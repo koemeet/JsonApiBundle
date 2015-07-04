@@ -16,7 +16,7 @@ use JMS\Serializer\EventDispatcher\EventSubscriberInterface;
 use JMS\Serializer\EventDispatcher\ObjectEvent;
 use JMS\Serializer\Naming\PropertyNamingStrategyInterface;
 use JMS\Serializer\VisitorInterface;
-use Mango\Hateoas\Configuration\Metadata\ClassMetadata;
+use Mango\Bundle\JsonApiBundle\Configuration\Metadata\ClassMetadata;
 use Mango\Bundle\JsonApiBundle\Serializer\JsonApiSerializationVisitor;
 use Metadata\MetadataFactoryInterface;
 use Symfony\Component\PropertyAccess\PropertyAccess;
@@ -98,18 +98,24 @@ class JsonEventSubscriber implements EventSubscriberInterface
             foreach ($metadata->getRelationships() as $relationship) {
                 $relKey = $relationship->getName();
 
+                $data = $propertyAccessor->getValue($object, $relKey);
+
+                // if there is no data for this relationship, then we can skip it
+                if (!$data) {
+                    continue;
+                }
+
                 if (!isset($jmsMetadata->propertyMetadata[$relKey])) {
                     continue;
                 }
 
                 $propertyMetadata = $jmsMetadata->propertyMetadata[$relKey];
 
+                // JMS Serializer support
                 $translatedName = $this->namingStrategy->translateName($propertyMetadata);
 
                 $rel =& $relationshipsData[$translatedName];
                 $relData =& $rel['data'];
-
-                $data = $propertyAccessor->getValue($object, $relKey);
 
                 if (is_array($data) || $data instanceof \Traversable) {
                     $relData = array();
@@ -148,7 +154,7 @@ class JsonEventSubscriber implements EventSubscriberInterface
                 }
             }
 
-            if (!empty($relationshipsData)) {
+            if ($relationshipsData) {
                 $visitor->addData('relationships', $relationshipsData);
             }
 
