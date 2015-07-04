@@ -70,4 +70,4 @@ use Mango\Bundle\JsonApiBundle\Configuration\Annotation as JsonApi;
 ```
 | Property  | Required  | Content   | Info  |
 | ---       | ---       | ---       | ---   |
-| includeByDefault      | No        | string    | This will include (sideload) the relationship with it's primary resource |
+| includeByDefault      | No        | bool    | This will include (sideload) the relationship with it's primary resource |
