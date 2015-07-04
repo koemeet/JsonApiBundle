@@ -11,6 +11,7 @@
 
 namespace Mango\Bundle\JsonApiBundle\EventListener\Serializer;
 
+use Doctrine\Common\Collections\Collection;
 use JMS\Serializer\Context;
 use JMS\Serializer\EventDispatcher\Events;
 use JMS\Serializer\EventDispatcher\EventSubscriberInterface;
@@ -19,6 +20,7 @@ use JMS\Serializer\Naming\PropertyNamingStrategyInterface;
 use JMS\Serializer\VisitorInterface;
 use Mango\Bundle\JsonApiBundle\Configuration\Metadata\ClassMetadata;
 use Mango\Bundle\JsonApiBundle\Configuration\Relationship;
+use Mango\Bundle\JsonApiBundle\Serializer\Exclusion\RelationshipExclusionStrategy;
 use Mango\Bundle\JsonApiBundle\Serializer\JsonApiSerializationVisitor;
 use Metadata\MetadataFactoryInterface;
 use Symfony\Component\PropertyAccess\PropertyAccess;
@@ -103,7 +105,7 @@ class JsonEventSubscriber implements EventSubscriberInterface
                 $relationshipObject = $propertyAccessor->getValue($object, $relationshipPropertyName);
 
                 // if there is no data for this relationship, then we can skip it
-                if (!$relationshipObject) {
+                if ($this->isEmpty($relationshipObject)) {
                     continue;
                 }
 
@@ -178,6 +180,17 @@ class JsonEventSubscriber implements EventSubscriberInterface
             'type' => $classMetadata->getResource()->getType(),
             'id' => $id
         );
+    }
+
+    /**
+     * Checks if an object is really empty, also if it is iteratable and has zero items.
+     *
+     * @param $object
+     * @return bool
+     */
+    protected function isEmpty($object)
+    {
+        return empty($object) || ($this->isIteratable($object) && count($object) === 0);
     }
 
     /**
