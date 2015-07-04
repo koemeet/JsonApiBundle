@@ -32,7 +32,7 @@
             <argument>Metadata\ClassHierarchyMetadata</argument>
             <argument>%kernel.debug%</argument>
             <!--<call method="setCache">-->
-                <!--<argument type="service" id="hateoas.metadata.cache" on-invalid="ignore"/>-->
+                <!--<argument type="service" id="json_api.metadata.cache" on-invalid="ignore"/>-->
             <!--</call>-->
         </service>
 

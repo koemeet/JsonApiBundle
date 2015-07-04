@@ -35,12 +35,16 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
             unset($result['included']);
         }
 
+        $included = array_udiff($included, $result, function ($a, $b) {
+            return strcmp($a['type'] . $a['id'], $b['type'] . $b['id']);
+        });
+
         $root = array(
-            'data' => $result
+            'data' => array_values($result)
         );
 
         if ($included) {
-            $root['included'] = $included;
+            $root['included'] = array_values($included);
         }
 
         $this->setRoot($root);
