@@ -1,0 +1,38 @@
+<?php
+/*
+ * This file is part of the Mango package.
+ *
+ * (c) Steffen Brem <steffenbrem@gmail.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
+namespace Mango\Bundle\JsonApiBundle\Configuration;
+
+/**
+ * @author Steffen Brem <steffenbrem@gmail.com>
+ */
+class Id
+{
+    /**
+     * @var string
+     */
+    protected $fieldName;
+
+    /**
+     * @param string $fieldName
+     */
+    public function __construct($fieldName)
+    {
+        $this->fieldName = $fieldName;
+    }
+
+    /**
+     * @return string
+     */
+    public function getFieldName()
+    {
+        return $this->fieldName;
+    }
+}
