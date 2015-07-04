@@ -1,0 +1,37 @@
+{
+    "name": "steffenbrem/json-api-bundle",
+    "description": "Integration of JSON API with Symfony2 (FOSRestBundle).",
+    "keywords": [
+        "rest",
+        "jsonapi",
+        "json-api"
+    ],
+    "type": "symfony-bundle",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Steffen Brem",
+            "email": "steffenbrem@gmail.com"
+        }
+    ],
+    "require": {
+        "symfony/framework-bundle": "~2.2",
+        "jms/metadata": "~1.5",
+        "jms/serializer-bundle": "~1.0"
+    },
+    "require-dev": {
+        "symfony/expression-language": "~2.4",
+        "twig/twig": "~1.12"
+    },
+    "autoload": {
+        "psr-0": {
+            "Mango\\Bundle\\JsonApiBundle": ""
+        }
+    },
+    "target-dir": "Mango/Bundle/JsonApiBundle",
+    "extra": {
+        "branch-alias": {
+            "dev-master": "0.1-dev"
+        }
+    }
+}
