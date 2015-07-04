@@ -27,28 +27,49 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
     {
         $result = $this->getRoot();
 
-        $included = null;
+        if ($result) {
+            $meta = null;
+            $included = null;
 
-        // strip out included part, since it does not belong to the primary resource data
-        if (isset($result['included'])) {
-            $included = $result['included'];
-            unset($result['included']);
+            // strip out included part, since it does not belong to the primary resource data
+            if (isset($result['included'])) {
+                $included = $result['included'];
+                unset($result['included']);
+            }
+
+            if (isset($result['meta'])) {
+                $meta = $result['meta'];
+                unset($result['meta']);
+            }
+
+            if (isset($result['links'])) {
+                $links = $result['links'];
+                unset($result['links']);
+            }
+
+            // filter out duplicate primary resource objects that are in `included`
+            $included = array_udiff($included, $result, function ($a, $b) {
+                return strcmp($a['type'] . $a['id'], $b['type'] . $b['id']);
+            });
+
+            $root = array();
+
+            if ($meta) {
+                $root['meta'] = $meta;
+            }
+
+            if ($links) {
+                $root['links'] = $links;
+            }
+
+            $root['data'] = array_values($result);
+
+            if ($included) {
+                $root['included'] = array_values($included);
+            }
+
+            $this->setRoot($root);
         }
-
-        // filter out duplicate primary resource objects that are in `included`
-        $included = array_udiff($included, $result, function ($a, $b) {
-            return strcmp($a['type'] . $a['id'], $b['type'] . $b['id']);
-        });
-
-        $root = array(
-            'data' => array_values($result)
-        );
-
-        if ($included) {
-            $root['included'] = array_values($included);
-        }
-
-        $this->setRoot($root);
 
         return parent::getResult();
     }
@@ -59,6 +80,16 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
     public function endVisitingObject(ClassMetadata $metadata, $data, array $type, Context $context)
     {
         $rs = parent::endVisitingObject($metadata, $data, $type, $context);
+
+        if (empty($rs)) {
+            $rs = new \ArrayObject();
+
+            if (array() === $this->getRoot()) {
+                $this->setRoot(clone $rs);
+            }
+
+            return $rs;
+        }
 
         $result = array();
 

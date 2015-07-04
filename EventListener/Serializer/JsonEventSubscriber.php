@@ -15,12 +15,14 @@ use JMS\Serializer\Context;
 use JMS\Serializer\EventDispatcher\Events;
 use JMS\Serializer\EventDispatcher\EventSubscriberInterface;
 use JMS\Serializer\EventDispatcher\ObjectEvent;
+use JMS\Serializer\EventDispatcher\PreSerializeEvent;
 use JMS\Serializer\Naming\PropertyNamingStrategyInterface;
 use JMS\Serializer\VisitorInterface;
 use Mango\Bundle\JsonApiBundle\Configuration\Metadata\ClassMetadata;
 use Mango\Bundle\JsonApiBundle\Configuration\Relationship;
 use Mango\Bundle\JsonApiBundle\Serializer\JsonApiSerializationVisitor;
 use Metadata\MetadataFactoryInterface;
+use Pagerfanta\Pagerfanta;
 use Symfony\Component\PropertyAccess\PropertyAccess;
 
 /**
@@ -72,7 +74,21 @@ class JsonEventSubscriber implements EventSubscriberInterface
                 'format' => 'json',
                 'method' => 'onPostSerialize',
             ),
+            array(
+                'event' => Events::PRE_SERIALIZE,
+                'format' => 'json',
+                'method' => 'onPreSerialize'
+            )
         );
+    }
+
+    public function onPreSerialize(PreSerializeEvent $event)
+    {
+        $object = $event->getObject();
+
+        if ($object instanceof Pagerfanta) {
+            //$event->getContext()->accept($object->getCurrentPageResults());
+        }
     }
 
     public function onPostSerialize(ObjectEvent $event)
@@ -187,6 +203,10 @@ class JsonEventSubscriber implements EventSubscriberInterface
      */
     protected function processRelationship($object, Relationship $relationship, Context $context)
     {
+        if (!is_object($object)) {
+            throw new \RuntimeException(sprintf('Cannot process relationship "%s", because it is not an object but a %s.', $relationship->getName(), gettype($object)));
+        }
+
         $propertyAccessor = PropertyAccess::createPropertyAccessor();
         $relationshipId = $propertyAccessor->getValue($object, 'id');
 

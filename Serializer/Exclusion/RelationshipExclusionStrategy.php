@@ -51,6 +51,10 @@ class RelationshipExclusionStrategy implements ExclusionStrategyInterface
         /** @var \Mango\Bundle\JsonApiBundle\Configuration\Metadata\ClassMetadata $metadata */
         $metadata = $this->metadataFactory->getMetadataForClass($property->class);
 
+        if (!$metadata) {
+            throw new \RuntimeException(sprintf('Could not get metadata for class "%s". Did you define it as a Resource?', $property->class));
+        }
+
         foreach ($metadata->getRelationships() as $relationship) {
             if ($property->name === $relationship->getName()) {
                 return true;

@@ -23,6 +23,11 @@
                 </argument>
             </call>
         </service>
+
+        <service id="json_api.serializer.handler.pagerfanta" class="Mango\Bundle\JsonApiBundle\Serializer\Handler\PagerfantaHandler">
+            <argument type="service" id="request_stack" />
+            <tag name="jms_serializer.subscribing_handler" />
+        </service>
     </services>
 
 </container>

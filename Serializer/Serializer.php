@@ -13,6 +13,7 @@ namespace Mango\Bundle\JsonApiBundle\Serializer;
 use JMS\Serializer\Exclusion\ExclusionStrategyInterface;
 use JMS\Serializer\SerializationContext;
 use JMS\Serializer\Serializer as BaseSerializer;
+use Pagerfanta\Pagerfanta;
 
 /**
  * @author Steffen Brem <steffenbrem@gmail.com>
