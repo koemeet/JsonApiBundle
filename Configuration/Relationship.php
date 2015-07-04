@@ -9,23 +9,45 @@
  */
 
 namespace Mango\Bundle\JsonApiBundle\Configuration;
+use Doctrine\Common\Collections\Collection;
 
 /**
  * @author Steffen Brem <steffenbrem@gmail.com>
  */
 class Relationship
 {
+    /**
+     * @var string
+     */
     protected $name;
 
-    protected $includedByDefault = false;
+    /**
+     * @var bool
+     */
+    protected $includedByDefault;
 
     /**
-     * @param $includedByDefault
+     * @var bool
      */
-    public function __construct($name, $includedByDefault)
+    protected $showLinkSelf;
+
+    /**
+     * @var bool
+     */
+    protected $showLinkRelated;
+
+    /**
+     * @param            $name
+     * @param bool|false $includedByDefault
+     * @param bool|false $showLinkSelf
+     * @param bool|false $showLinkRelated
+     */
+    public function __construct($name, $includedByDefault = false, $showLinkSelf = false, $showLinkRelated = false)
     {
         $this->name = $name;
         $this->includedByDefault = $includedByDefault;
+        $this->showLinkSelf = $showLinkSelf;
+        $this->showLinkRelated = $showLinkRelated;
     }
 
     /**
@@ -42,5 +64,21 @@ class Relationship
     public function isIncludedByDefault()
     {
         return $this->includedByDefault;
+    }
+
+    /**
+     * @return boolean
+     */
+    public function getShowLinkSelf()
+    {
+        return $this->showLinkSelf;
+    }
+
+    /**
+     * @return boolean
+     */
+    public function getShowLinkRelated()
+    {
+        return $this->showLinkRelated;
     }
 }

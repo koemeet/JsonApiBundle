@@ -1,5 +1,4 @@
 <?php
-
 /*
  * This file is part of the Mango package.
  *
@@ -13,12 +12,11 @@ namespace Mango\Bundle\JsonApiBundle\Configuration\Annotation;
 
 /**
  * @Annotation
- * @Target("CLASS")
+ * @Target("ANNOTATION")
  *
  * @author Steffen Brem <steffenbrem@gmail.com>
  */
-final class Resource
+final class Route
 {
-    public $type;
-    public $showLinkSelf;
+    public $href;
 }

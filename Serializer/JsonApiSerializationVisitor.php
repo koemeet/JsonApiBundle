@@ -75,6 +75,7 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
                 case 'id':
                 case 'type':
                 case 'relationships':
+                case 'links':
                     return false;
             }
             return true;
@@ -82,6 +83,10 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
 
         if (isset($rs['relationships'])) {
             $result['relationships'] = $rs['relationships'];
+        }
+
+        if (isset($rs['links'])) {
+            $result['links'] = $rs['links'];
         }
 
         return $result;

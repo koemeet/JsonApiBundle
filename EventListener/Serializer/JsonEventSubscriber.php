@@ -11,7 +11,6 @@
 
 namespace Mango\Bundle\JsonApiBundle\EventListener\Serializer;
 
-use Doctrine\Common\Collections\Collection;
 use JMS\Serializer\Context;
 use JMS\Serializer\EventDispatcher\Events;
 use JMS\Serializer\EventDispatcher\EventSubscriberInterface;
@@ -20,7 +19,6 @@ use JMS\Serializer\Naming\PropertyNamingStrategyInterface;
 use JMS\Serializer\VisitorInterface;
 use Mango\Bundle\JsonApiBundle\Configuration\Metadata\ClassMetadata;
 use Mango\Bundle\JsonApiBundle\Configuration\Relationship;
-use Mango\Bundle\JsonApiBundle\Serializer\Exclusion\RelationshipExclusionStrategy;
 use Mango\Bundle\JsonApiBundle\Serializer\JsonApiSerializationVisitor;
 use Metadata\MetadataFactoryInterface;
 use Symfony\Component\PropertyAccess\PropertyAccess;
@@ -91,7 +89,6 @@ class JsonEventSubscriber implements EventSubscriberInterface
 
         $propertyAccessor = PropertyAccess::createPropertyAccessor();
 
-
         if ($visitor instanceof JsonApiSerializationVisitor) {
             $this->prependData($visitor, array(
                 'type' => $metadata->getResource()->getType()
@@ -116,17 +113,26 @@ class JsonEventSubscriber implements EventSubscriberInterface
                 $jmsPropertyMetadata = $jmsMetadata->propertyMetadata[$relationshipPropertyName];
                 $relationshipPayloadKey = $this->namingStrategy->translateName($jmsPropertyMetadata);
 
-                $relationshipData =& $relationships[$relationshipPayloadKey]['data'];
+                $relationshipData =& $relationships[$relationshipPayloadKey];
                 $relationshipData = array();
 
-                // hasMany relationship
-                if ($this->isIteratable($relationshipObject)) {
-                    foreach ($relationshipObject as $item) {
-                        $relationshipData[] = $this->processRelationship($item, $relationship, $context);
+                // add `links`
+                $links = $this->processRelationshipLinks($object, $relationship, $relationshipPayloadKey);
+                if ($links) {
+                    $relationshipData['links'] = $links;
+                }
+
+
+                if ($relationship->isIncludedByDefault()) {
+                    // hasMany relationship
+                    if ($this->isIteratable($relationshipObject)) {
+                        foreach ($relationshipObject as $item) {
+                            $relationshipData['data'][] = $this->processRelationship($item, $relationship, $context);
+                        }
+                    } // belongsTo relationship
+                    else {
+                        $relationshipData['data'] = $this->processRelationship($relationshipObject, $relationship, $context);
                     }
-                } // belongsTo relationship
-                else {
-                    $relationshipData = $this->processRelationship($relationshipObject, $relationship, $context);
                 }
             }
 
@@ -134,10 +140,43 @@ class JsonEventSubscriber implements EventSubscriberInterface
                 $visitor->addData('relationships', $relationships);
             }
 
+            // TODO: Improve link handling
+            if ($metadata->getResource()->getShowLinkSelf()) {
+                $visitor->addData('links', array(
+                    'self' => '/' . $metadata->getResource()->getType() . '/' . $propertyAccessor->getValue($object, 'id')
+                ));
+            }
+
             $root = (array)$visitor->getRoot();
             $root['included'] = array_values($this->includedRelationships);
             $visitor->setRoot($root);
         }
+    }
+
+    /**
+     * @param Relationship $relationship
+     * @return array
+     */
+    protected function processRelationshipLinks($primaryObject, Relationship $relationship, $relationshipPayloadKey)
+    {
+        $propertyAccessor = PropertyAccess::createPropertyAccessor();
+        $primaryId = $propertyAccessor->getValue($primaryObject, 'id');
+
+        /** @var ClassMetadata $relationshipMetadata */
+        $primaryMetadata = $this->hateoasMetadataFactory->getMetadataForClass(get_class($primaryObject));
+
+        $links = array();
+
+        // TODO: Improve this
+        if ($relationship->getShowLinkSelf()) {
+            $links['self'] = '/' . $primaryMetadata->getResource()->getType() . '/' . $primaryId . '/relationships/' . $relationshipPayloadKey;
+        }
+
+        if ($relationship->getShowLinkRelated()) {
+            $links['related'] = '/' . $primaryMetadata->getResource()->getType() . '/' . $primaryId . '/' . $relationshipPayloadKey;
+        }
+
+        return $links;
     }
 
     /**
@@ -149,7 +188,6 @@ class JsonEventSubscriber implements EventSubscriberInterface
     protected function processRelationship($object, Relationship $relationship, Context $context)
     {
         $propertyAccessor = PropertyAccess::createPropertyAccessor();
-
         $relationshipId = $propertyAccessor->getValue($object, 'id');
 
         /** @var ClassMetadata $relationshipMetadata */

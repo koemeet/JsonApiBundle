@@ -45,7 +45,7 @@ class ClassMetadata extends MergeableClassMetadata implements ClassMetadataInter
     }
 
     /**
-     * {@inheritdoc}
+     * @return Resource
      */
     public function getResource()
     {
@@ -53,7 +53,7 @@ class ClassMetadata extends MergeableClassMetadata implements ClassMetadataInter
     }
 
     /**
-     * {@inheritdoc}
+     * @param Resource $resource
      */
     public function setResource(Resource $resource)
     {

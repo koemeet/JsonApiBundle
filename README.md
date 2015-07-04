@@ -20,7 +20,7 @@ This will define your class as a JSON-API resource, and you can optionally set i
 use Mango\Bundle\JsonApiBundle\Configuration\Annotation as JsonApi;
 
 /**
- * @JsonApi\Resource(type="posts")
+ * @JsonApi\Resource(type="posts", showSelfLink=false)
  */
  class Post 
  {
@@ -30,6 +30,7 @@ use Mango\Bundle\JsonApiBundle\Configuration\Annotation as JsonApi;
 | Property  | Required  | Content   | Info  |
 | ---       | ---       | ---       | ---   |
 | type      | No        | string    | If not present, it will use the dasherized classname as it's type |
+| showLinkSelf | No     | boolean   | Add `self` link to the resource |
 
 ### @Id
 This will define the property that will be used as the `id` of a resource. It needs to be unique for every resource of the same type.
@@ -65,11 +66,13 @@ use Mango\Bundle\JsonApiBundle\Configuration\Annotation as JsonApi;
     // ..
     
     /**
-     * @JsonApi\Relationship(includeByDefault=true)
+     * @JsonApi\Relationship(includeByDefault=true, showSelfLink=false, showRelatedLink=false)
      */
     protected $comments;
  }
 ```
-| Property  | Required  | Content   | Info  |
-| ---       | ---       | ---       | ---   |
-| includeByDefault      | No        | bool    | This will include (sideload) the relationship with it's primary resource |
+| Property              | Required  | Content   | Info  |
+| ---                   | ---       | ---       | ---   |
+| includeByDefault      | No        | boolean   | This will include (sideload) the relationship with it's primary resource |
+| showSelfLink          | No        | boolean   | Add `self` link of the relationship |
+| showRelatedLink       | No        | boolean   | Add `related` link of the relationship |
