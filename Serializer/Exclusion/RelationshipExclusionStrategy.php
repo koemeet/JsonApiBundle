@@ -48,7 +48,7 @@ class RelationshipExclusionStrategy implements ExclusionStrategyInterface
      */
     public function shouldSkipProperty(PropertyMetadata $property, Context $context)
     {
-        /** @var \Mango\Hateoas\Configuration\Metadata\ClassMetadata $metadata */
+        /** @var \Mango\Bundle\JsonApiBundle\Configuration\Metadata\ClassMetadata $metadata */
         $metadata = $this->metadataFactory->getMetadataForClass($property->class);
 
         foreach ($metadata->getRelationships() as $relationship) {

@@ -11,12 +11,14 @@
 
 namespace Mango\Bundle\JsonApiBundle\EventListener\Serializer;
 
+use JMS\Serializer\Context;
 use JMS\Serializer\EventDispatcher\Events;
 use JMS\Serializer\EventDispatcher\EventSubscriberInterface;
 use JMS\Serializer\EventDispatcher\ObjectEvent;
 use JMS\Serializer\Naming\PropertyNamingStrategyInterface;
 use JMS\Serializer\VisitorInterface;
 use Mango\Bundle\JsonApiBundle\Configuration\Metadata\ClassMetadata;
+use Mango\Bundle\JsonApiBundle\Configuration\Relationship;
 use Mango\Bundle\JsonApiBundle\Serializer\JsonApiSerializationVisitor;
 use Metadata\MetadataFactoryInterface;
 use Symfony\Component\PropertyAccess\PropertyAccess;
@@ -93,75 +95,116 @@ class JsonEventSubscriber implements EventSubscriberInterface
                 'type' => $metadata->getResource()->getType()
             ));
 
-            $relationshipsData = array();
+            $relationships = array();
 
             foreach ($metadata->getRelationships() as $relationship) {
-                $relKey = $relationship->getName();
+                $relationshipPropertyName = $relationship->getName();
 
-                $data = $propertyAccessor->getValue($object, $relKey);
+                $relationshipObject = $propertyAccessor->getValue($object, $relationshipPropertyName);
 
                 // if there is no data for this relationship, then we can skip it
-                if (!$data) {
+                if (!$relationshipObject) {
                     continue;
                 }
-
-                if (!isset($jmsMetadata->propertyMetadata[$relKey])) {
-                    continue;
-                }
-
-                $propertyMetadata = $jmsMetadata->propertyMetadata[$relKey];
 
                 // JMS Serializer support
-                $translatedName = $this->namingStrategy->translateName($propertyMetadata);
+                if (!isset($jmsMetadata->propertyMetadata[$relationshipPropertyName])) {
+                    continue;
+                }
+                $jmsPropertyMetadata = $jmsMetadata->propertyMetadata[$relationshipPropertyName];
+                $relationshipPayloadKey = $this->namingStrategy->translateName($jmsPropertyMetadata);
 
-                $rel =& $relationshipsData[$translatedName];
-                $relData =& $rel['data'];
+                $relationshipData =& $relationships[$relationshipPayloadKey]['data'];
+                $relationshipData = array();
 
-                if (is_array($data) || $data instanceof \Traversable) {
-                    $relData = array();
-                    foreach ($data as $item) {
-                        /** @var ClassMetadata $relMetadata */
-                        $relMetadata = $this->hateoasMetadataFactory->getMetadataForClass(get_class($item));
-
-                        $id = $propertyAccessor->getValue($item, 'id');
-
-                        if ($relationship->isIncludedByDefault()) {
-                            $this->includedRelationships[$relKey . ':' . $id] = $context->accept($item);
-                        }
-
-                        $relData[] = array(
-                            'type' => $relMetadata->getResource()->getType(),
-                            'id' => $id
-                        );
+                // hasMany relationship
+                if ($this->isIteratable($relationshipObject)) {
+                    foreach ($relationshipObject as $item) {
+                        $relationshipData[] = $this->processRelationship($item, $relationship, $context);
                     }
-                } else {
-                    $relData = array();
-
-                    /** @var ClassMetadata $relMetadata */
-                    $relMetadata = $this->hateoasMetadataFactory->getMetadataForClass(get_class($data));
-
-                    $id = $propertyAccessor->getValue($data, 'id');
-
-                    if ($relationship->isIncludedByDefault()) {
-                        // TODO: How do we check if the relationship is already in `data`?
-                        //$this->includedRelationships[$relKey . ':' . $id] = $context->accept($data);
-                    }
-
-                    $relData[] = array(
-                        'type' => $relMetadata->getResource()->getType(),
-                        'id' => $id
-                    );
+                } // belongsTo relationship
+                else {
+                    $relationshipData = $this->processRelationship($relationshipObject, $relationship, $context);
                 }
             }
 
-            if ($relationshipsData) {
-                $visitor->addData('relationships', $relationshipsData);
+            if ($relationships) {
+                $visitor->addData('relationships', $relationships);
             }
 
             $root = (array)$visitor->getRoot();
             $root['included'] = array_values($this->includedRelationships);
             $visitor->setRoot($root);
         }
+    }
+
+    /**
+     * @param              $object
+     * @param Relationship $relationship
+     * @param Context      $context
+     * @return array
+     */
+    protected function processRelationship($object, Relationship $relationship, Context $context)
+    {
+        $propertyAccessor = PropertyAccess::createPropertyAccessor();
+
+        $relationshipId = $propertyAccessor->getValue($object, 'id');
+
+        /** @var ClassMetadata $relationshipMetadata */
+        $relationshipMetadata = $this->hateoasMetadataFactory->getMetadataForClass(get_class($object));
+
+        // contains the relations type and id
+        $relationshipDataArray = $this->getRelationshipDataArray($relationshipMetadata, $relationshipId);
+
+        // only include this relationship if it is needed
+        if ($relationship->isIncludedByDefault() && $this->canIncludeRelationship($relationshipMetadata, $relationshipId)) {
+            $includedRelationship = $relationshipDataArray; // copy data array so we do not override it with our reference
+            $this->includedRelationships[] =& $includedRelationship;
+            $includedRelationship = $context->accept($object); // override previous reference with the serialized data
+        }
+
+        // the relationship data can only contain one reference to another resource
+        return $relationshipDataArray;
+    }
+
+    /**
+     * @param ClassMetadata $classMetadata
+     * @param               $id
+     * @return array
+     */
+    protected function getRelationshipDataArray(ClassMetadata $classMetadata, $id)
+    {
+        return array(
+            'type' => $classMetadata->getResource()->getType(),
+            'id' => $id
+        );
+    }
+
+    /**
+     * @param $data
+     * @return bool
+     */
+    protected function isIteratable($data)
+    {
+        return (is_array($data) || $data instanceof \Traversable);
+    }
+
+
+    /**
+     * @param ClassMetadata $classMetadata
+     * @param               $id
+     * @return bool
+     */
+    protected function canIncludeRelationship(ClassMetadata $classMetadata, $id)
+    {
+        foreach ($this->includedRelationships as $includedRelationship) {
+            if ($includedRelationship['type'] === $classMetadata->getResource()->getType()
+                && $includedRelationship['id'] === $id
+            ) {
+                return false;
+            }
+        }
+        return true;
     }
 
     /**
