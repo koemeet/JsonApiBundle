@@ -67,6 +67,14 @@ class Relationship
     }
 
     /**
+     * @param $bool
+     */
+    public function setIncludedByDefault($bool)
+    {
+        $this->includedByDefault = $bool;
+    }
+
+    /**
      * @return boolean
      */
     public function getShowLinkSelf()

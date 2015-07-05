@@ -23,6 +23,7 @@ use Mango\Bundle\JsonApiBundle\Configuration\Relationship;
 use Mango\Bundle\JsonApiBundle\Serializer\JsonApiSerializationVisitor;
 use Metadata\MetadataFactoryInterface;
 use Pagerfanta\Pagerfanta;
+use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\PropertyAccess\PropertyAccess;
 
 /**
@@ -53,14 +54,28 @@ class JsonEventSubscriber implements EventSubscriberInterface
     protected $namingStrategy;
 
     /**
+     * @var RequestStack
+     */
+    protected $requestStack;
+
+    /**
+     * @var string
+     */
+    protected $currentPath;
+
+    /**
      * @param MetadataFactoryInterface        $hateoasMetadataFactory
      * @param PropertyNamingStrategyInterface $namingStrategy
      */
-    public function __construct(MetadataFactoryInterface $hateoasMetadataFactory, MetadataFactoryInterface $jmsMetadataFactory, PropertyNamingStrategyInterface $namingStrategy)
+    public function __construct(MetadataFactoryInterface $hateoasMetadataFactory,
+                                MetadataFactoryInterface $jmsMetadataFactory,
+                                PropertyNamingStrategyInterface $namingStrategy,
+                                RequestStack $requestStack)
     {
         $this->hateoasMetadataFactory = $hateoasMetadataFactory;
         $this->jmsMetadataFactory = $jmsMetadataFactory;
         $this->namingStrategy = $namingStrategy;
+        $this->requestStack = $requestStack;
     }
 
     /**
@@ -73,22 +88,8 @@ class JsonEventSubscriber implements EventSubscriberInterface
                 'event' => Events::POST_SERIALIZE,
                 'format' => 'json',
                 'method' => 'onPostSerialize',
-            ),
-            array(
-                'event' => Events::PRE_SERIALIZE,
-                'format' => 'json',
-                'method' => 'onPreSerialize'
             )
         );
-    }
-
-    public function onPreSerialize(PreSerializeEvent $event)
-    {
-        $object = $event->getObject();
-
-        if ($object instanceof Pagerfanta) {
-            //$event->getContext()->accept($object->getCurrentPageResults());
-        }
     }
 
     public function onPostSerialize(ObjectEvent $event)
@@ -138,6 +139,22 @@ class JsonEventSubscriber implements EventSubscriberInterface
                     $relationshipData['links'] = $links;
                 }
 
+                // TODO: Support for `include` parameter
+                $include = $this->requestStack->getCurrentRequest()->query->get('include');
+                $include = $this->parseInclude($include);
+
+                // FIXME: $includePath always is relative to the primary resource, so we can build our way with
+                // class metadata to find out if we can include this relationship.
+                foreach ($include as $includePath) {
+                    $last = end($includePath);
+                    if ($last === $relationship->getName()) {
+                        // keep track of the path we are currently following (e.x. comments -> author)
+                        $this->currentPath = $includePath;
+                        $relationship->setIncludedByDefault(true);
+                        // we are done here, since we have found out we can include this relationship :)
+                        break;
+                    }
+                }
 
                 if ($relationship->isIncludedByDefault()) {
                     // hasMany relationship
@@ -225,6 +242,41 @@ class JsonEventSubscriber implements EventSubscriberInterface
 
         // the relationship data can only contain one reference to another resource
         return $relationshipDataArray;
+    }
+
+    /**
+     * @param $include
+     * @return array
+     */
+    protected function parseInclude($include)
+    {
+        $array = array();
+        $parts = array_map('trim', explode(',', $include));
+
+        foreach ($parts as $part) {
+            $resources = array_map('trim', explode('.', $part));
+            $array[] = $resources;
+        }
+
+        return $array;
+    }
+
+    /**
+     * @param array $resources
+     * @param int   $index
+     * @return array
+     */
+    protected function parseIncludeResources(array $resources, $index = 0)
+    {
+        if (isset($resources[$index + 1])) {
+            $resource = array_shift($resources);
+            return array(
+                $resource => $this->parseIncludeResources($resources)
+            );
+        }
+        return array(
+            end($resources) => 1
+        );
     }
 
     /**
