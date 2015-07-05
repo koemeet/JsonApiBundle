@@ -30,6 +30,7 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
         if ($result) {
             $meta = null;
             $included = null;
+            $links = null;
 
             // strip out included part, since it does not belong to the primary resource data
             if (isset($result['included'])) {
