@@ -38,5 +38,9 @@ class MangoJsonApiExtension extends Extension
                 throw new \RuntimeException(sprintf('Could not create cache directory "%s".', $dir));
             }
         }
+
+        $container->setParameter('json_api.pagination', array(
+            'limit' => $config['pagination']['limit']
+        ));
     }
 }

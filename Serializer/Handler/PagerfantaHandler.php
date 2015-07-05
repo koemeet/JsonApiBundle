@@ -30,11 +30,18 @@ class PagerfantaHandler implements SubscribingHandlerInterface
     protected $requestStack;
 
     /**
-     * @param RequestStack $requestStack
+     * @var array
      */
-    public function __construct(RequestStack $requestStack)
+    protected $paginationOptions;
+
+    /**
+     * @param RequestStack $requestStack
+     * @param array        $paginationOptions
+     */
+    public function __construct(RequestStack $requestStack, array $paginationOptions)
     {
         $this->requestStack = $requestStack;
+        $this->paginationOptions = $paginationOptions;
     }
 
     /**
@@ -66,7 +73,7 @@ class PagerfantaHandler implements SubscribingHandlerInterface
         $pagerfanta->setNormalizeOutOfRangePages(true);
         $pagerfanta->setAllowOutOfRangePages(true);
 
-        $pagerfanta->setMaxPerPage($request->get('page[limit]', 10, true));
+        $pagerfanta->setMaxPerPage($request->get('page[limit]', $this->paginationOptions['limit'], true));
         $pagerfanta->setCurrentPage($request->get('page[number]', 1, true));
 
         $visitor->getNavigator()->accept($pagerfanta->getCurrentPageResults(), null, $context);

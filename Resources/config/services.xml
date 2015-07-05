@@ -26,6 +26,7 @@
 
         <service id="json_api.serializer.handler.pagerfanta" class="Mango\Bundle\JsonApiBundle\Serializer\Handler\PagerfantaHandler">
             <argument type="service" id="request_stack" />
+            <argument>%json_api.pagination%</argument>
             <tag name="jms_serializer.subscribing_handler" />
         </service>
     </services>
