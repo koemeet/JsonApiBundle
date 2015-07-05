@@ -17,6 +17,7 @@ use JMS\Serializer\Handler\SubscribingHandlerInterface;
 use Mango\Bundle\JsonApiBundle\Serializer\JsonApiSerializationVisitor;
 use Pagerfanta\Pagerfanta;
 use Symfony\Component\HttpFoundation\RequestStack;
+use Symfony\Component\Routing\Route;
 
 /**
  * @author Steffen Brem <steffenbrem@gmail.com>
@@ -60,6 +61,9 @@ class PagerfantaHandler implements SubscribingHandlerInterface
      */
     public function serializePagerfanta(JsonApiSerializationVisitor $visitor, Pagerfanta $pagerfanta, array $type, Context $context)
     {
+        $pagerfanta->setNormalizeOutOfRangePages(true);
+        $pagerfanta->setAllowOutOfRangePages(true);
+
         $visitor->getNavigator()->accept($pagerfanta->getCurrentPageResults(), null, $context);
 
         $root = $visitor->getRoot();
@@ -70,18 +74,32 @@ class PagerfantaHandler implements SubscribingHandlerInterface
             'total' => $pagerfanta->getNbResults()
         );
 
-        // TODO: Support for absolute URLs?
-        $path = $this->requestStack->getCurrentRequest()->getPathInfo();
-
         $root['links'] = array(
-            'first' => $path . '?page[number]=1',
-            'last' => $path . '?page[number]=' . $pagerfanta->getNbPages(),
-            'prev' => ($pagerfanta->hasPreviousPage()) ? $path . '?page[number]=' . $pagerfanta->getPreviousPage() : null,
-            'next' => ($pagerfanta->hasNextPage()) ? $path . '?page[number]=' . $pagerfanta->getNextPage() : null
+            'first' => $this->getUriForPage(1),
+            'last' => $this->getUriForPage($pagerfanta->getNbPages()),
+            'prev' => ($pagerfanta->hasPreviousPage()) ? $this->getUriForPage($pagerfanta->getPreviousPage()) : null,
+            'next' => ($pagerfanta->hasNextPage()) ? $this->getUriForPage($pagerfanta->getNextPage()) : null
         );
 
         $visitor->setRoot($root);
 
         return $root;
+    }
+
+    /**
+     * @param $page
+     * @return string
+     */
+    protected function getUriForPage($page)
+    {
+        $request = clone $this->requestStack->getCurrentRequest();
+
+        $queryPage = $request->query->get('page');
+        $queryPage['number'] = $page;
+        $request->query->set('page', $queryPage);
+
+        $query = urldecode(http_build_query($request->query->all()));
+
+        return $request->getSchemeAndHttpHost() . $request->getBaseUrl() . $request->getPathInfo() . '?' . $query;
     }
 }
