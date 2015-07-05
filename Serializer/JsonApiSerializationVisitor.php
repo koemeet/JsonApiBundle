@@ -48,7 +48,7 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
             }
 
             // filter out duplicate primary resource objects that are in `included`
-            $included = array_udiff($included, $result, function ($a, $b) {
+            $included = array_udiff((array)$included, $result, function ($a, $b) {
                 return strcmp($a['type'] . $a['id'], $b['type'] . $b['id']);
             });
 

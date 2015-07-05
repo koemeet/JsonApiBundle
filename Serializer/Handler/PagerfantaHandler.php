@@ -61,8 +61,13 @@ class PagerfantaHandler implements SubscribingHandlerInterface
      */
     public function serializePagerfanta(JsonApiSerializationVisitor $visitor, Pagerfanta $pagerfanta, array $type, Context $context)
     {
+        $request = $this->requestStack->getCurrentRequest();
+
         $pagerfanta->setNormalizeOutOfRangePages(true);
         $pagerfanta->setAllowOutOfRangePages(true);
+
+        $pagerfanta->setMaxPerPage($request->get('page[limit]', 10, true));
+        $pagerfanta->setCurrentPage($request->get('page[number]', 1, true));
 
         $visitor->getNavigator()->accept($pagerfanta->getCurrentPageResults(), null, $context);
 
