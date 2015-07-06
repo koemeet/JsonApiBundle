@@ -99,4 +99,32 @@ class ClassMetadata extends MergeableClassMetadata implements ClassMetadataInter
     {
         $this->relationships->add($relationship);
     }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function serialize()
+    {
+        return serialize(array(
+            $this->resource,
+            $this->idField,
+            $this->relationships,
+            parent::serialize(),
+        ));
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function unserialize($str)
+    {
+        list(
+            $this->resource,
+            $this->idField,
+            $this->relationships,
+            $parentStr
+            ) = unserialize($str);
+
+        parent::unserialize($parentStr);
+    }
 }

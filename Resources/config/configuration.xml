@@ -30,9 +30,9 @@
             <argument type="service" id="json_api.metadata.chain_driver"/>
             <argument>Metadata\ClassHierarchyMetadata</argument>
             <argument>%kernel.debug%</argument>
-            <!--<call method="setCache">-->
-                <!--<argument type="service" id="json_api.metadata.cache" on-invalid="ignore"/>-->
-            <!--</call>-->
+            <call method="setCache">
+                <argument type="service" id="json_api.metadata.cache" on-invalid="ignore"/>
+            </call>
         </service>
 
         <service id="json_api.serializer.relationship_exclusion_strategy" class="Mango\Bundle\JsonApiBundle\Serializer\Exclusion\RelationshipExclusionStrategy">
