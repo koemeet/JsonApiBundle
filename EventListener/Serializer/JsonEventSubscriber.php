@@ -224,11 +224,10 @@ class JsonEventSubscriber implements EventSubscriberInterface
             throw new \RuntimeException(sprintf('Cannot process relationship "%s", because it is not an object but a %s.', $relationship->getName(), gettype($object)));
         }
 
-        $propertyAccessor = PropertyAccess::createPropertyAccessor();
-        $relationshipId = $propertyAccessor->getValue($object, 'id');
-
         /** @var ClassMetadata $relationshipMetadata */
         $relationshipMetadata = $this->hateoasMetadataFactory->getMetadataForClass(get_class($object));
+
+        $relationshipId = $this->getId($relationshipMetadata, $object);
 
         // contains the relations type and id
         $relationshipDataArray = $this->getRelationshipDataArray($relationshipMetadata, $relationshipId);
@@ -259,6 +258,19 @@ class JsonEventSubscriber implements EventSubscriberInterface
         }
 
         return $array;
+    }
+
+    /**
+     * Get the real ID of the given object by it's metadata
+     *
+     * @param ClassMetadata $classMetadata
+     * @param               $object
+     * @return mixed
+     */
+    protected function getId(ClassMetadata $classMetadata, $object)
+    {
+        $propertyAccessor = PropertyAccess::createPropertyAccessor();
+        return $propertyAccessor->getValue($object, $classMetadata->getIdField());
     }
 
     /**

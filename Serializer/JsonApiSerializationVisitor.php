@@ -15,22 +15,37 @@ use JMS\Serializer\Context;
 use JMS\Serializer\JsonSerializationVisitor;
 use JMS\Serializer\Metadata\ClassMetadata;
 use JMS\Serializer\Naming\PropertyNamingStrategyInterface;
+use Metadata\MetadataFactoryInterface;
+use Mango\Bundle\JsonApiBundle\Configuration\Metadata\ClassMetadata as JsonApiClassMetadata;
 
 /**
  * @author Steffen Brem <steffenbrem@gmail.com>
  */
 class JsonApiSerializationVisitor extends JsonSerializationVisitor
 {
+    /**
+     * @var MetadataFactoryInterface
+     */
+    protected $metadataFactory;
+
+    /**
+     * @var bool
+     */
     protected $showVersionInfo;
 
     /**
      * @param PropertyNamingStrategyInterface $propertyNamingStrategy
+     * @param MetadataFactoryInterface        $metadataFactory
      * @param                                 $showVersionInfo
      */
-    public function __construct(PropertyNamingStrategyInterface $propertyNamingStrategy, $showVersionInfo)
+    public function __construct(
+        PropertyNamingStrategyInterface $propertyNamingStrategy,
+        MetadataFactoryInterface $metadataFactory,
+        $showVersionInfo)
     {
         parent::__construct($propertyNamingStrategy);
 
+        $this->metadataFactory = $metadataFactory;
         $this->showVersionInfo = $showVersionInfo;
     }
 
@@ -100,6 +115,10 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
      */
     public function endVisitingObject(ClassMetadata $metadata, $data, array $type, Context $context)
     {
+        /** @var JsonApiClassMetadata $jsonApiMetadata */
+        $jsonApiMetadata = $this->metadataFactory->getMetadataForClass(get_class($data));
+        $idField = $jsonApiMetadata->getIdField();
+
         $rs = parent::endVisitingObject($metadata, $data, $type, $context);
 
         if (empty($rs)) {
@@ -118,13 +137,13 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
             $result['type'] = $rs['type'];
         }
 
-        if (isset($rs['id'])) {
-            $result['id'] = $rs['id'];
+        if (isset($rs[$idField])) {
+            $result['id'] = $rs[$idField];
         }
 
-        $result['attributes'] = array_filter($rs, function ($key) {
+        $result['attributes'] = array_filter($rs, function ($key) use ($idField) {
             switch ($key) {
-                case 'id':
+                case $idField:
                 case 'type':
                 case 'relationships':
                 case 'links':
