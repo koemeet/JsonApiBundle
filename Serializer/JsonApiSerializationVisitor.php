@@ -14,12 +14,26 @@ namespace Mango\Bundle\JsonApiBundle\Serializer;
 use JMS\Serializer\Context;
 use JMS\Serializer\JsonSerializationVisitor;
 use JMS\Serializer\Metadata\ClassMetadata;
+use JMS\Serializer\Naming\PropertyNamingStrategyInterface;
 
 /**
  * @author Steffen Brem <steffenbrem@gmail.com>
  */
 class JsonApiSerializationVisitor extends JsonSerializationVisitor
 {
+    protected $showVersionInfo;
+
+    /**
+     * @param PropertyNamingStrategyInterface $propertyNamingStrategy
+     * @param                                 $showVersionInfo
+     */
+    public function __construct(PropertyNamingStrategyInterface $propertyNamingStrategy, $showVersionInfo)
+    {
+        parent::__construct($propertyNamingStrategy);
+
+        $this->showVersionInfo = $showVersionInfo;
+    }
+
     /**
      * {@inheritdoc}
      */
@@ -54,6 +68,12 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
             });
 
             $root = array();
+
+            if ($this->showVersionInfo) {
+                $root['jsonapi'] = array(
+                    'version' => '1.0'
+                );
+            }
 
             if ($meta) {
                 $root['meta'] = $meta;

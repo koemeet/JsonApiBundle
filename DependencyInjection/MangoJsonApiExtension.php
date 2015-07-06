@@ -39,6 +39,7 @@ class MangoJsonApiExtension extends Extension
             }
         }
 
+        $container->setParameter('json_api.show_version_info', $config['show_version_info']);
         $container->setParameter('json_api.pagination', array(
             'limit' => $config['pagination']['limit']
         ));
