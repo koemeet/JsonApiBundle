@@ -76,3 +76,13 @@ use Mango\Bundle\JsonApiBundle\Configuration\Annotation as JsonApi;
 | includeByDefault      | No        | boolean   | This will include (sideload) the relationship with it's primary resource |
 | showSelfLink          | No        | boolean   | Add `self` link of the relationship |
 | showRelatedLink       | No        | boolean   | Add `related` link of the relationship |
+
+## Configuration Reference
+```yaml
+# app/config/config.yml
+
+mango_json_api:
+    show_version_info: true
+    pagination:
+        limit: 10
+```
