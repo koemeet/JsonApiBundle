@@ -17,7 +17,7 @@
     "require": {
         "symfony/framework-bundle": "~2.2",
         "jms/metadata": "~1.5",
-        "jms/serializer-bundle": "~1.0",
+        "jms/serializer-bundle": "~0.13",
         "pagerfanta/pagerfanta": "~1.0"
     },
     "require-dev": {
