@@ -6,6 +6,7 @@
 
     <parameters>
         <parameter key="json_api.metadata.annotation_driver.class">Mango\Bundle\JsonApiBundle\Configuration\Metadata\Driver\AnnotationDriver</parameter>
+        <parameter key="json_api.metadata.yaml_driver.class">Mango\Bundle\JsonApiBundle\Configuration\Metadata\Driver\YamlDriver</parameter>
     </parameters>
 
     <services>
@@ -14,8 +15,13 @@
             <argument type="service" id="annotations.reader"/>
         </service>
 
+        <service id="json_api.metadata.yaml_driver" class="%json_api.metadata.yaml_driver.class%">
+            <argument type="service" id="jms_serializer.metadata.file_locator" />
+        </service>
+
         <service id="json_api.metadata.chain_driver" class="%jms_serializer.metadata.chain_driver.class%" public="false">
             <argument type="collection">
+                <argument type="service" id="json_api.metadata.yaml_driver" />
                 <argument type="service" id="json_api.metadata.annotation_driver"/>
             </argument>
         </service>

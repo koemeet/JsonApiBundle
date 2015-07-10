@@ -15,14 +15,12 @@ use JMS\Serializer\Context;
 use JMS\Serializer\EventDispatcher\Events;
 use JMS\Serializer\EventDispatcher\EventSubscriberInterface;
 use JMS\Serializer\EventDispatcher\ObjectEvent;
-use JMS\Serializer\EventDispatcher\PreSerializeEvent;
 use JMS\Serializer\Naming\PropertyNamingStrategyInterface;
 use JMS\Serializer\VisitorInterface;
 use Mango\Bundle\JsonApiBundle\Configuration\Metadata\ClassMetadata;
 use Mango\Bundle\JsonApiBundle\Configuration\Relationship;
 use Mango\Bundle\JsonApiBundle\Serializer\JsonApiSerializationVisitor;
 use Metadata\MetadataFactoryInterface;
-use Pagerfanta\Pagerfanta;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\PropertyAccess\PropertyAccess;
 
@@ -101,15 +99,23 @@ class JsonEventSubscriber implements EventSubscriberInterface
         /** @var ClassMetadata $metadata */
         $metadata = $this->hateoasMetadataFactory->getMetadataForClass(get_class($object));
 
+        // if it has no json api metadata, skip it
+        if (null === $metadata) {
+            return;
+        }
+
         /** @var \JMS\Serializer\Metadata\ClassMetadata $jmsMetadata */
         $jmsMetadata = $this->jmsMetadataFactory->getMetadataForClass(get_class($object));
 
         $propertyAccessor = PropertyAccess::createPropertyAccessor();
 
         if ($visitor instanceof JsonApiSerializationVisitor) {
-            $this->prependData($visitor, array(
-                'type' => $metadata->getResource()->getType()
-            ));
+            $this->prependData(
+                $visitor,
+                $this->getRelationshipDataArray(
+                    $metadata, $this->getId($metadata, $object)
+                )
+            );
 
             $relationships = array();
 
@@ -226,6 +232,10 @@ class JsonEventSubscriber implements EventSubscriberInterface
 
         /** @var ClassMetadata $relationshipMetadata */
         $relationshipMetadata = $this->hateoasMetadataFactory->getMetadataForClass(get_class($object));
+
+        if (null === $relationshipMetadata) {
+            throw new \RuntimeException(sprintf('Metadata for class %s not found. Did you define at as a JSON-API resource?', get_class($object)));
+        }
 
         $relationshipId = $this->getId($relationshipMetadata, $object);
 

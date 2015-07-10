@@ -115,11 +115,16 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
      */
     public function endVisitingObject(ClassMetadata $metadata, $data, array $type, Context $context)
     {
+        $rs = parent::endVisitingObject($metadata, $data, $type, $context);
+
         /** @var JsonApiClassMetadata $jsonApiMetadata */
         $jsonApiMetadata = $this->metadataFactory->getMetadataForClass(get_class($data));
-        $idField = $jsonApiMetadata->getIdField();
 
-        $rs = parent::endVisitingObject($metadata, $data, $type, $context);
+        if (null === $jsonApiMetadata) {
+            return $rs;
+        }
+
+        $idField = $jsonApiMetadata->getIdField();
 
         if (empty($rs)) {
             $rs = new \ArrayObject();

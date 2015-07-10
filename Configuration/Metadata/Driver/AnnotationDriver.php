@@ -18,6 +18,7 @@ use Mango\Bundle\JsonApiBundle\Configuration\Link;
 use Mango\Bundle\JsonApiBundle\Configuration\Metadata\ClassMetadata;
 use Mango\Bundle\JsonApiBundle\Configuration\Relationship;
 use Mango\Bundle\JsonApiBundle\Configuration\Resource;
+use Mango\Bundle\JsonApiBundle\Util\String;
 use Metadata\Driver\DriverInterface;
 
 /**
@@ -56,7 +57,7 @@ class AnnotationDriver implements DriverInterface
             if ($annotation instanceof Annotation\Resource) {
                 // auto transform type from class name
                 if (!$annotation->type) {
-                    $annotation->type = str_replace('_', '-', Inflector::tableize(Inflector::pluralize($class->getShortName())));
+                    $annotation->type = String::dasherize($class->getShortName());
                 }
                 $classMetadata->setResource(new Resource($annotation->type, $annotation->showLinkSelf));
             }

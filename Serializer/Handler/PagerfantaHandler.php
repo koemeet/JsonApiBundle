@@ -76,7 +76,13 @@ class PagerfantaHandler implements SubscribingHandlerInterface
         $pagerfanta->setMaxPerPage($request->get('page[limit]', $this->paginationOptions['limit'], true));
         $pagerfanta->setCurrentPage($request->get('page[number]', 1, true));
 
-        $visitor->getNavigator()->accept($pagerfanta->getCurrentPageResults(), null, $context);
+        $results = $pagerfanta->getCurrentPageResults();
+
+        if ($results instanceof \ArrayIterator) {
+            $results = $results->getArrayCopy();
+        }
+
+        $data = $context->accept($results);
 
         $root = $visitor->getRoot();
         $root['meta'] = array(
@@ -95,7 +101,7 @@ class PagerfantaHandler implements SubscribingHandlerInterface
 
         $visitor->setRoot($root);
 
-        return $root;
+        return $data;
     }
 
     /**

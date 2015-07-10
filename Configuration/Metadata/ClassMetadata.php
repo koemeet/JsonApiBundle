@@ -65,6 +65,10 @@ class ClassMetadata extends MergeableClassMetadata implements ClassMetadataInter
      */
     public function getIdField()
     {
+        if (null === $this->idField) {
+            return 'id';
+        }
+
         return $this->idField;
     }
 

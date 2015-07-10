@@ -15,6 +15,7 @@ use JMS\Serializer\Context;
 use JMS\Serializer\Exclusion\ExclusionStrategyInterface;
 use JMS\Serializer\Metadata\ClassMetadata;
 use JMS\Serializer\Metadata\PropertyMetadata;
+use JMS\Serializer\SerializationContext;
 use Metadata\MetadataFactoryInterface;
 
 /**
@@ -40,7 +41,13 @@ class RelationshipExclusionStrategy implements ExclusionStrategyInterface
      */
     public function shouldSkipClass(ClassMetadata $metadata, Context $context)
     {
-        return false;
+        $jsonApiMetadata = $this->metadataFactory->getMetadataForClass($metadata->name);
+
+        if ($jsonApiMetadata) {
+            return false;
+        }
+
+        return true;
     }
 
     /**
@@ -48,17 +55,21 @@ class RelationshipExclusionStrategy implements ExclusionStrategyInterface
      */
     public function shouldSkipProperty(PropertyMetadata $property, Context $context)
     {
-        /** @var \Mango\Bundle\JsonApiBundle\Configuration\Metadata\ClassMetadata $metadata */
-        $metadata = $this->metadataFactory->getMetadataForClass($property->class);
-
-        if (!$metadata) {
-            throw new \RuntimeException(sprintf('Could not get metadata for class "%s". Did you define it as a Resource?', $property->class));
+        if (!$context instanceof SerializationContext) {
+            return false;
         }
 
-        foreach ($metadata->getRelationships() as $relationship) {
-            if ($property->name === $relationship->getName()) {
-                return true;
+        /** @var \Mango\Bundle\JsonApiBundle\Configuration\Metadata\ClassMetadata $metadata */
+        $metadata = $this->metadataFactory->getMetadataForClass(get_class($context->getObject()));
+
+        if ($metadata) {
+            foreach ($metadata->getRelationships() as $relationship) {
+                if ($property->name === $relationship->getName()) {
+                    return true;
+                }
             }
         }
+
+        return false;
     }
 }
