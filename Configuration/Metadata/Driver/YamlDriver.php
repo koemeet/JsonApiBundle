@@ -35,24 +35,26 @@ class YamlDriver extends AbstractFileDriver
 
         $config = $config[$name];
 
-        $classMetadata = new ClassMetadata($name);
-        $classMetadata->fileResources[] = $file;
-        $classMetadata->fileResources[] = $class->getFileName();
+        if (isset($config['resource'])) {
+            $classMetadata = new ClassMetadata($name);
+            $classMetadata->fileResources[] = $file;
+            $classMetadata->fileResources[] = $class->getFileName();
 
-        $classMetadata->setResource($this->parseResource($config, $class));
+            $classMetadata->setResource($this->parseResource($config, $class));
 
-        if (isset($config['relations'])) {
-            foreach ($config['relations'] as $name => $relation) {
-                $classMetadata->addRelationship(new Relationship(
-                    $name,
-                    (isset($relation['includeByDefault'])) ? $relation['includeByDefault'] : false,
-                    (isset($relation['showLinkSelf'])) ? $relation['showLinkSelf'] : false,
-                    (isset($relation['showLinkRelated'])) ? $relation['showLinkRelated'] : false
-                ));
+            if (isset($config['relations'])) {
+                foreach ($config['relations'] as $name => $relation) {
+                    $classMetadata->addRelationship(new Relationship(
+                        $name,
+                        (isset($relation['includeByDefault'])) ? $relation['includeByDefault'] : false,
+                        (isset($relation['showLinkSelf'])) ? $relation['showLinkSelf'] : false,
+                        (isset($relation['showLinkRelated'])) ? $relation['showLinkRelated'] : false
+                    ));
+                }
             }
-        }
 
-        return $classMetadata;
+            return $classMetadata;
+        }
     }
 
     /**
