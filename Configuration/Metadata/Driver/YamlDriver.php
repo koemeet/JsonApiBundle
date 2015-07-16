@@ -13,7 +13,7 @@ namespace Mango\Bundle\JsonApiBundle\Configuration\Metadata\Driver;
 use Mango\Bundle\JsonApiBundle\Configuration\Metadata\ClassMetadata;
 use Mango\Bundle\JsonApiBundle\Configuration\Relationship;
 use Mango\Bundle\JsonApiBundle\Configuration\Resource;
-use Mango\Bundle\JsonApiBundle\Util\String;
+use Mango\Bundle\JsonApiBundle\Util\StringUtil;
 use Metadata\Driver\AbstractFileDriver;
 use Symfony\Component\Yaml\Yaml;
 
@@ -77,6 +77,6 @@ class YamlDriver extends AbstractFileDriver
                 return new Resource($config['resource']['type'], true);
             }
         }
-        return new Resource(String::dasherize($class->getShortName()), true);
+        return new Resource(StringUtil::dasherize($class->getShortName()), true);
     }
 }

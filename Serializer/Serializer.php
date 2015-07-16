@@ -38,6 +38,10 @@ class Serializer extends BaseSerializer
      */
     public function serialize($data, $format, SerializationContext $context = null)
     {
+        if (null === $context) {
+            $context = new SerializationContext();
+        }
+
         if ($format === 'json') {
             foreach ($this->exclusionStrategies as $exclusionStrategy) {
                 $context->addExclusionStrategy($exclusionStrategy);
