@@ -84,3 +84,146 @@ use Mango\Bundle\JsonApiBundle\Configuration\Annotation as JsonApi;
 mango_json_api:
     show_version_info: true
 ```
+
+## Example response
+> GET /api/channels
+
+```json
+{
+    "jsonapi": {
+        "version": "1.0"
+    },
+    "meta": {
+        "page": 1,
+        "limit": 10,
+        "pages": 1,
+        "total": 4
+    },
+    "data": [
+        {
+            "type": "channels",
+            "id": 5,
+            "attributes": {
+                "code": "WEB-UK",
+                "name": "UK Webstore",
+                "description": null,
+                "url": "localhost",
+                "color": "Blue",
+                "enabled": true,
+                "created-at": "2015-07-16T12:11:50+0000",
+                "updated-at": "2015-07-16T12:11:50+0000",
+                "locales": [],
+                "currencies": [],
+                "payment-methods": [],
+                "shipping-methods": [],
+                "taxonomies": []
+            },
+            "relationships": {
+                "workspace": {
+                    "data": {
+                        "type": "workspaces",
+                        "id": 18
+                    }
+                }
+            }
+        },
+        {
+            "type": "channels",
+            "id": 6,
+            "attributes": {
+                "code": "WEB-NL",
+                "name": "Dutch Webstore",
+                "description": null,
+                "url": null,
+                "color": "Orange",
+                "enabled": true,
+                "created-at": "2015-07-16T12:11:50+0000",
+                "updated-at": "2015-07-16T12:11:50+0000",
+                "locales": [],
+                "currencies": [],
+                "payment-methods": [],
+                "shipping-methods": [],
+                "taxonomies": []
+            },
+            "relationships": {
+                "workspace": {
+                    "data": {
+                        "type": "workspaces",
+                        "id": 18
+                    }
+                }
+            }
+        },
+        {
+            "type": "channels",
+            "id": 7,
+            "attributes": {
+                "code": "WEB-US",
+                "name": "United States Webstore",
+                "description": null,
+                "url": null,
+                "color": "Orange",
+                "enabled": true,
+                "created-at": "2015-07-16T12:11:50+0000",
+                "updated-at": "2015-07-16T12:11:50+0000",
+                "locales": [],
+                "currencies": [],
+                "payment-methods": [],
+                "shipping-methods": [],
+                "taxonomies": []
+            },
+            "relationships": {
+                "workspace": {
+                    "data": {
+                        "type": "workspaces",
+                        "id": 18
+                    }
+                }
+            }
+        },
+        {
+            "type": "channels",
+            "id": 8,
+            "attributes": {
+                "code": "MOBILE",
+                "name": "Mobile Store",
+                "description": null,
+                "url": null,
+                "color": "Orange",
+                "enabled": true,
+                "created-at": "2015-07-16T12:11:50+0000",
+                "updated-at": "2015-07-16T12:11:50+0000",
+                "locales": [],
+                "currencies": [],
+                "payment-methods": [],
+                "shipping-methods": [],
+                "taxonomies": []
+            },
+            "relationships": {
+                "workspace": {
+                    "data": {
+                        "type": "workspaces",
+                        "id": 18
+                    }
+                }
+            }
+        }
+    ],
+    "included": [
+        {
+            "type": "workspaces",
+            "id": 18,
+            "attributes": {
+                "name": "First Workspace"
+            },
+            "relationships": {
+                "channels": {
+                    "links": {
+                        "related": "/workspaces/18/channels"
+                    }
+                }
+            }
+        }
+    ]
+}
+```
