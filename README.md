@@ -20,19 +20,19 @@ This will define your class as a JSON-API resource, and you can optionally set i
 use Mango\Bundle\JsonApiBundle\Configuration\Annotation as JsonApi;
 
 /**
- * @JsonApi\Resource(type="posts", showSelfLink=false)
+ * @JsonApi\Resource(type="posts", showSelfLink=true)
  */
  class Post 
  {
   // ...
  }
 ```
-| Property  | Required  | Content   | Info  |
-| ---       | ---       | ---       | ---   |
-| type      | No        | string    | If not present, it will use the dasherized classname as it's type |
-| showLinkSelf | No     | boolean   | Add `self` link to the resource |
+| Property      | Default | Required  | Content   | Info  |
+| ---           | ---     | ---       | ---       | ---   |
+| type          | ~       | No        | string    | If not present, it will use the dasherized classname as it's type |
+| showLinkSelf  | true    | No        | boolean   | Add `self` link to the resource |
 
-### @Id
+### @Id (optional, it defaults to `id`)
 This will define the property that will be used as the `id` of a resource. It needs to be unique for every resource of the same type.
 > This annotation can be defined on a property.
 
@@ -47,7 +47,7 @@ use Mango\Bundle\JsonApiBundle\Configuration\Annotation as JsonApi;
     /**
      * @JsonApi\Id
      */
-    protected $id;
+    protected $uuid;
  }
 ```
 
@@ -71,11 +71,12 @@ use Mango\Bundle\JsonApiBundle\Configuration\Annotation as JsonApi;
     protected $comments;
  }
 ```
-| Property              | Required  | Content   | Info  |
-| ---                   | ---       | ---       | ---   |
-| includeByDefault      | No        | boolean   | This will include (sideload) the relationship with it's primary resource |
-| showSelfLink          | No        | boolean   | Add `self` link of the relationship |
-| showRelatedLink       | No        | boolean   | Add `related` link of the relationship |
+| Property              | Default | Required  | Content   | Info  |
+| ---                   | ---     | ---       | ---       | ---   |
+| includeByDefault      | false   | No        | boolean   | This will include (sideload) the relationship with it's primary resource |
+| showData              | false   | No        | boolean   | Shows `data`, which consists of ids of the relationship data |
+| showSelfLink          | false   | No        | boolean   | Add `self` link of the relationship |
+| showRelatedLink       | false   | No        | boolean   | Add `related` link of the relationship |
 
 ## Configuration Reference
 ```yaml

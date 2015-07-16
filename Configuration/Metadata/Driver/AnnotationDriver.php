@@ -74,6 +74,7 @@ class AnnotationDriver implements DriverInterface
                     $classMetadata->addRelationship(new Relationship(
                         $property->getName(),
                         $annotation->includeByDefault,
+                        $annotation->showData,
                         $annotation->showLinkSelf,
                         $annotation->showLinkRelated
                     ));

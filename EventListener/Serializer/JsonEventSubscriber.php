@@ -124,11 +124,6 @@ class JsonEventSubscriber implements EventSubscriberInterface
 
                 $relationshipObject = $propertyAccessor->getValue($object, $relationshipPropertyName);
 
-                // if there is no data for this relationship, then we can skip it
-                if ($this->isEmpty($relationshipObject)) {
-                    continue;
-                }
-
                 // JMS Serializer support
                 if (!isset($jmsMetadata->propertyMetadata[$relationshipPropertyName])) {
                     continue;
@@ -162,9 +157,12 @@ class JsonEventSubscriber implements EventSubscriberInterface
                     }
                 }
 
-                if ($relationship->isIncludedByDefault()) {
+                // We show the relationships data if it is included or if there are no links. We do this
+                // because there MUST be links or data (see: http://jsonapi.org/format/#document-resource-object-relationships).
+                if ($relationship->isIncludedByDefault() || !$links || $relationship->getShowData()) {
                     // hasMany relationship
                     if ($this->isIteratable($relationshipObject)) {
+                        $relationshipData['data'] = array();
                         foreach ($relationshipObject as $item) {
                             $relationshipData['data'][] = $this->processRelationship($item, $relationship, $context);
                         }
@@ -180,7 +178,7 @@ class JsonEventSubscriber implements EventSubscriberInterface
             }
 
             // TODO: Improve link handling
-            if ($metadata->getResource()->getShowLinkSelf()) {
+            if (true === $metadata->getResource()->getShowLinkSelf()) {
                 $visitor->addData('links', array(
                     'self' => '/' . $metadata->getResource()->getType() . '/' . $propertyAccessor->getValue($object, 'id')
                 ));
@@ -194,6 +192,7 @@ class JsonEventSubscriber implements EventSubscriberInterface
 
     /**
      * @param Relationship $relationship
+     *
      * @return array
      */
     protected function processRelationshipLinks($primaryObject, Relationship $relationship, $relationshipPayloadKey)
@@ -222,6 +221,7 @@ class JsonEventSubscriber implements EventSubscriberInterface
      * @param              $object
      * @param Relationship $relationship
      * @param Context      $context
+     *
      * @return array
      */
     protected function processRelationship($object, Relationship $relationship, Context $context)
@@ -255,6 +255,7 @@ class JsonEventSubscriber implements EventSubscriberInterface
 
     /**
      * @param $include
+     *
      * @return array
      */
     protected function parseInclude($include)
@@ -275,6 +276,7 @@ class JsonEventSubscriber implements EventSubscriberInterface
      *
      * @param ClassMetadata $classMetadata
      * @param               $object
+     *
      * @return mixed
      */
     protected function getId(ClassMetadata $classMetadata, $object)
@@ -286,6 +288,7 @@ class JsonEventSubscriber implements EventSubscriberInterface
     /**
      * @param array $resources
      * @param int   $index
+     *
      * @return array
      */
     protected function parseIncludeResources(array $resources, $index = 0)
@@ -304,6 +307,7 @@ class JsonEventSubscriber implements EventSubscriberInterface
     /**
      * @param ClassMetadata $classMetadata
      * @param               $id
+     *
      * @return array
      */
     protected function getRelationshipDataArray(ClassMetadata $classMetadata, $id)
@@ -318,6 +322,7 @@ class JsonEventSubscriber implements EventSubscriberInterface
      * Checks if an object is really empty, also if it is iteratable and has zero items.
      *
      * @param $object
+     *
      * @return bool
      */
     protected function isEmpty($object)
@@ -327,6 +332,7 @@ class JsonEventSubscriber implements EventSubscriberInterface
 
     /**
      * @param $data
+     *
      * @return bool
      */
     protected function isIteratable($data)
@@ -338,6 +344,7 @@ class JsonEventSubscriber implements EventSubscriberInterface
     /**
      * @param ClassMetadata $classMetadata
      * @param               $id
+     *
      * @return bool
      */
     protected function canIncludeRelationship(ClassMetadata $classMetadata, $id)

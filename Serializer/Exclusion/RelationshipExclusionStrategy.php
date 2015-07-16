@@ -43,11 +43,14 @@ class RelationshipExclusionStrategy implements ExclusionStrategyInterface
     {
         $jsonApiMetadata = $this->metadataFactory->getMetadataForClass($metadata->name);
 
-        if ($jsonApiMetadata) {
-            return false;
+        if (null === $jsonApiMetadata) {
+            throw new \RuntimeException(sprintf(
+                'Trying to serialize class %s, but it is not defined as a JSON-API resource.',
+                $metadata->name
+            ));
         }
 
-        return true;
+        return false;
     }
 
     /**

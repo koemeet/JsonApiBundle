@@ -46,9 +46,10 @@ class YamlDriver extends AbstractFileDriver
                 foreach ($config['relations'] as $name => $relation) {
                     $classMetadata->addRelationship(new Relationship(
                         $name,
-                        (isset($relation['includeByDefault'])) ? $relation['includeByDefault'] : false,
-                        (isset($relation['showLinkSelf'])) ? $relation['showLinkSelf'] : false,
-                        (isset($relation['showLinkRelated'])) ? $relation['showLinkRelated'] : false
+                        (isset($relation['includeByDefault'])) ? $relation['includeByDefault'] : null,
+                        (isset($relation['showData'])) ? $relation['showData'] : null,
+                        (isset($relation['showLinkSelf'])) ? $relation['showLinkSelf'] : null,
+                        (isset($relation['showLinkRelated'])) ? $relation['showLinkRelated'] : null
                     ));
                 }
             }
@@ -68,14 +69,18 @@ class YamlDriver extends AbstractFileDriver
     /**
      * @param array            $config
      * @param \ReflectionClass $class
+     *
      * @return Resource
      */
     protected function parseResource(array $config, \ReflectionClass $class)
     {
         if (isset($config['resource'])) {
-            if (isset($config['resource']['type'])) {
-                return new Resource($config['resource']['type'], true);
-            }
+            $resource = $config['resource'];
+            return new Resource(
+                isset($resource['type']) ? $resource['type'] : null,
+                isset($resource['showLinkSelf']) ? $resource['showLinkSelf'] : null
+            );
+
         }
         return new Resource(StringUtil::dasherize($class->getShortName()), true);
     }

@@ -24,15 +24,19 @@ class Resource
     /**
      * @var bool
      */
-    private $showLinkSelf;
+    private $showLinkSelf = true;
 
     /**
-     * @param string $type
+     * @param $type
+     * @param $showLinkSelf
      */
-    public function __construct($type, $showLinkSelf)
+    public function __construct($type, $showLinkSelf = null)
     {
         $this->type = $type;
-        $this->showLinkSelf = $showLinkSelf;
+
+        if (null !== $showLinkSelf) {
+            $this->showLinkSelf = $showLinkSelf;
+        }
     }
 
     /**
@@ -48,6 +52,6 @@ class Resource
      */
     public function getShowLinkSelf()
     {
-        return $this->showLinkSelf;
+        return (bool)$this->showLinkSelf;
     }
 }

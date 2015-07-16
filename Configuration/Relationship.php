@@ -9,6 +9,7 @@
  */
 
 namespace Mango\Bundle\JsonApiBundle\Configuration;
+
 use Doctrine\Common\Collections\Collection;
 
 /**
@@ -24,30 +25,49 @@ class Relationship
     /**
      * @var bool
      */
-    protected $includedByDefault;
+    protected $includedByDefault = false;
 
     /**
      * @var bool
      */
-    protected $showLinkSelf;
+    protected $showData = false;
 
     /**
      * @var bool
      */
-    protected $showLinkRelated;
+    protected $showLinkSelf = false;
+
+    /**
+     * @var bool
+     */
+    protected $showLinkRelated = false;
 
     /**
      * @param            $name
      * @param bool|false $includedByDefault
+     * @param bool|false $showData
      * @param bool|false $showLinkSelf
      * @param bool|false $showLinkRelated
      */
-    public function __construct($name, $includedByDefault = false, $showLinkSelf = false, $showLinkRelated = false)
+    public function __construct($name, $includedByDefault = null, $showData = null, $showLinkSelf = null, $showLinkRelated = null)
     {
         $this->name = $name;
-        $this->includedByDefault = $includedByDefault;
-        $this->showLinkSelf = $showLinkSelf;
-        $this->showLinkRelated = $showLinkRelated;
+
+        if (null !== $includedByDefault) {
+            $this->includedByDefault = $includedByDefault;
+        }
+
+        if (null !== $showData) {
+            $this->showData = $showData;
+        }
+
+        if (null !== $showLinkSelf) {
+            $this->showLinkSelf = $showLinkSelf;
+        }
+
+        if (null !== $showLinkRelated) {
+            $this->showLinkRelated = $showLinkRelated;
+        }
     }
 
     /**
@@ -72,6 +92,22 @@ class Relationship
     public function setIncludedByDefault($bool)
     {
         $this->includedByDefault = $bool;
+    }
+
+    /**
+     * @return boolean
+     */
+    public function getShowData()
+    {
+        return $this->showData;
+    }
+
+    /**
+     * @param boolean $showData
+     */
+    public function setShowData($showData)
+    {
+        $this->showData = $showData;
     }
 
     /**
