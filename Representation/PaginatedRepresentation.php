@@ -9,10 +9,17 @@
  * file that was distributed with this source code.
  */
 
+namespace Mango\Bundle\JsonApiBundle\Representation;
+
+/**
+ * PaginatedRepresentation
+ *
+ * @author Steffen Brem <steffenbrem@gmail.com>
+ */
 class PaginatedRepresentation
 {
     /**
-     * @var array|Traversable
+     * @var array
      */
     protected $items;
 

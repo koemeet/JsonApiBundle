@@ -83,6 +83,4 @@ use Mango\Bundle\JsonApiBundle\Configuration\Annotation as JsonApi;
 
 mango_json_api:
     show_version_info: true
-    pagination:
-        limit: 10
 ```

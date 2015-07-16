@@ -23,12 +23,6 @@ class Configuration implements ConfigurationInterface
         $rootNode
             ->children()
                 ->booleanNode('show_version_info')->defaultValue(true)->end()
-                ->arrayNode('pagination')
-                    ->addDefaultsIfNotSet()
-                    ->children()
-                        ->scalarNode('limit')->defaultValue('10')->end()
-                    ->end()
-                ->end()
             ->end()
         ;
 
