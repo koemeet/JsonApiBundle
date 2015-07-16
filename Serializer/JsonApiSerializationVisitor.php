@@ -50,38 +50,56 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
     }
 
     /**
+     * @param mixed $data
+     *
+     * @return array
+     */
+    public function prepare($data)
+    {
+        return array(
+            'data' => $data
+        );
+    }
+
+    /**
      * {@inheritdoc}
      */
     public function getResult()
     {
-        $result = $this->getRoot();
+        $root = $this->getRoot();
 
-        if ($result) {
-            $meta = null;
-            $included = null;
-            $links = null;
+        if ($root) {
+            $data = array();
+            $meta = array();
+            $included = array();
+            $links = array();
 
-            // strip out included part, since it does not belong to the primary resource data
-            if (isset($result['included'])) {
-                $included = $result['included'];
-                unset($result['included']);
+            if (isset($root['data'])) {
+                $data = $root['data'];
             }
 
-            if (isset($result['meta'])) {
-                $meta = $result['meta'];
-                unset($result['meta']);
+            if (isset($root['included'])) {
+                $included = $root['included'];
             }
 
-            if (isset($result['links'])) {
-                $links = $result['links'];
-                unset($result['links']);
+            if (isset($root['meta'])) {
+                $meta = $root['meta'];
+            }
+
+            if (isset($root['links'])) {
+                $links = $root['links'];
             }
 
             // filter out duplicate primary resource objects that are in `included`
-            $included = array_udiff((array)$included, $result, function ($a, $b) {
-                return strcmp($a['type'] . $a['id'], $b['type'] . $b['id']);
-            });
+            $included = array_udiff(
+                (array)$included,
+                (isset($data['type'])) ? array($data) : $data,
+                function ($a, $b) {
+                    return strcmp($a['type'] . $a['id'], $b['type'] . $b['id']);
+                }
+            );
 
+            // start building new root array
             $root = array();
 
             if ($this->showVersionInfo) {
@@ -98,7 +116,9 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
                 $root['links'] = $links;
             }
 
-            $root['data'] = array_values($result);
+            if ($data) {
+                $root['data'] = $data;
+            }
 
             if ($included) {
                 $root['included'] = array_values($included);
