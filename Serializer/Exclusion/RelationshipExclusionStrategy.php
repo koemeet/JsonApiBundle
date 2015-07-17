@@ -45,7 +45,7 @@ class RelationshipExclusionStrategy implements ExclusionStrategyInterface
 
         if (null === $jsonApiMetadata) {
             throw new \RuntimeException(sprintf(
-                'Trying to serialize class %s, but it is not defined as a JSON-API resource.',
+                'Trying to serialize class %s, but it is not defined as a JSON-API resource. Either exclude it with the JMS Exclude mapping or map it as a Resource.',
                 $metadata->name
             ));
         }
