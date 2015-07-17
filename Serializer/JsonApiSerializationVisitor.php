@@ -116,9 +116,8 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
                 $root['links'] = $links;
             }
 
-            if ($data) {
-                $root['data'] = $data;
-            }
+            $root['data'] = $data;
+            
 
             if ($included) {
                 $root['included'] = array_values($included);

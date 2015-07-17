@@ -32,6 +32,10 @@ class Resource
      */
     public function __construct($type, $showLinkSelf = null)
     {
+        if (null === $type) {
+            throw new \RuntimeException('A JSON-API resource must have a type defined and cannot be "null".');
+        }
+
         $this->type = $type;
 
         if (null !== $showLinkSelf) {
