@@ -98,4 +98,40 @@ class PaginatedRepresentation
     {
         return $this->total;
     }
+
+    /**
+     * @return bool
+     */
+    public function hasNextPage()
+    {
+        return $this->page < $this->getPages();
+    }
+
+    /**
+     * @return int
+     */
+    public function getNextPage()
+    {
+        if ($this->hasNextPage()) {
+            return $this->page + 1;
+        }
+    }
+
+    /**
+     * @return bool
+     */
+    public function hasPreviousPage()
+    {
+        return $this->page > 1;
+    }
+
+    /**
+     * @return int
+     */
+    public function getPreviousPage()
+    {
+        if ($this->hasPreviousPage()) {
+            return $this->page - 1;
+        }
+    }
 }

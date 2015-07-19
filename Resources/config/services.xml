@@ -28,11 +28,13 @@
 
         <!-- build-in support for pagerfanta -->
         <service id="json_api.serializer.handler.pagerfanta" class="Mango\Bundle\JsonApiBundle\Serializer\Handler\PagerfantaHandler">
+            <argument type="service" id="request_stack" />
             <tag name="jms_serializer.subscribing_handler" />
         </service>
 
         <!-- build-in support for hateoas representations -->
         <service id="json_api.serializer.handler.hateoas" class="Mango\Bundle\JsonApiBundle\Serializer\Handler\HateoasRepresentationHandler">
+            <argument type="service" id="request_stack" />
             <tag name="jms_serializer.subscribing_handler" />
         </service>
         

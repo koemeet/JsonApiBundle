@@ -11,6 +11,7 @@
 
 namespace Mango\Bundle\JsonApiBundle\EventListener\Serializer;
 
+use Doctrine\Common\Util\ClassUtils;
 use JMS\Serializer\Context;
 use JMS\Serializer\EventDispatcher\Events;
 use JMS\Serializer\EventDispatcher\EventSubscriberInterface;
@@ -63,7 +64,9 @@ class JsonEventSubscriber implements EventSubscriberInterface
 
     /**
      * @param MetadataFactoryInterface        $hateoasMetadataFactory
+     * @param MetadataFactoryInterface        $jmsMetadataFactory
      * @param PropertyNamingStrategyInterface $namingStrategy
+     * @param RequestStack                    $requestStack
      */
     public function __construct(MetadataFactoryInterface $hateoasMetadataFactory,
                                 MetadataFactoryInterface $jmsMetadataFactory,
@@ -226,6 +229,10 @@ class JsonEventSubscriber implements EventSubscriberInterface
      */
     protected function processRelationship($object, Relationship $relationship, Context $context)
     {
+        if (null === $object) {
+            return null;
+        }
+
         if (!is_object($object)) {
             throw new \RuntimeException(sprintf('Cannot process relationship "%s", because it is not an object but a %s.', $relationship->getName(), gettype($object)));
         }
@@ -234,7 +241,10 @@ class JsonEventSubscriber implements EventSubscriberInterface
         $relationshipMetadata = $this->hateoasMetadataFactory->getMetadataForClass(get_class($object));
 
         if (null === $relationshipMetadata) {
-            throw new \RuntimeException(sprintf('Metadata for class %s not found. Did you define at as a JSON-API resource?', get_class($object)));
+            throw new \RuntimeException(sprintf(
+                'Metadata for class %s not found. Did you define at as a JSON-API resource?',
+                ClassUtils::getRealClass(get_class($object))
+            ));
         }
 
         $relationshipId = $this->getId($relationshipMetadata, $object);

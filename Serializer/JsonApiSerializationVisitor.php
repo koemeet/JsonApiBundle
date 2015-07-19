@@ -68,6 +68,11 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
     {
         $root = $this->getRoot();
 
+        // TODO: Error handling
+        if (isset($root['data']) && array_key_exists('errors', $root['data'])) {
+            return parent::getResult();
+        }
+
         if ($root) {
             $data = array();
             $meta = array();

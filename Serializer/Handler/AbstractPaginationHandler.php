@@ -13,6 +13,7 @@ use JMS\Serializer\GraphNavigator;
 use JMS\Serializer\Handler\SubscribingHandlerInterface;
 use Mango\Bundle\JsonApiBundle\Representation\PaginatedRepresentation;
 use Mango\Bundle\JsonApiBundle\Serializer\JsonApiSerializationVisitor;
+use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
  * AbstractPaginationHandler
@@ -21,6 +22,19 @@ use Mango\Bundle\JsonApiBundle\Serializer\JsonApiSerializationVisitor;
  */
 abstract class AbstractPaginationHandler implements SubscribingHandlerInterface
 {
+    /**
+     * @var RequestStack
+     */
+    protected $requestStack;
+
+    /**
+     * @param RequestStack $requestStack
+     */
+    public function __construct(RequestStack $requestStack)
+    {
+        $this->requestStack = $requestStack;
+    }
+
     /**
      * {@inheritdoc}
      */
@@ -82,6 +96,13 @@ abstract class AbstractPaginationHandler implements SubscribingHandlerInterface
             'total' => $representation->getTotal()
         );
 
+        $root['links'] = array(
+            'first' => $this->getUriForPage(1),
+            'last' => $this->getUriForPage($representation->getPages()),
+            'next' => $representation->hasNextPage() ? $this->getUriForPage($representation->getNextPage()) : null,
+            'previous' => $representation->hasPreviousPage() ? $this->getUriForPage($representation->getPreviousPage()) : null
+        );
+
         $visitor->setRoot($root);
 
         return $data;
@@ -94,11 +115,8 @@ abstract class AbstractPaginationHandler implements SubscribingHandlerInterface
      */
     protected function getUriForPage($page)
     {
-        $request = clone $this->requestStack->getCurrentRequest();
-
-        $queryPage = $request->query->get('page');
-        $queryPage['number'] = $page;
-        $request->query->set('page', $queryPage);
+        $request = $this->requestStack->getCurrentRequest();
+        $request->query->set('page', $page);
 
         $query = urldecode(http_build_query($request->query->all()));
 
