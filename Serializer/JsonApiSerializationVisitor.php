@@ -33,6 +33,8 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
      */
     protected $showVersionInfo;
 
+    protected $isJsonApiDocument = false;
+
     /**
      * @param PropertyNamingStrategyInterface $propertyNamingStrategy
      * @param MetadataFactoryInterface        $metadataFactory
@@ -41,7 +43,8 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
     public function __construct(
         PropertyNamingStrategyInterface $propertyNamingStrategy,
         MetadataFactoryInterface $metadataFactory,
-        $showVersionInfo)
+        $showVersionInfo
+    )
     {
         parent::__construct($propertyNamingStrategy);
 
@@ -56,9 +59,33 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
      */
     public function prepare($data)
     {
-        return array(
-            'data' => $data
-        );
+        // it is a JSON-API document if:
+        //  - it is an object and is a JSON-API resource
+        //  - it is an array containing objects which are JSON-API resources
+        //  - it is empty (we cannot identify it)
+
+        if ($this->isResource($data)) {
+            $this->isJsonApiDocument = true;
+        } else if (is_array($data) || $data instanceof \Traversable) {
+            if (count($data) === 0) {
+                $this->isJsonApiDocument = true;
+            } else {
+                foreach ($data as $item) {
+                    if ($this->isResource($item)) {
+                        $this->isJsonApiDocument = true;
+                        break;
+                    }
+                }
+            }
+        }
+
+        if ($this->isJsonApiDocument) {
+            return [
+                'data' => $data
+            ];
+        }
+
+        return $data;
     }
 
     /**
@@ -66,6 +93,10 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
      */
     public function getResult()
     {
+        if (false === $this->isJsonApiDocument) {
+            return parent::getResult();
+        }
+
         $root = $this->getRoot();
 
         // TODO: Error handling
@@ -74,10 +105,10 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
         }
 
         if ($root) {
-            $data = array();
-            $meta = array();
-            $included = array();
-            $links = array();
+            $data = [];
+            $meta = [];
+            $included = [];
+            $links = [];
 
             if (isset($root['data'])) {
                 $data = $root['data'];
@@ -98,19 +129,19 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
             // filter out duplicate primary resource objects that are in `included`
             $included = array_udiff(
                 (array)$included,
-                (isset($data['type'])) ? array($data) : $data,
+                (isset($data['type'])) ? [$data] : $data,
                 function ($a, $b) {
                     return strcmp($a['type'] . $a['id'], $b['type'] . $b['id']);
                 }
             );
 
             // start building new root array
-            $root = array();
+            $root = [];
 
             if ($this->showVersionInfo) {
-                $root['jsonapi'] = array(
+                $root['jsonapi'] = [
                     'version' => '1.0'
-                );
+                ];
             }
 
             if ($meta) {
@@ -122,7 +153,6 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
             }
 
             $root['data'] = $data;
-
 
             if ($included) {
                 $root['included'] = array_values($included);
@@ -153,14 +183,14 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
         if (empty($rs)) {
             $rs = new \ArrayObject();
 
-            if (array() === $this->getRoot()) {
+            if ([] === $this->getRoot()) {
                 $this->setRoot(clone $rs);
             }
 
             return $rs;
         }
 
-        $result = array();
+        $result = [];
 
         if (isset($rs['type'])) {
             $result['type'] = $rs['type'];
@@ -178,6 +208,7 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
                 case 'links':
                     return false;
             }
+
             return true;
         }, ARRAY_FILTER_USE_KEY);
 
@@ -190,5 +221,23 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
         }
 
         return $result;
+    }
+
+    /**
+     * Check if the given variable is a valid JSON-API resource.
+     *
+     * @param $data
+     *
+     * @return bool
+     */
+    protected function isResource($data)
+    {
+        if (is_object($data)) {
+            if ($this->metadataFactory->getMetadataForClass(get_class($data))) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }
