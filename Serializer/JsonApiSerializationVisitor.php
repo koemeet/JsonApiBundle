@@ -86,7 +86,7 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
                 $inline = $inline->getResources();
             }
 
-            if ($this->hasResource($inline)) {
+            if (count($inline) === 0 || $this->hasResource($inline)) {
                 $this->isJsonApiDocument = true;
             }
         }
