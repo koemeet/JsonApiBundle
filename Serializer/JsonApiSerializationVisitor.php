@@ -11,12 +11,14 @@
 
 namespace Mango\Bundle\JsonApiBundle\Serializer;
 
+use Hateoas\Representation\CollectionRepresentation;
+use Hateoas\Representation\PaginatedRepresentation;
 use JMS\Serializer\Context;
 use JMS\Serializer\JsonSerializationVisitor;
+use Mango\Bundle\JsonApiBundle\Configuration\Metadata\ClassMetadata as JsonApiClassMetadata;
 use JMS\Serializer\Metadata\ClassMetadata;
 use JMS\Serializer\Naming\PropertyNamingStrategyInterface;
 use Metadata\MetadataFactoryInterface;
-use Mango\Bundle\JsonApiBundle\Configuration\Metadata\ClassMetadata as JsonApiClassMetadata;
 
 /**
  * @author Steffen Brem <steffenbrem@gmail.com>
@@ -53,6 +55,14 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
     }
 
     /**
+     * @return bool
+     */
+    public function isJsonApiDocument()
+    {
+        return $this->isJsonApiDocument;
+    }
+
+    /**
      * @param mixed $data
      *
      * @return array
@@ -64,18 +74,20 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
         //  - it is an array containing objects which are JSON-API resources
         //  - it is empty (we cannot identify it)
 
-        if ($this->isResource($data)) {
+        if (is_object($data) && $this->isResource($data)) {
             $this->isJsonApiDocument = true;
         } else if (is_array($data) || $data instanceof \Traversable) {
-            if (count($data) === 0) {
+            if (count($data) === 0 || $this->hasResource($data)) {
                 $this->isJsonApiDocument = true;
-            } else {
-                foreach ($data as $item) {
-                    if ($this->isResource($item)) {
-                        $this->isJsonApiDocument = true;
-                        break;
-                    }
-                }
+            }
+        } else if ($data instanceof PaginatedRepresentation) {
+            $inline = $data->getInline();
+            if ($inline instanceof CollectionRepresentation) {
+                $inline = $inline->getResources();
+            }
+
+            if ($this->hasResource($inline)) {
+                $this->isJsonApiDocument = true;
             }
         }
 
@@ -224,6 +236,20 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
     }
 
     /**
+     * @param $items
+     *
+     * @return bool
+     */
+    protected function hasResource($items)
+    {
+        foreach ($items as $item) {
+            return $this->isResource($item);
+        }
+
+        return false;
+    }
+
+    /**
      * Check if the given variable is a valid JSON-API resource.
      *
      * @param $data
@@ -233,8 +259,11 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
     protected function isResource($data)
     {
         if (is_object($data)) {
-            if ($this->metadataFactory->getMetadataForClass(get_class($data))) {
-                return true;
+            /** @var JsonApiClassMetadata $metadata */
+            if ($metadata = $this->metadataFactory->getMetadataForClass(get_class($data))) {
+                if ($metadata->getResource()) {
+                    return true;
+                }
             }
         }
 

@@ -66,6 +66,11 @@ abstract class AbstractPaginationHandler implements SubscribingHandlerInterface
     )
     {
         $representation = $this->createPaginatedRepresentation($object);
+
+        if (false === $visitor->isJsonApiDocument()) {
+            return $context->accept($representation->getItems());
+        }
+
         return $this->transformRoot($representation, $visitor, $context);
     }
 
