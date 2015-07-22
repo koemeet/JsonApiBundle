@@ -22,6 +22,7 @@ class StringUtil
      * Dasherize string
      *
      * @param string $string
+     *
      * @return string
      */
     public static function dasherize($string)

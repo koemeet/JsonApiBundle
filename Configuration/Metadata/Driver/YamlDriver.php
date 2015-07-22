@@ -76,11 +76,11 @@ class YamlDriver extends AbstractFileDriver
     {
         if (isset($config['resource'])) {
             $resource = $config['resource'];
+
             return new Resource(
                 isset($resource['type']) ? $resource['type'] : StringUtil::dasherize($class->getShortName()),
                 isset($resource['showLinkSelf']) ? $resource['showLinkSelf'] : null
             );
-
         }
 
         return new Resource(StringUtil::dasherize($class->getShortName()));

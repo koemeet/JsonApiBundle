@@ -117,10 +117,10 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
         }
 
         if ($root) {
-            $data = [];
-            $meta = [];
-            $included = [];
-            $links = [];
+            $data = array();
+            $meta = array();
+            $included = array();
+            $links = array();
 
             if (isset($root['data'])) {
                 $data = $root['data'];
@@ -148,12 +148,12 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
             );
 
             // start building new root array
-            $root = [];
+            $root = array();
 
             if ($this->showVersionInfo) {
-                $root['jsonapi'] = [
+                $root['jsonapi'] = array(
                     'version' => '1.0'
-                ];
+                );
             }
 
             if ($meta) {
@@ -202,7 +202,7 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
             return $rs;
         }
 
-        $result = [];
+        $result = array();
 
         if (isset($rs['type'])) {
             $result['type'] = $rs['type'];

@@ -68,10 +68,12 @@ class JsonEventSubscriber implements EventSubscriberInterface
      * @param PropertyNamingStrategyInterface $namingStrategy
      * @param RequestStack                    $requestStack
      */
-    public function __construct(MetadataFactoryInterface $hateoasMetadataFactory,
-                                MetadataFactoryInterface $jmsMetadataFactory,
-                                PropertyNamingStrategyInterface $namingStrategy,
-                                RequestStack $requestStack)
+    public function __construct(
+        MetadataFactoryInterface $hateoasMetadataFactory,
+        MetadataFactoryInterface $jmsMetadataFactory,
+        PropertyNamingStrategyInterface $namingStrategy,
+        RequestStack $requestStack
+    )
     {
         $this->hateoasMetadataFactory = $hateoasMetadataFactory;
         $this->jmsMetadataFactory = $jmsMetadataFactory;
@@ -183,7 +185,8 @@ class JsonEventSubscriber implements EventSubscriberInterface
             // TODO: Improve link handling
             if (true === $metadata->getResource()->getShowLinkSelf()) {
                 $visitor->addData('links', array(
-                    'self' => '/' . $metadata->getResource()->getType() . '/' . $propertyAccessor->getValue($object, 'id')
+                    'self' => '/' . $metadata->getResource()
+                            ->getType() . '/' . $propertyAccessor->getValue($object, 'id')
                 ));
             }
 
@@ -210,11 +213,13 @@ class JsonEventSubscriber implements EventSubscriberInterface
 
         // TODO: Improve this
         if ($relationship->getShowLinkSelf()) {
-            $links['self'] = '/' . $primaryMetadata->getResource()->getType() . '/' . $primaryId . '/relationships/' . $relationshipPayloadKey;
+            $links['self'] = '/' . $primaryMetadata->getResource()
+                    ->getType() . '/' . $primaryId . '/relationships/' . $relationshipPayloadKey;
         }
 
         if ($relationship->getShowLinkRelated()) {
-            $links['related'] = '/' . $primaryMetadata->getResource()->getType() . '/' . $primaryId . '/' . $relationshipPayloadKey;
+            $links['related'] = '/' . $primaryMetadata->getResource()
+                    ->getType() . '/' . $primaryId . '/' . $relationshipPayloadKey;
         }
 
         return $links;
@@ -292,6 +297,7 @@ class JsonEventSubscriber implements EventSubscriberInterface
     protected function getId(ClassMetadata $classMetadata, $object)
     {
         $propertyAccessor = PropertyAccess::createPropertyAccessor();
+
         return $propertyAccessor->getValue($object, $classMetadata->getIdField());
     }
 
@@ -305,10 +311,12 @@ class JsonEventSubscriber implements EventSubscriberInterface
     {
         if (isset($resources[$index + 1])) {
             $resource = array_shift($resources);
+
             return array(
                 $resource => $this->parseIncludeResources($resources)
             );
         }
+
         return array(
             end($resources) => 1
         );
@@ -350,7 +358,6 @@ class JsonEventSubscriber implements EventSubscriberInterface
         return (is_array($data) || $data instanceof \Traversable);
     }
 
-
     /**
      * @param ClassMetadata $classMetadata
      * @param               $id
@@ -366,6 +373,7 @@ class JsonEventSubscriber implements EventSubscriberInterface
                 return false;
             }
         }
+
         return true;
     }
 

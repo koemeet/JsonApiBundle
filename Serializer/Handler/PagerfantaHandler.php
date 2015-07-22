@@ -10,6 +10,7 @@
  */
 
 namespace Mango\Bundle\JsonApiBundle\Serializer\Handler;
+
 use Mango\Bundle\JsonApiBundle\Representation\PaginatedRepresentation;
 use Pagerfanta\Pagerfanta;
 
@@ -28,6 +29,7 @@ class PagerfantaHandler extends AbstractPaginationHandler
 
     /**
      * @param Pagerfanta $object
+     *
      * @return PaginatedRepresentation
      */
     protected function createPaginatedRepresentation($object)

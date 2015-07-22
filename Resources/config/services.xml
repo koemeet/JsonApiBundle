@@ -1,43 +1,50 @@
 <?xml version="1.0" ?>
 
 <container xmlns="http://symfony.com/schema/dic/services"
-    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd">
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd">
 
     <parameters>
-        <parameter key="json_api.listener.json_event_subcriber.class">Mango\Bundle\JsonApiBundle\EventListener\Serializer\JsonEventSubscriber</parameter>
-        <parameter key="json_api.serializer.handler.paginated.class">Mango\Bundle\JsonApiBundle\Serializer\Handler\PaginatedRepresentationHandler</parameter>
+        <parameter key="json_api.listener.json_event_subcriber.class">
+            Mango\Bundle\JsonApiBundle\EventListener\Serializer\JsonEventSubscriber
+        </parameter>
+        <parameter key="json_api.serializer.handler.paginated.class">
+            Mango\Bundle\JsonApiBundle\Serializer\Handler\PaginatedRepresentationHandler
+        </parameter>
     </parameters>
 
     <services>
         <service id="json_api.listener.json_event_subscriber" class="%json_api.listener.json_event_subcriber.class%">
-            <argument type="service" id="json_api.metadata_factory" />
-            <argument type="service" id="jms_serializer.metadata_factory" />
-            <argument type="service" id="jms_serializer.naming_strategy" />
-            <argument type="service" id="request_stack" />
-            <tag name="jms_serializer.event_subscriber" />
+            <argument type="service" id="json_api.metadata_factory"/>
+            <argument type="service" id="jms_serializer.metadata_factory"/>
+            <argument type="service" id="jms_serializer.naming_strategy"/>
+            <argument type="service" id="request_stack"/>
+            <tag name="jms_serializer.event_subscriber"/>
         </service>
 
-        <service id="json_api.serializer" class="Mango\Bundle\JsonApiBundle\Serializer\Serializer" parent="jms_serializer.serializer" public="false">
+        <service id="json_api.serializer" class="Mango\Bundle\JsonApiBundle\Serializer\Serializer"
+                 parent="jms_serializer.serializer" public="false">
             <call method="setExclusionStrategies">
                 <argument type="collection">
-                    <argument type="service" id="json_api.serializer.relationship_exclusion_strategy" />
+                    <argument type="service" id="json_api.serializer.relationship_exclusion_strategy"/>
                 </argument>
             </call>
         </service>
 
         <!-- build-in support for pagerfanta -->
-        <service id="json_api.serializer.handler.pagerfanta" class="Mango\Bundle\JsonApiBundle\Serializer\Handler\PagerfantaHandler">
-            <argument type="service" id="request_stack" />
-            <tag name="jms_serializer.subscribing_handler" />
+        <service id="json_api.serializer.handler.pagerfanta"
+                 class="Mango\Bundle\JsonApiBundle\Serializer\Handler\PagerfantaHandler">
+            <argument type="service" id="request_stack"/>
+            <tag name="jms_serializer.subscribing_handler"/>
         </service>
 
         <!-- build-in support for hateoas representations -->
-        <service id="json_api.serializer.handler.hateoas" class="Mango\Bundle\JsonApiBundle\Serializer\Handler\HateoasRepresentationHandler">
-            <argument type="service" id="request_stack" />
-            <tag name="jms_serializer.subscribing_handler" />
+        <service id="json_api.serializer.handler.hateoas"
+                 class="Mango\Bundle\JsonApiBundle\Serializer\Handler\HateoasRepresentationHandler">
+            <argument type="service" id="request_stack"/>
+            <tag name="jms_serializer.subscribing_handler"/>
         </service>
-        
+
     </services>
 
 </container>

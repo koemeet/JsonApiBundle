@@ -1,6 +1,6 @@
 {
     "name": "steffenbrem/json-api-bundle",
-    "description": "Integration of JSON API with Symfony2 (FOSRestBundle).",
+    "description": "Integration of JSON API with Symfony2 using JMS Serializer (FOSRestBundle).",
     "keywords": [
         "rest",
         "jsonapi",
@@ -15,9 +15,11 @@
         }
     ],
     "require": {
+        "php": ">=5.3.9",
         "symfony/framework-bundle": "~2.3",
         "jms/serializer-bundle": "~0.13",
-        "pagerfanta/pagerfanta": "~1.0"
+        "pagerfanta/pagerfanta": "~1.0",
+        "willdurand/hateoas": "~2.8"
     },
     "require-dev": {
         "symfony/expression-language": "~2.4",
