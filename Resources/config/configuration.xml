@@ -5,12 +5,8 @@
            xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd">
 
     <parameters>
-        <parameter key="json_api.metadata.annotation_driver.class">
-            Mango\Bundle\JsonApiBundle\Configuration\Metadata\Driver\AnnotationDriver
-        </parameter>
-        <parameter key="json_api.metadata.yaml_driver.class">
-            Mango\Bundle\JsonApiBundle\Configuration\Metadata\Driver\YamlDriver
-        </parameter>
+        <parameter key="json_api.metadata.annotation_driver.class">Mango\Bundle\JsonApiBundle\Configuration\Metadata\Driver\AnnotationDriver</parameter>
+        <parameter key="json_api.metadata.yaml_driver.class">Mango\Bundle\JsonApiBundle\Configuration\Metadata\Driver\YamlDriver</parameter>
     </parameters>
 
     <services>
