@@ -19,7 +19,7 @@
         "symfony/framework-bundle": "~2.3",
         "jms/serializer-bundle": "~0.13",
         "pagerfanta/pagerfanta": "~1.0",
-        "willdurand/hateoas": "~2.8"
+        "willdurand/hateoas": ">2.0"
     },
     "require-dev": {
         "symfony/expression-language": "~2.4",
