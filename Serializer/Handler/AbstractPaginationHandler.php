@@ -133,7 +133,10 @@ abstract class AbstractPaginationHandler implements SubscribingHandlerInterface
      *
      * @return string
      */
-    abstract public static function getType();
+    public static function getType()
+    {
+        throw new \RuntimeException('The method "getType" must be implemented.');
+    }
 
     /**
      * Create a paginated representation from the given type.
