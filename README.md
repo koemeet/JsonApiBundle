@@ -20,7 +20,7 @@ This will define your class as a JSON-API resource, and you can optionally set i
 use Mango\Bundle\JsonApiBundle\Configuration\Annotation as JsonApi;
 
 /**
- * @JsonApi\Resource(type="posts", showSelfLink=true)
+ * @JsonApi\Resource(type="posts", showLinkSelf=true)
  */
  class Post 
  {
