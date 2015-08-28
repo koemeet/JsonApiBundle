@@ -20,7 +20,7 @@ This will define your class as a JSON-API resource, and you can optionally set i
 use Mango\Bundle\JsonApiBundle\Configuration\Annotation as JsonApi;
 
 /**
- * @JsonApi\Resource(type="posts", showSelfLink=true)
+ * @JsonApi\Resource(type="posts", showLinkSelf=true)
  */
  class Post 
  {
@@ -66,7 +66,7 @@ use Mango\Bundle\JsonApiBundle\Configuration\Annotation as JsonApi;
     // ..
     
     /**
-     * @JsonApi\Relationship(includeByDefault=true, showSelfLink=false, showRelatedLink=false)
+     * @JsonApi\Relationship(includeByDefault=true, showLinkSelf=false, showRelatedLink=false)
      */
     protected $comments;
  }
@@ -75,7 +75,7 @@ use Mango\Bundle\JsonApiBundle\Configuration\Annotation as JsonApi;
 | ---                   | ---     | ---       | ---       | ---   |
 | includeByDefault      | false   | No        | boolean   | This will include (sideload) the relationship with it's primary resource |
 | showData              | false   | No        | boolean   | Shows `data`, which consists of ids of the relationship data |
-| showSelfLink          | false   | No        | boolean   | Add `self` link of the relationship |
+| showLinkSelf          | false   | No        | boolean   | Add `self` link of the relationship |
 | showRelatedLink       | false   | No        | boolean   | Add `related` link of the relationship |
 
 ## Configuration Reference
