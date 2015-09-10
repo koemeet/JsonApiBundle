@@ -62,6 +62,8 @@ class JsonEventSubscriber implements EventSubscriberInterface
      */
     protected $currentPath;
 
+    protected $baseUrl = '/api';
+
     /**
      * @param MetadataFactoryInterface        $hateoasMetadataFactory
      * @param MetadataFactoryInterface        $jmsMetadataFactory
@@ -185,7 +187,7 @@ class JsonEventSubscriber implements EventSubscriberInterface
             // TODO: Improve link handling
             if (true === $metadata->getResource()->getShowLinkSelf()) {
                 $visitor->addData('links', array(
-                    'self' => '/' . $metadata->getResource()
+                    'self' => $this->baseUrl . '/' . $metadata->getResource()
                             ->getType() . '/' . $propertyAccessor->getValue($object, 'id')
                 ));
             }
@@ -213,12 +215,12 @@ class JsonEventSubscriber implements EventSubscriberInterface
 
         // TODO: Improve this
         if ($relationship->getShowLinkSelf()) {
-            $links['self'] = '/' . $primaryMetadata->getResource()
+            $links['self'] = $this->baseUrl . '/' . $primaryMetadata->getResource()
                     ->getType() . '/' . $primaryId . '/relationships/' . $relationshipPayloadKey;
         }
 
         if ($relationship->getShowLinkRelated()) {
-            $links['related'] = '/' . $primaryMetadata->getResource()
+            $links['related'] = $this->baseUrl . '/' . $primaryMetadata->getResource()
                     ->getType() . '/' . $primaryId . '/' . $relationshipPayloadKey;
         }
 
