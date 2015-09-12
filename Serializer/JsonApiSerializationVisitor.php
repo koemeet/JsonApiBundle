@@ -63,22 +63,61 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
     }
 
     /**
-     * @param mixed $data
+     * @param mixed $root
      *
      * @return array
      */
-    public function prepare($data)
+    public function prepare($root)
     {
-        // it is a JSON-API document if:
-        //  - it is an object and is a JSON-API resource
-        //  - it is an array containing objects which are JSON-API resources
-        //  - it is empty (we cannot identify it)
+        if (is_array($root) && array_key_exists('data', $root)) {
+            $data = $root['data'];
+        } else {
+            $data = $root;
+        }
 
+        $this->isJsonApiDocument = $this->validateJsonApiDocument($data);
+
+        if ($this->isJsonApiDocument) {
+            $meta = null;
+            if (is_array($root) && isset($root['meta']) && is_array($root['meta'])) {
+                $meta = $root['meta'];
+            }
+            return $this->buildJsonApiRoot($data, $meta);
+        }
+
+        return $root;
+    }
+
+    protected function buildJsonApiRoot($data, array $meta = null)
+    {
+        $root = array(
+            'data' => $data
+        );
+
+        if ($meta) {
+            $root['meta'] = $meta;
+        }
+
+        return $root;
+    }
+
+    /**
+     * it is a JSON-API document if:
+     *  - it is an object and is a JSON-API resource
+     *  - it is an array containing objects which are JSON-API resources
+     *  - it is empty (we cannot identify it)
+     *
+     * @param mixed $data
+     *
+     * @return bool
+     */
+    protected function validateJsonApiDocument($data)
+    {
         if (is_object($data) && $this->isResource($data)) {
-            $this->isJsonApiDocument = true;
+            return true;
         } else if (is_array($data) || $data instanceof \Traversable) {
             if (count($data) === 0 || $this->hasResource($data)) {
-                $this->isJsonApiDocument = true;
+                return true;
             }
         } else if ($data instanceof PaginatedRepresentation) {
             $inline = $data->getInline();
@@ -87,17 +126,11 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
             }
 
             if (count($inline) === 0 || $this->hasResource($inline)) {
-                $this->isJsonApiDocument = true;
+                return true;
             }
         }
 
-        if ($this->isJsonApiDocument) {
-            return [
-                'data' => $data
-            ];
-        }
-
-        return $data;
+        return false;
     }
 
     /**
@@ -183,6 +216,12 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
     {
         $rs = parent::endVisitingObject($metadata, $data, $type, $context);
 
+        if ($rs instanceof \ArrayObject) {
+            $rs = [];
+            $this->setRoot($rs);
+            return $rs;
+        }
+
         /** @var JsonApiClassMetadata $jsonApiMetadata */
         $jsonApiMetadata = $this->metadataFactory->getMetadataForClass(get_class($data));
 
@@ -191,16 +230,6 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
         }
 
         $idField = $jsonApiMetadata->getIdField();
-
-        if (empty($rs)) {
-            $rs = new \ArrayObject();
-
-            if ([] === $this->getRoot()) {
-                $this->setRoot(clone $rs);
-            }
-
-            return $rs;
-        }
 
         $result = array();
 

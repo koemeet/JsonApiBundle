@@ -40,6 +40,10 @@ class PagerfantaHandler extends AbstractPaginationHandler
 
         $items = $object->getCurrentPageResults();
 
+        if ($items instanceof \ArrayIterator) {
+            $items = $items->getArrayCopy();
+        }
+
         return new PaginatedRepresentation(
             $items,
             $object->getCurrentPage(),
