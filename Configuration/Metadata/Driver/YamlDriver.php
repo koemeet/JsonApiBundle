@@ -42,6 +42,10 @@ class YamlDriver extends AbstractFileDriver
 
             $classMetadata->setResource($this->parseResource($config, $class));
 
+            if (isset($config['resource']['idField'])) {
+                $classMetadata->setIdField(trim($config['resource']['idField']));
+            }
+
             if (isset($config['relations'])) {
                 foreach ($config['relations'] as $name => $relation) {
                     $classMetadata->addRelationship(new Relationship(

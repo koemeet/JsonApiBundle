@@ -188,7 +188,7 @@ class JsonEventSubscriber implements EventSubscriberInterface
             if (true === $metadata->getResource()->getShowLinkSelf()) {
                 $visitor->addData('links', array(
                     'self' => $this->baseUrl . '/' . $metadata->getResource()
-                            ->getType() . '/' . $propertyAccessor->getValue($object, 'id')
+                            ->getType() . '/' . $this->getId($metadata, $object)
                 ));
             }
 
@@ -205,11 +205,9 @@ class JsonEventSubscriber implements EventSubscriberInterface
      */
     protected function processRelationshipLinks($primaryObject, Relationship $relationship, $relationshipPayloadKey)
     {
-        $propertyAccessor = PropertyAccess::createPropertyAccessor();
-        $primaryId = $propertyAccessor->getValue($primaryObject, 'id');
-
         /** @var ClassMetadata $relationshipMetadata */
         $primaryMetadata = $this->hateoasMetadataFactory->getMetadataForClass(get_class($primaryObject));
+        $primaryId = $this->getId($primaryMetadata, $primaryObject);
 
         $links = array();
 
