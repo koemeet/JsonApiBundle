@@ -35,7 +35,7 @@ class HateoasRepresentationHandler extends AbstractPaginationHandler
         $items = $paginatedRepresentation->getInline();
 
         if ($items instanceof CollectionRepresentation) {
-            $items = $items->getResources();
+            $items = array_values($items->getResources());
         }
 
         if ($items instanceof \ArrayIterator) {
