@@ -27,6 +27,6 @@ class StringUtil
      */
     public static function dasherize($string)
     {
-        return str_replace('_', '-', Inflector::tableize(Inflector::pluralize($string)));
+        return Inflector::pluralize(str_replace('_', '-', Inflector::tableize($string)));
     }
 }
