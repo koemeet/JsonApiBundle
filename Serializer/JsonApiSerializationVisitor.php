@@ -18,6 +18,7 @@ use JMS\Serializer\JsonSerializationVisitor;
 use Mango\Bundle\JsonApiBundle\Configuration\Metadata\ClassMetadata as JsonApiClassMetadata;
 use JMS\Serializer\Metadata\ClassMetadata;
 use JMS\Serializer\Naming\PropertyNamingStrategyInterface;
+use Mango\Bundle\JsonApiBundle\EventListener\Serializer\JsonEventSubscriber;
 use Metadata\MetadataFactoryInterface;
 
 /**
@@ -233,21 +234,24 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
 
         $result = array();
 
-        if (isset($rs['type'])) {
-            $result['type'] = $rs['type'];
+        if (isset($rs[JsonEventSubscriber::EXTRA_DATA_KEY]['type'])) {
+            $result['type'] = $rs[JsonEventSubscriber::EXTRA_DATA_KEY]['type'];
         }
 
-        if (isset($rs[$idField])) {
-            $result['id'] = $rs[$idField];
+        if (isset($rs[JsonEventSubscriber::EXTRA_DATA_KEY][$idField])) {
+            $result['id'] = $rs[JsonEventSubscriber::EXTRA_DATA_KEY][$idField];
         }
 
         $result['attributes'] = array_filter($rs, function ($key) use ($idField) {
             switch ($key) {
                 case $idField:
-                case 'type':
                 case 'relationships':
                 case 'links':
                     return false;
+            }
+
+            if ($key === JsonEventSubscriber::EXTRA_DATA_KEY) {
+                return false;
             }
 
             return true;

@@ -30,6 +30,8 @@ use Symfony\Component\PropertyAccess\PropertyAccess;
  */
 class JsonEventSubscriber implements EventSubscriberInterface
 {
+    const EXTRA_DATA_KEY = '__DATA__';
+
     /**
      * Keep track of all included relationships, so that we do not duplicate them
      *
@@ -75,8 +77,7 @@ class JsonEventSubscriber implements EventSubscriberInterface
         MetadataFactoryInterface $jmsMetadataFactory,
         PropertyNamingStrategyInterface $namingStrategy,
         RequestStack $requestStack
-    )
-    {
+    ) {
         $this->hateoasMetadataFactory = $hateoasMetadataFactory;
         $this->jmsMetadataFactory = $jmsMetadataFactory;
         $this->namingStrategy = $namingStrategy;
@@ -93,7 +94,7 @@ class JsonEventSubscriber implements EventSubscriberInterface
                 'event' => Events::POST_SERIALIZE,
                 'format' => 'json',
                 'method' => 'onPostSerialize',
-            )
+            ),
         );
     }
 
@@ -117,12 +118,9 @@ class JsonEventSubscriber implements EventSubscriberInterface
         $propertyAccessor = PropertyAccess::createPropertyAccessor();
 
         if ($visitor instanceof JsonApiSerializationVisitor) {
-            $this->prependData(
-                $visitor,
-                $this->getRelationshipDataArray(
-                    $metadata, $this->getId($metadata, $object)
-                )
-            );
+            $visitor->addData(self::EXTRA_DATA_KEY, $this->getRelationshipDataArray(
+                $metadata, $this->getId($metadata, $object)
+            ));
 
             $relationships = array();
 
@@ -187,8 +185,8 @@ class JsonEventSubscriber implements EventSubscriberInterface
             // TODO: Improve link handling
             if (true === $metadata->getResource()->getShowLinkSelf()) {
                 $visitor->addData('links', array(
-                    'self' => $this->baseUrl . '/' . $metadata->getResource()
-                            ->getType() . '/' . $this->getId($metadata, $object)
+                    'self' => $this->baseUrl.'/'.$metadata->getResource()
+                            ->getType().'/'.$this->getId($metadata, $object),
                 ));
             }
 
@@ -213,13 +211,13 @@ class JsonEventSubscriber implements EventSubscriberInterface
 
         // TODO: Improve this
         if ($relationship->getShowLinkSelf()) {
-            $links['self'] = $this->baseUrl . '/' . $primaryMetadata->getResource()
-                    ->getType() . '/' . $primaryId . '/relationships/' . $relationshipPayloadKey;
+            $links['self'] = $this->baseUrl.'/'.$primaryMetadata->getResource()
+                    ->getType().'/'.$primaryId.'/relationships/'.$relationshipPayloadKey;
         }
 
         if ($relationship->getShowLinkRelated()) {
-            $links['related'] = $this->baseUrl . '/' . $primaryMetadata->getResource()
-                    ->getType() . '/' . $primaryId . '/' . $relationshipPayloadKey;
+            $links['related'] = $this->baseUrl.'/'.$primaryMetadata->getResource()
+                    ->getType().'/'.$primaryId.'/'.$relationshipPayloadKey;
         }
 
         return $links;
@@ -313,12 +311,12 @@ class JsonEventSubscriber implements EventSubscriberInterface
             $resource = array_shift($resources);
 
             return array(
-                $resource => $this->parseIncludeResources($resources)
+                $resource => $this->parseIncludeResources($resources),
             );
         }
 
         return array(
-            end($resources) => 1
+            end($resources) => 1,
         );
     }
 
@@ -332,7 +330,7 @@ class JsonEventSubscriber implements EventSubscriberInterface
     {
         return array(
             'type' => $classMetadata->getResource()->getType(),
-            'id' => $id
+            'id' => $id,
         );
     }
 
@@ -375,23 +373,5 @@ class JsonEventSubscriber implements EventSubscriberInterface
         }
 
         return true;
-    }
-
-    /**
-     * Prepend some data
-     *
-     * @param VisitorInterface $visitor
-     * @param array            $prependData
-     */
-    protected function prependData(VisitorInterface $visitor, array $prependData)
-    {
-        $refl = new \ReflectionObject($visitor);
-        $property = $refl->getParentClass()->getParentClass()->getProperty('data');
-        $property->setAccessible(true);
-
-        $data = $property->getValue($visitor);
-        $data = $prependData + $data;
-
-        $property->setValue($visitor, $data);
     }
 }
