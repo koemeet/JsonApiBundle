@@ -47,8 +47,7 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
         PropertyNamingStrategyInterface $propertyNamingStrategy,
         MetadataFactoryInterface $metadataFactory,
         $showVersionInfo
-    )
-    {
+    ) {
         parent::__construct($propertyNamingStrategy);
 
         $this->metadataFactory = $metadataFactory;
@@ -83,6 +82,7 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
             if (is_array($root) && isset($root['meta']) && is_array($root['meta'])) {
                 $meta = $root['meta'];
             }
+
             return $this->buildJsonApiRoot($data, $meta);
         }
 
@@ -92,7 +92,7 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
     protected function buildJsonApiRoot($data, array $meta = null)
     {
         $root = array(
-            'data' => $data
+            'data' => $data,
         );
 
         if ($meta) {
@@ -177,7 +177,7 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
                 (array)$included,
                 (isset($data['type'])) ? [$data] : $data,
                 function ($a, $b) {
-                    return strcmp($a['type'] . $a['id'], $b['type'] . $b['id']);
+                    return strcmp($a['type'].$a['id'], $b['type'].$b['id']);
                 }
             );
 
@@ -186,7 +186,7 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
 
             if ($this->showVersionInfo) {
                 $root['jsonapi'] = array(
-                    'version' => '1.0'
+                    'version' => '1.0',
                 );
             }
 
@@ -220,6 +220,7 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
         if ($rs instanceof \ArrayObject) {
             $rs = [];
             $this->setRoot($rs);
+
             return $rs;
         }
 
@@ -230,17 +231,17 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
             return $rs;
         }
 
-        $idField = $jsonApiMetadata->getIdField();
-
         $result = array();
 
         if (isset($rs[JsonEventSubscriber::EXTRA_DATA_KEY]['type'])) {
             $result['type'] = $rs[JsonEventSubscriber::EXTRA_DATA_KEY]['type'];
         }
 
-        if (isset($rs[JsonEventSubscriber::EXTRA_DATA_KEY][$idField])) {
-            $result['id'] = $rs[JsonEventSubscriber::EXTRA_DATA_KEY][$idField];
+        if (isset($rs[JsonEventSubscriber::EXTRA_DATA_KEY]['id'])) {
+            $result['id'] = $rs[JsonEventSubscriber::EXTRA_DATA_KEY]['id'];
         }
+
+        $idField = $jsonApiMetadata->getIdField();
 
         $result['attributes'] = array_filter($rs, function ($key) use ($idField) {
             switch ($key) {
