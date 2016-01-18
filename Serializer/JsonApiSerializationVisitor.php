@@ -114,24 +114,11 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
      */
     protected function validateJsonApiDocument($data)
     {
-        if (is_object($data) && $this->isResource($data)) {
-            return true;
-        } else if (is_array($data) || $data instanceof \Traversable) {
-            if (count($data) === 0 || $this->hasResource($data)) {
-                return true;
-            }
-        } else if ($data instanceof PaginatedRepresentation) {
-            $inline = $data->getInline();
-            if ($inline instanceof CollectionRepresentation) {
-                $inline = $inline->getResources();
-            }
-
-            if (count($inline) === 0 || $this->hasResource($inline)) {
-                return true;
-            }
+        if (is_array($data) && !$this->hasResource($data)) {
+            return false;
         }
 
-        return false;
+        return true;
     }
 
     /**
@@ -176,7 +163,7 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
             $included = array_udiff(
                 (array)$included,
                 (isset($data['type'])) ? [$data] : $data,
-                function ($a, $b) {
+                function($a, $b) {
                     return strcmp($a['type'].$a['id'], $b['type'].$b['id']);
                 }
             );
@@ -243,7 +230,7 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
 
         $idField = $jsonApiMetadata->getIdField();
 
-        $result['attributes'] = array_filter($rs, function ($key) use ($idField) {
+        $result['attributes'] = array_filter($rs, function($key) use ($idField) {
             switch ($key) {
                 case $idField:
                 case 'relationships':
