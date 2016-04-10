@@ -29,6 +29,11 @@ class ClassMetadata extends MergeableClassMetadata implements ClassMetadataInter
     protected $resource;
 
     /**
+     * @var boolean
+     */
+    protected $error;
+
+    /**
      * @var string
      */
     protected $idField;
@@ -59,6 +64,22 @@ class ClassMetadata extends MergeableClassMetadata implements ClassMetadataInter
     public function setResource(Resource $resource)
     {
         $this->resource = $resource;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isError()
+    {
+        return $this->error;
+    }
+
+    /**
+     * 
+     */
+    public function markAsError()
+    {
+        $this->error = true;
     }
 
     /**
@@ -131,6 +152,7 @@ class ClassMetadata extends MergeableClassMetadata implements ClassMetadataInter
     {
         return serialize(array(
             $this->resource,
+            $this->error ? 1 : 0,
             $this->idField,
             $this->relationships,
             parent::serialize(),
@@ -144,11 +166,14 @@ class ClassMetadata extends MergeableClassMetadata implements ClassMetadataInter
     {
         list(
             $this->resource,
+            $error,
             $this->idField,
             $this->relationships,
             $parentStr
-            ) = unserialize($str);
+        ) = unserialize($str);
 
+        $this->error = 1 === $error;
+        
         parent::unserialize($parentStr);
     }
 }

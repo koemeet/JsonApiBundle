@@ -59,6 +59,8 @@ class AnnotationDriver implements DriverInterface
                     $annotation->type = StringUtil::dasherize($class->getShortName());
                 }
                 $classMetadata->setResource(new Resource($annotation->type, $annotation->showLinkSelf));
+            } elseif ($annotation instanceof Annotation\Error) {
+                $classMetadata->markAsError();
             }
         }
 
