@@ -108,7 +108,7 @@ class JsonEventSubscriber implements EventSubscriberInterface
         $metadata = $this->hateoasMetadataFactory->getMetadataForClass(get_class($object));
 
         // if it has no json api metadata, skip it
-        if (null === $metadata) {
+        if (null === $metadata || null === !$metadata->getResource()) {
             return;
         }
 
