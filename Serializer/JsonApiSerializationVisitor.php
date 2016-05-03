@@ -19,7 +19,10 @@ use Mango\Bundle\JsonApiBundle\Configuration\Metadata\ClassMetadata as JsonApiCl
 use JMS\Serializer\Metadata\ClassMetadata;
 use JMS\Serializer\Naming\PropertyNamingStrategyInterface;
 use Mango\Bundle\JsonApiBundle\EventListener\Serializer\JsonEventSubscriber;
+use Mango\Bundle\JsonApiBundle\Serializer\Handler\HateoasRepresentationHandler;
+use Mango\Bundle\JsonApiBundle\Serializer\Handler\PagerfantaHandler;
 use Metadata\MetadataFactoryInterface;
+use Pagerfanta\Pagerfanta;
 
 /**
  * @author Steffen Brem <steffenbrem@gmail.com>
@@ -163,7 +166,11 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
      */
     protected function validateJsonApiDocument($data)
     {
-        if (is_object($data) && !$this->hasResource($data)) {
+        if (!$this->isPaginator($data) && !$this->isResource($data)) {
+            return false;
+        }
+
+        if ($this->isPaginator($data) && !$this->hasResource($data)) {
             return false;
         }
 
@@ -186,7 +193,11 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
      */
     protected function validateJsonApiErrorDocument($errors)
     {
-        if (is_object($errors) && !$this->hasErrors($errors)) {
+        if (!$this->isPaginator($errors) && !$this->isError($errors)) {
+            return false;
+        }
+
+        if ($this->isPaginator($errors) && !$this->hasErrors($errors)) {
             return false;
         }
 
@@ -453,6 +464,32 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
     {
         if ($metadata = $this->getMetadataForClass($error)) {
             return $metadata->isError();
+        }
+
+        return false;
+    }
+
+    /**
+     * Is data a paginated object with resource(s)
+     *
+     * @param mixed $data
+     * @return bool
+     */
+    protected function isPaginator($data)
+    {
+        if (!is_object($data)) {
+            return false;
+        }
+
+        $paginatedClasses = array(
+            PagerfantaHandler::getType(),
+            HateoasRepresentationHandler::getType(),
+        );
+
+        foreach ($paginatedClasses as $paginatedClass) {
+            if (is_a($data, $paginatedClass)) {
+                return true;
+            }
         }
 
         return false;
