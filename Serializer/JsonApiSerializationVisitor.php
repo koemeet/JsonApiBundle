@@ -163,7 +163,7 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
      */
     protected function validateJsonApiDocument($data)
     {
-        if (is_object($data) && !$this->isResource($data)) {
+        if (is_object($data) && !$this->hasResource($data)) {
             return false;
         }
 
@@ -186,7 +186,7 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
      */
     protected function validateJsonApiErrorDocument($errors)
     {
-        if (is_object($errors) && !$this->isError($errors)) {
+        if (is_object($errors) && !$this->hasErrors($errors)) {
             return false;
         }
 
