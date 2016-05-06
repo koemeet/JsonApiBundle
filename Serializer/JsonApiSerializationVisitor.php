@@ -213,6 +213,18 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
      */
     public function getResult()
     {
+        if ($this->isJsonApiErrorDocument) {
+            if ($this->showVersionInfo) {
+                $root = $this->getResult();
+
+                $root['jsonapi'] = array(
+                    'version' => '1.0',
+                );
+
+                $this->setRoot($root);
+            }
+        }
+
         if (false === $this->isJsonApiDocument) {
             return parent::getResult();
         }
