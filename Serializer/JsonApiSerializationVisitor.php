@@ -215,7 +215,7 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
     {
         if ($this->isJsonApiErrorDocument) {
             if ($this->showVersionInfo) {
-                $root = $this->getResult();
+                $root = $this->getRoot();
 
                 $root['jsonapi'] = array(
                     'version' => '1.0',
