@@ -45,10 +45,6 @@ class AnnotationDriver implements DriverInterface
     {
         $annotations = $this->reader->getClassAnnotations($class);
 
-        if ($class->isAbstract()) {
-            return null;
-        }
-
         if (0 === count($annotations)) {
             return null;
         }
