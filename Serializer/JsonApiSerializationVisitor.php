@@ -392,7 +392,7 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
         if (isset($rs['source'])) {
             $result['source'] = array_filter($rs['source'], function($key) {
                 return in_array($key, ['pointer', 'parameter']);
-            });
+            }, ARRAY_FILTER_USE_KEY);
         }
 
         if (isset($result['source']) && empty($result['source'])) {
