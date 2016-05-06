@@ -16,6 +16,7 @@ use Doctrine\Common\Collections\Collection;
 use Mango\Bundle\JsonApiBundle\Configuration\Relationship;
 use Mango\Bundle\JsonApiBundle\Configuration\Resource;
 use Metadata\MergeableClassMetadata;
+use Metadata\MergeableInterface;
 
 /**
  * @author Steffen Brem <steffenbrem@gmail.com>
@@ -102,6 +103,25 @@ class ClassMetadata extends MergeableClassMetadata implements ClassMetadataInter
     public function addRelationship($relationship)
     {
         $this->relationships->add($relationship);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function merge(MergeableInterface $object)
+    {
+        if (!$object instanceof self) {
+            throw new \InvalidArgumentException(sprintf('Object must be an instance of %s.', __CLASS__));
+        }
+
+        parent::merge($object);
+
+        $this->resource = $object->getResource();
+        $this->idField = $object->getIdField();
+
+        foreach ($object->getRelationships() as $relationship) {
+            $this->addRelationship($relationship);
+        }
     }
 
     /**
