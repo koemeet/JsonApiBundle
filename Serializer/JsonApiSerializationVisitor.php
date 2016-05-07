@@ -166,7 +166,7 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
      */
     protected function validateJsonApiDocument($data)
     {
-        if (!$this->isPaginator($data) && !$this->isResource($data)) {
+        if (is_object($data) && !$this->isPaginator($data) && !$this->isResource($data)) {
             return false;
         }
 
@@ -193,7 +193,7 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
      */
     protected function validateJsonApiErrorDocument($errors)
     {
-        if (!$this->isPaginator($errors) && !$this->isError($errors)) {
+        if (is_object($errors) && !$this->isPaginator($errors) && !$this->isError($errors)) {
             return false;
         }
 
