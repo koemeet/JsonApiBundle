@@ -333,11 +333,11 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
         $result = array();
 
         if (isset($rs[JsonEventSubscriber::EXTRA_DATA_KEY]['type'])) {
-            $result['type'] = $rs[JsonEventSubscriber::EXTRA_DATA_KEY]['type'];
+            $result['type'] = (string) $rs[JsonEventSubscriber::EXTRA_DATA_KEY]['type'];
         }
 
         if (isset($rs[JsonEventSubscriber::EXTRA_DATA_KEY]['id'])) {
-            $result['id'] = $rs[JsonEventSubscriber::EXTRA_DATA_KEY]['id'];
+            $result['id'] = (string) $rs[JsonEventSubscriber::EXTRA_DATA_KEY]['id'];
         }
 
         $idField = $metadata->getIdField();
