@@ -66,7 +66,7 @@ use Mango\Bundle\JsonApiBundle\Configuration\Annotation as JsonApi;
     // ..
     
     /**
-     * @JsonApi\Relationship(includeByDefault=true, showLinkSelf=false, showRelatedLink=false)
+     * @JsonApi\Relationship(includeByDefault=true, showLinkSelf=false, showLinkRelated=false)
      */
     protected $comments;
  }
@@ -76,7 +76,7 @@ use Mango\Bundle\JsonApiBundle\Configuration\Annotation as JsonApi;
 | includeByDefault      | false   | No        | boolean   | This will include (sideload) the relationship with it's primary resource |
 | showData              | false   | No        | boolean   | Shows `data`, which consists of ids of the relationship data |
 | showLinkSelf          | false   | No        | boolean   | Add `self` link of the relationship |
-| showRelatedLink       | false   | No        | boolean   | Add `related` link of the relationship |
+| showLinkRelated       | false   | No        | boolean   | Add `related` link of the relationship |
 
 ## Configuration Reference
 ```yaml
