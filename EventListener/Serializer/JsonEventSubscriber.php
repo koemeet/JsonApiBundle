@@ -145,9 +145,11 @@ class JsonEventSubscriber implements EventSubscriberInterface
                     $relationshipData['links'] = $links;
                 }
 
-                // TODO: Support for `include` parameter
-                $include = $this->requestStack->getCurrentRequest()->query->get('include');
-                $include = $this->parseInclude($include);
+                $include = [];
+                if ($request = $this->requestStack->getCurrentRequest()) {
+                    $include = $request->query->get('include');
+                    $include = $this->parseInclude($include);
+                }
 
                 // FIXME: $includePath always is relative to the primary resource, so we can build our way with
                 // class metadata to find out if we can include this relationship.
