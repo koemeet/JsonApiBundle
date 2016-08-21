@@ -10,20 +10,38 @@
 
 namespace Mango\Bundle\JsonApiBundle\Serializer;
 
+use FOS\RestBundle\Context\Context;
+use FOS\RestBundle\Serializer\Serializer as FosRestSerializerInterface;
 use JMS\Serializer\Exclusion\ExclusionStrategyInterface;
-use JMS\Serializer\SerializationContext;
-use JMS\Serializer\Serializer as BaseSerializer;
-use Pagerfanta\Pagerfanta;
+use JMS\Serializer\SerializerInterface;
+use JMS\Serializer\SerializationContext as JMSSerializationContext;
+use JMS\Serializer\DeserializationContext as JMSDeserializationContext;
 
 /**
  * @author Steffen Brem <steffenbrem@gmail.com>
  */
-class Serializer extends BaseSerializer
+class Serializer implements FosRestSerializerInterface
 {
+    /**
+     * @internal
+     */
+    const SERIALIZATION = 0;
+    /**
+     * @internal
+     */
+    const DESERIALIZATION = 1;
+
+    private $serializer;
+
     /**
      * @var ExclusionStrategyInterface[]
      */
     protected $exclusionStrategies;
+
+    public function __construct(SerializerInterface $serializer)
+    {
+        $this->serializer = $serializer;
+    }
 
     /**
      * @param mixed $exclusionStrategies
@@ -36,18 +54,67 @@ class Serializer extends BaseSerializer
     /**
      * {@inheritdoc}
      */
-    public function serialize($data, $format, SerializationContext $context = null)
+    public function serialize($data, $format, Context $context = null)
     {
-        if (null === $context) {
-            $context = new SerializationContext();
+        $context = $this->convertContext($context, self::SERIALIZATION, $format);
+
+        return $this->serializer->serialize($data, $format, $context);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function deserialize($data, $type, $format, Context $context)
+    {
+        $context = $this->convertContext($context, self::DESERIALIZATION, $format);
+
+        return $this->serializer->deserialize($data, $type, $format, $context);
+    }
+
+    /**
+     * @param Context $context
+     * @param int     $direction {@see self} constants
+     *
+     * @return JMSContext
+     */
+    private function convertContext(Context $context, $direction, $format)
+    {
+        if ($direction === self::SERIALIZATION) {
+            $jmsContext = JMSSerializationContext::create();
+        } else {
+            $jmsContext = JMSDeserializationContext::create();
+            $maxDepth = $context->getMaxDepth();
+            if (null !== $maxDepth) {
+                for ($i = 0; $i < $maxDepth; ++$i) {
+                    $jmsContext->increaseDepth();
+                }
+            }
+        }
+
+        foreach ($context->getAttributes() as $key => $value) {
+            $jmsContext->attributes->set($key, $value);
+        }
+
+        if (null !== $context->getVersion()) {
+            $jmsContext->setVersion($context->getVersion());
+        }
+        $groups = $context->getGroups();
+        if (!empty($groups)) {
+            $jmsContext->setGroups($context->getGroups());
+        }
+        if (null !== $context->getMaxDepth()) {
+            $jmsContext->enableMaxDepthChecks();
+        }
+        if (null !== $context->getSerializeNull()) {
+            $jmsContext->setSerializeNull($context->getSerializeNull());
         }
 
         if ($format === 'json') {
             foreach ($this->exclusionStrategies as $exclusionStrategy) {
-                $context->addExclusionStrategy($exclusionStrategy);
+                $jmsContext->addExclusionStrategy($exclusionStrategy);
             }
         }
 
-        return parent::serialize($data, $format, $context);
+        return $jmsContext;
     }
 }

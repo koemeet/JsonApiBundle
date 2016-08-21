@@ -19,14 +19,16 @@
         </service>
 
         <service id="json_api.serializer" class="Mango\Bundle\JsonApiBundle\Serializer\Serializer"
-                 parent="jms_serializer.serializer" public="false">
+                 public="false">
+            <argument type="service" id="jms_serializer.serializer"/>
+            
             <call method="setExclusionStrategies">
                 <argument type="collection">
                     <argument type="service" id="json_api.serializer.relationship_exclusion_strategy"/>
                 </argument>
             </call>
         </service>
-
+        
         <!-- build-in support for pagerfanta -->
         <service id="json_api.serializer.handler.pagerfanta"
                  class="Mango\Bundle\JsonApiBundle\Serializer\Handler\PagerfantaHandler">
