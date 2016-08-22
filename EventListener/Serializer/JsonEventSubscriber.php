@@ -16,14 +16,17 @@ use JMS\Serializer\Context;
 use JMS\Serializer\EventDispatcher\Events;
 use JMS\Serializer\EventDispatcher\EventSubscriberInterface;
 use JMS\Serializer\EventDispatcher\ObjectEvent;
+use JMS\Serializer\EventDispatcher\PreDeserializeEvent;
+use JMS\Serializer\Metadata\ClassMetadata as JmsClassMetadata;
 use JMS\Serializer\Naming\PropertyNamingStrategyInterface;
-use JMS\Serializer\VisitorInterface;
 use Mango\Bundle\JsonApiBundle\Configuration\Metadata\ClassMetadata;
 use Mango\Bundle\JsonApiBundle\Configuration\Relationship;
 use Mango\Bundle\JsonApiBundle\Serializer\JsonApiSerializationVisitor;
 use Metadata\MetadataFactoryInterface;
+use RuntimeException;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\PropertyAccess\PropertyAccess;
+use Traversable;
 
 /**
  * @author Steffen Brem <steffenbrem@gmail.com>
@@ -95,6 +98,11 @@ class JsonEventSubscriber implements EventSubscriberInterface
                 'format' => 'json',
                 'method' => 'onPostSerialize',
             ),
+            array(
+                'event' => Events::PRE_DESERIALIZE,
+                'format' => 'json',
+                'method' => 'onPreDeserialize',
+            ),
         );
     }
 
@@ -112,7 +120,7 @@ class JsonEventSubscriber implements EventSubscriberInterface
             return;
         }
 
-        /** @var \JMS\Serializer\Metadata\ClassMetadata $jmsMetadata */
+        /** @var JmsClassMetadata $jmsMetadata */
         $jmsMetadata = $this->jmsMetadataFactory->getMetadataForClass(get_class($object));
 
         $propertyAccessor = PropertyAccess::createPropertyAccessor();
@@ -239,14 +247,14 @@ class JsonEventSubscriber implements EventSubscriberInterface
         }
 
         if (!is_object($object)) {
-            throw new \RuntimeException(sprintf('Cannot process relationship "%s", because it is not an object but a %s.', $relationship->getName(), gettype($object)));
+            throw new RuntimeException(sprintf('Cannot process relationship "%s", because it is not an object but a %s.', $relationship->getName(), gettype($object)));
         }
 
         /** @var ClassMetadata $relationshipMetadata */
         $relationshipMetadata = $this->hateoasMetadataFactory->getMetadataForClass(get_class($object));
 
         if (null === $relationshipMetadata) {
-            throw new \RuntimeException(sprintf(
+            throw new RuntimeException(sprintf(
                 'Metadata for class %s not found. Did you define at as a JSON-API resource?',
                 ClassUtils::getRealClass(get_class($object))
             ));
@@ -355,7 +363,7 @@ class JsonEventSubscriber implements EventSubscriberInterface
      */
     protected function isIteratable($data)
     {
-        return (is_array($data) || $data instanceof \Traversable);
+        return (is_array($data) || $data instanceof Traversable);
     }
 
     /**
@@ -375,5 +383,43 @@ class JsonEventSubscriber implements EventSubscriberInterface
         }
 
         return true;
+    }
+
+    /**
+     * @param PreDeserializeEvent $event
+     */
+    public function onPreDeserialize(PreDeserializeEvent $event)
+    {
+        $type = $event->getType();
+        $resourceClassName = $type['name'];
+        $data = $event->getData();
+
+        if (isset($data['data'])) {
+            /** @var ClassMetadata $metadata */
+            $metadata = $this->hateoasMetadataFactory->getMetadataForClass($resourceClassName);
+
+            // if it has no json api metadata, skip it
+            if (null === $metadata) {
+                return;
+            }
+
+            $attributes = isset($data['data']['attributes']) ? $data['data']['attributes'] : null;
+            
+            $relationshipsData = isset($data['data']['relationships']) ? $data['data']['relationships'] : array();
+            foreach ($metadata->getRelationships() as $relationshipMeta) {
+                $relationshipName = $relationshipMeta->getName();
+                
+                if (isset($relationshipsData[$relationshipName])) {
+                    $relationshipData = $relationshipsData[$relationshipName];
+
+                    $relationshipId = $relationshipData['data']['id'];
+                    $relationshipType = $relationshipData['data']['type'];
+
+                    $attributes[$relationshipName] = ['id' => $relationshipId];
+                }
+            }
+
+            $event->setData($attributes);
+        }
     }
 }
