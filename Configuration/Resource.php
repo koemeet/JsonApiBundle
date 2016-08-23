@@ -11,6 +11,8 @@
 
 namespace Mango\Bundle\JsonApiBundle\Configuration;
 
+use Mango\Bundle\JsonApiBundle\Util\StringUtil;
+
 /**
  * @author Steffen Brem <steffenbrem@gmail.com>
  */
@@ -22,21 +24,33 @@ class Resource
     private $type;
 
     /**
+     * @var string
+     */
+    private $route;
+    
+    /**
      * @var bool
      */
     private $showLinkSelf = true;
 
     /**
      * @param $type
+     * @param $route
      * @param $showLinkSelf
      */
-    public function __construct($type, $showLinkSelf = null)
+    public function __construct($type, $route = null, $showLinkSelf = null)
     {
         if (null === $type) {
             throw new \RuntimeException('A JSON-API resource must have a type defined and cannot be "null".');
         }
 
         $this->type = $type;
+
+        if (null !== $route) {
+            $this->route = $route;
+        } else {
+            $this->route = StringUtil::resourceNameToResourceRoute($type);
+        }
 
         if (null !== $showLinkSelf) {
             $this->showLinkSelf = $showLinkSelf;
@@ -51,6 +65,14 @@ class Resource
         return $this->type;
     }
 
+    /**
+     * @return string
+     */
+    public function getRoute()
+    {
+        return $this->route;
+    }
+    
     /**
      * @return boolean
      */

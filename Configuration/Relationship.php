@@ -10,7 +10,7 @@
 
 namespace Mango\Bundle\JsonApiBundle\Configuration;
 
-use Doctrine\Common\Collections\Collection;
+use Mango\Bundle\JsonApiBundle\Util\StringUtil;
 
 /**
  * @author Steffen Brem <steffenbrem@gmail.com>
@@ -43,13 +43,19 @@ class Relationship
     protected $showLinkRelated = false;
 
     /**
-     * @param            $name
-     * @param bool|false $includedByDefault
-     * @param bool|false $showData
-     * @param bool|false $showLinkSelf
-     * @param bool|false $showLinkRelated
+     * @var string
      */
-    public function __construct($name, $includedByDefault = null, $showData = null, $showLinkSelf = null, $showLinkRelated = null)
+    protected $route;
+
+    /**
+     * @param             $name
+     * @param bool|false  $includedByDefault
+     * @param bool|false  $showData
+     * @param bool|false  $showLinkSelf
+     * @param bool|false  $showLinkRelated
+     * @param string|null $route
+     */
+    public function __construct($name, $includedByDefault = null, $showData = null, $showLinkSelf = null, $showLinkRelated = null, $route = null)
     {
         $this->name = $name;
 
@@ -67,6 +73,12 @@ class Relationship
 
         if (null !== $showLinkRelated) {
             $this->showLinkRelated = $showLinkRelated;
+        }
+
+        if (null !== $route) {
+            $this->route = $route;
+        } else {
+            $this->route = StringUtil::resourceNameToResourceRoute($name);
         }
     }
 
@@ -125,4 +137,13 @@ class Relationship
     {
         return $this->showLinkRelated;
     }
+
+    /**
+     * @return string
+     */
+    public function getRoute()
+    {
+        return $this->route;
+    }
+
 }

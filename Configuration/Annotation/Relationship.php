@@ -22,4 +22,5 @@ final class Relationship
     public $showData;
     public $showLinkSelf;
     public $showLinkRelated;
+    public $route;
 }

@@ -58,7 +58,8 @@ class AnnotationDriver implements DriverInterface
                 if (!$annotation->type) {
                     $annotation->type = StringUtil::dasherize($class->getShortName());
                 }
-                $classMetadata->setResource(new Resource($annotation->type, $annotation->showLinkSelf));
+                
+                $classMetadata->setResource(new Resource($annotation->type, $annotation->route, $annotation->showLinkSelf));
             }
         }
 
@@ -76,7 +77,8 @@ class AnnotationDriver implements DriverInterface
                         $annotation->includeByDefault,
                         $annotation->showData,
                         $annotation->showLinkSelf,
-                        $annotation->showLinkRelated
+                        $annotation->showLinkRelated,
+                        $annotation->route
                     ));
                 }
             }
