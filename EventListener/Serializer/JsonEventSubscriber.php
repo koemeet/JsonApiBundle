@@ -33,6 +33,10 @@ class JsonEventSubscriber implements EventSubscriberInterface
 {
     const EXTRA_DATA_KEY = '__DATA__';
 
+    const LINK_SELF = 'self';
+    const LINK_RELATED = 'related';
+    
+
     /**
      * Keep track of all included relationships, so that we do not duplicate them
      *
@@ -148,7 +152,7 @@ class JsonEventSubscriber implements EventSubscriberInterface
                 $relationshipData = array();
 
                 // add `links`
-                $links = $this->processRelationshipLinks($object, $relationship, $relationshipPayloadKey);
+                $links = $this->processRelationshipLinks($object, $relationship);
                 if ($links) {
                     $relationshipData['links'] = $links;
                 }
@@ -193,7 +197,7 @@ class JsonEventSubscriber implements EventSubscriberInterface
             }
 
             if (true === $metadata->getResource()->getShowLinkSelf()) {
-                $visitor->addData('links', array($this->generateUrlSelf($metadata, $object)));
+                $visitor->addData('links', array(self::LINK_SELF => $this->generateUrlSelf($metadata, $object)));
             }
 
             $root = (array)$visitor->getRoot();
@@ -224,29 +228,60 @@ class JsonEventSubscriber implements EventSubscriberInterface
 
         return $link;
     }
+    
+    /**
+     * @param ClassMetadata $resource
+     * @param mixed $object
+     * @return string
+     */
+    private function generateRelationshipUrl($primaryObject, $relationshipObject, ClassMetadata $primaryMetadata, ClassMetadata $relationshipMetadata)
+    {
+        $params = $this->router->getContext()->getParameters();
+
+        if ($request = $this->requestStack->getCurrentRequest()) {
+            $params = array_merge($params, $request->attributes->get('_route_params'));
+        }
+
+        $primaryIdName = $primaryMetadata->getResource()->getType() . 'Id';
+        $params[$primaryIdName] = $this->getId($primaryMetadata, $primaryObject);
+
+        $relationshipIdName = $relationshipMetadata->getResource()->getType() . 'Id';
+        $params[$relationshipIdName] = $this->getId($relationshipMetadata, $relationshipObject);
+
+        $this->router->getContext()->setParameters($params);
+
+        $link = $this->router->generate($relationshipMetadata->getResource()->getRoute());
+
+        return $link;
+    }
 
     /**
+     * @param mixed $primaryObject
      * @param Relationship $relationship
-     *
      * @return array
      */
-    protected function processRelationshipLinks($primaryObject, Relationship $relationship, $relationshipPayloadKey)
+    protected function processRelationshipLinks($primaryObject, Relationship $relationship)
     {
+        $className = get_class($primaryObject);
         /** @var ClassMetadata $relationshipMetadata */
-        $primaryMetadata = $this->hateoasMetadataFactory->getMetadataForClass(get_class($primaryObject));
+        $primaryMetadata = $this->hateoasMetadataFactory->getMetadataForClass($className);
         $primaryId = $this->getId($primaryMetadata, $primaryObject);
+        $relationshipPropertyName = $relationship->getName();
+
+        $propertyAccessor = PropertyAccess::createPropertyAccessor();
+        $relationshipObject = $propertyAccessor->getValue($primaryObject, $relationshipPropertyName);
+        $relationshipClassName = get_class($relationshipObject);
+        
+        $relationshipMetadata = $this->hateoasMetadataFactory->getMetadataForClass($relationshipClassName);
 
         $links = array();
 
-        // TODO: Improve this
         if ($relationship->getShowLinkSelf()) {
-            $links['self'] = $this->baseUrl.'/'.$primaryMetadata->getResource()
-                    ->getType().'/'.$primaryId.'/relationships/'.$relationshipPayloadKey;
+            $links[self::LINK_SELF] = $this->generateRelationshipUrl($primaryObject, $relationshipObject, $primaryMetadata, $relationshipMetadata);
         }
 
         if ($relationship->getShowLinkRelated()) {
-            $links['related'] = $this->baseUrl.'/'.$primaryMetadata->getResource()
-                    ->getType().'/'.$primaryId.'/'.$relationshipPayloadKey;
+            $links[self::LINK_RELATED] = $this->generateUrlSelf($relationshipMetadata, $relationshipObject);
         }
 
         return $links;

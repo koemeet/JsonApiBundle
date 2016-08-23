@@ -77,7 +77,8 @@ class AnnotationDriver implements DriverInterface
                         $annotation->includeByDefault,
                         $annotation->showData,
                         $annotation->showLinkSelf,
-                        $annotation->showLinkRelated
+                        $annotation->showLinkRelated,
+                        $annotation->route
                     ));
                 }
             }

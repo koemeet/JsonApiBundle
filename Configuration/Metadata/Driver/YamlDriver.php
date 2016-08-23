@@ -53,7 +53,8 @@ class YamlDriver extends AbstractFileDriver
                         (isset($relation['includeByDefault'])) ? $relation['includeByDefault'] : null,
                         (isset($relation['showData'])) ? $relation['showData'] : null,
                         (isset($relation['showLinkSelf'])) ? $relation['showLinkSelf'] : null,
-                        (isset($relation['showLinkRelated'])) ? $relation['showLinkRelated'] : null
+                        (isset($relation['showLinkRelated'])) ? $relation['showLinkRelated'] : null,
+                        (isset($relation['route'])) ? $relation['route'] : null
                     ));
                 }
             }
