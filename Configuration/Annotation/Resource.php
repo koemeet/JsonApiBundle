@@ -21,4 +21,5 @@ final class Resource
 {
     public $type;
     public $showLinkSelf;
+    public $route;
 }

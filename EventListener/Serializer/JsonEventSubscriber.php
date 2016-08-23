@@ -17,13 +17,14 @@ use JMS\Serializer\EventDispatcher\Events;
 use JMS\Serializer\EventDispatcher\EventSubscriberInterface;
 use JMS\Serializer\EventDispatcher\ObjectEvent;
 use JMS\Serializer\Naming\PropertyNamingStrategyInterface;
-use JMS\Serializer\VisitorInterface;
 use Mango\Bundle\JsonApiBundle\Configuration\Metadata\ClassMetadata;
 use Mango\Bundle\JsonApiBundle\Configuration\Relationship;
 use Mango\Bundle\JsonApiBundle\Serializer\JsonApiSerializationVisitor;
+use Metadata\ClassHierarchyMetadata;
 use Metadata\MetadataFactoryInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\PropertyAccess\PropertyAccess;
+use Symfony\Component\Routing\RouterInterface;
 
 /**
  * @author Steffen Brem <steffenbrem@gmail.com>
@@ -60,6 +61,11 @@ class JsonEventSubscriber implements EventSubscriberInterface
     protected $requestStack;
 
     /**
+     * @var RouterInterface
+     */
+    protected $router;
+
+    /**
      * @var string
      */
     protected $currentPath;
@@ -76,12 +82,14 @@ class JsonEventSubscriber implements EventSubscriberInterface
         MetadataFactoryInterface $hateoasMetadataFactory,
         MetadataFactoryInterface $jmsMetadataFactory,
         PropertyNamingStrategyInterface $namingStrategy,
-        RequestStack $requestStack
+        RequestStack $requestStack,
+        RouterInterface $router
     ) {
         $this->hateoasMetadataFactory = $hateoasMetadataFactory;
         $this->jmsMetadataFactory = $jmsMetadataFactory;
         $this->namingStrategy = $namingStrategy;
         $this->requestStack = $requestStack;
+        $this->router = $router;
     }
 
     /**
@@ -184,18 +192,37 @@ class JsonEventSubscriber implements EventSubscriberInterface
                 $visitor->addData('relationships', $relationships);
             }
 
-            // TODO: Improve link handling
             if (true === $metadata->getResource()->getShowLinkSelf()) {
-                $visitor->addData('links', array(
-                    'self' => $this->baseUrl.'/'.$metadata->getResource()
-                            ->getType().'/'.$this->getId($metadata, $object),
-                ));
+                $visitor->addData('links', array($this->generateUrlSelf($metadata, $object)));
             }
 
             $root = (array)$visitor->getRoot();
             $root['included'] = array_values($this->includedRelationships);
             $visitor->setRoot($root);
         }
+    }
+
+    /**
+     * @param ClassMetadata $resource
+     * @param mixed $object
+     * @return string
+     */
+    private function generateUrlSelf(ClassMetadata $metadata, $object)
+    {
+        $params = $this->router->getContext()->getParameters();
+        
+        if ($request = $this->requestStack->getCurrentRequest()) {
+            $params = array_merge($params, $request->attributes->get('_route_params'));
+        }
+
+        $params['id'] = $this->getId($metadata, $object);
+        $resourceIdName = $metadata->getResource()->getType() . 'Id';
+        $params[$resourceIdName] = $this->getId($metadata, $object);
+        $this->router->getContext()->setParameters($params);
+                
+        $link = $this->router->generate($metadata->getResource()->getRoute());
+
+        return $link;
     }
 
     /**
