@@ -238,11 +238,14 @@ class JsonEventSubscriber implements EventSubscriberInterface
     }
     
     /**
-     * @param ClassMetadata $resource
-     * @param mixed $object
+     * @param mixed $primaryObject
+     * @param mixed $relationshipObject
+     * @param ClassMetadata $primaryMetadata
+     * @param ClassMetadata $relationshipMetadata
+     * @param Relationship $relationship
      * @return string
      */
-    private function generateRelationshipUrl($primaryObject, $relationshipObject, ClassMetadata $primaryMetadata, ClassMetadata $relationshipMetadata)
+    private function generateRelationshipUrl($primaryObject, $relationshipObject, ClassMetadata $primaryMetadata, ClassMetadata $relationshipMetadata, Relationship $relationship)
     {
         $params = $this->router->getContext()->getParameters();
 
@@ -258,7 +261,7 @@ class JsonEventSubscriber implements EventSubscriberInterface
 
         $this->router->getContext()->setParameters($params);
 
-        $link = $this->router->generate($relationshipMetadata->getResource()->getRoute());
+        $link = $this->router->generate($relationship->getRoute());
 
         return $link;
     }
@@ -285,7 +288,7 @@ class JsonEventSubscriber implements EventSubscriberInterface
         $links = array();
 
         if ($relationship->getShowLinkSelf()) {
-            $links[self::LINK_SELF] = $this->generateRelationshipUrl($primaryObject, $relationshipObject, $primaryMetadata, $relationshipMetadata);
+            $links[self::LINK_SELF] = $this->generateRelationshipUrl($primaryObject, $relationshipObject, $primaryMetadata, $relationshipMetadata, $relationship);
         }
 
         if ($relationship->getShowLinkRelated()) {
