@@ -185,7 +185,7 @@ class JsonEventSubscriber implements EventSubscriberInterface
             }
 
             // TODO: Improve link handling
-            if (true === $metadata->getResource()->getShowLinkSelf()) {
+            if ($metadata->getResource() && true === $metadata->getResource()->getShowLinkSelf()) {
                 $visitor->addData('links', array(
                     'self' => $this->baseUrl.'/'.$metadata->getResource()
                             ->getType().'/'.$this->getId($metadata, $object),
@@ -330,6 +330,10 @@ class JsonEventSubscriber implements EventSubscriberInterface
      */
     protected function getRelationshipDataArray(ClassMetadata $classMetadata, $id)
     {
+        if (null === $classMetadata->getResource()) {
+            return null;
+        }
+        
         return array(
             'type' => $classMetadata->getResource()->getType(),
             'id' => $id,
