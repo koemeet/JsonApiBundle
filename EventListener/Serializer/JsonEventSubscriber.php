@@ -204,7 +204,7 @@ class JsonEventSubscriber implements EventSubscriberInterface
                 $visitor->addData('relationships', $relationships);
             }
 
-            if (true === $metadata->getResource()->getShowLinkSelf()) {
+            if ($metadata->getResource() && true === $metadata->getResource()->getShowLinkSelf()) {
                 $visitor->addData('links', array(self::LINK_SELF => $this->generateUrlSelf($metadata, $object)));
             }
 
@@ -403,6 +403,10 @@ class JsonEventSubscriber implements EventSubscriberInterface
      */
     protected function getRelationshipDataArray(ClassMetadata $classMetadata, $id)
     {
+        if (null === $classMetadata->getResource()) {
+            return null;
+        }
+        
         return array(
             'type' => $classMetadata->getResource()->getType(),
             'id' => $id,
