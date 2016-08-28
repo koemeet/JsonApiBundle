@@ -488,6 +488,14 @@ class JsonEventSubscriber implements EventSubscriberInterface
                 }
             }
 
+            if (isset($data['data']['id'])) {
+               $id = $data['data']['id'];
+
+                if (null !== $id) {
+                    $attributes[$metadata->getIdField()] = $id;
+                }
+            }
+
             $event->setData($attributes);
         }
     }
