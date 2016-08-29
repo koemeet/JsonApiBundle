@@ -204,6 +204,10 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
     {
         $rs = parent::endVisitingObject($metadata, $data, $type, $context);
 
+        if ($context->getDepth() > 0) {
+            return $rs;
+        }
+
         if ($rs instanceof \ArrayObject) {
             $rs = [];
             $this->setRoot($rs);
