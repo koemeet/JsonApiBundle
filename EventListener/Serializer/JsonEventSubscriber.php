@@ -149,6 +149,10 @@ class JsonEventSubscriber implements EventSubscriberInterface
 
                 $relationshipObject = $propertyAccessor->getValue($object, $relationshipPropertyName);
 
+                if (null === $relationshipObject) {
+                    return;
+                }
+
                 // JMS Serializer support
                 if (!isset($jmsMetadata->propertyMetadata[$relationshipPropertyName])) {
                     continue;
