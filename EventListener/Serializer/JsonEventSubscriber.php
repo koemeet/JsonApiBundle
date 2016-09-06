@@ -317,7 +317,7 @@ class JsonEventSubscriber implements EventSubscriberInterface
             
         $links = array();
 
-        if (is_array($relationshipObject)) {
+        if ($this->isIteratable($relationshipObject)) {
             if ($relationship->getShowLinkSelf()) {
                 $links[self::LINK_SELF] = $this->generateRelationshipCollectionUrl($primaryObject, $primaryMetadata, $relationshipMetadata, $relationship);
             }
