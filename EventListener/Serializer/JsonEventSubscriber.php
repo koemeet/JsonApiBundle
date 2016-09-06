@@ -268,6 +268,32 @@ class JsonEventSubscriber implements EventSubscriberInterface
 
     /**
      * @param mixed $primaryObject
+     * @param ClassMetadata $primaryMetadata
+     * @param ClassMetadata $relationshipMetadata
+     * @param Relationship $relationship
+     * @return string
+     */
+    private function generateRelationshipCollectionUrl($primaryObject, ClassMetadata $primaryMetadata, ClassMetadata $relationshipMetadata, Relationship $relationship)
+    {
+        $params = $this->router->getContext()->getParameters();
+
+        if ($request = $this->requestStack->getCurrentRequest()) {
+            $params = array_merge($params, $request->attributes->get('_route_params'));
+        }
+
+        $primaryIdName = $primaryMetadata->getResource()->getType() . 'Id';
+
+        $params[$primaryIdName] = $this->getId($primaryMetadata, $primaryObject);
+
+        $this->router->getContext()->setParameters($params);
+
+        $link = $this->router->generate($relationship->getRoute());
+
+        return $link;
+    }
+
+    /**
+     * @param mixed $primaryObject
      * @param Relationship $relationship
      * @return array
      */
@@ -281,20 +307,30 @@ class JsonEventSubscriber implements EventSubscriberInterface
 
         $propertyAccessor = PropertyAccess::createPropertyAccessor();
         $relationshipObject = $propertyAccessor->getValue($primaryObject, $relationshipPropertyName);
-        $relationshipClassName = get_class($relationshipObject);
-        
-        $relationshipMetadata = $this->hateoasMetadataFactory->getMetadataForClass($relationshipClassName);
 
+        if (is_array($relationshipObject)) {
+            $relationshipObject = current($relationshipObject);
+        }
+
+        $relationshipClassName = get_class($relationshipObject);
+        $relationshipMetadata = $this->hateoasMetadataFactory->getMetadataForClass($relationshipClassName);
+            
         $links = array();
 
-        if ($relationship->getShowLinkSelf()) {
-            $links[self::LINK_SELF] = $this->generateRelationshipUrl($primaryObject, $relationshipObject, $primaryMetadata, $relationshipMetadata, $relationship);
-        }
+        if (is_array($relationshipObject)) {
+            if ($relationship->getShowLinkSelf()) {
+                $links[self::LINK_SELF] = $this->generateRelationshipCollectionUrl($primaryObject, $primaryMetadata, $relationshipMetadata, $relationship);
+            }
+        } else {
+            if ($relationship->getShowLinkSelf()) {
+                $links[self::LINK_SELF] = $this->generateRelationshipUrl($primaryObject, $relationshipObject, $primaryMetadata, $relationshipMetadata, $relationship);
+            }
 
-        if ($relationship->getShowLinkRelated()) {
-            $links[self::LINK_RELATED] = $this->generateUrlSelf($relationshipMetadata, $relationshipObject);
+            if ($relationship->getShowLinkRelated()) {
+                $links[self::LINK_RELATED] = $this->generateUrlSelf($relationshipMetadata, $relationshipObject);
+            }
         }
-
+        
         return $links;
     }
 
