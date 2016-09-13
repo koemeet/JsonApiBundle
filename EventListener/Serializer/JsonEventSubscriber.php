@@ -545,7 +545,7 @@ class JsonEventSubscriber implements EventSubscriberInterface
                     foreach ($relationshipData['data'] as $relationship) {
                         $relationshipId = $relationship['id'];
                         $relationshipType = $relationship['type'];
-//                        $attributes[$serializedName][] = ['id' => $relationshipId];
+                        $attributes[$serializedName][] = ['id' => $relationshipId];
                     }
                 } else {
                     $relationshipId = $relationshipData['data']['id'];
