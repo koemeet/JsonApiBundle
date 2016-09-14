@@ -43,6 +43,12 @@
             <argument type="service" id="request_stack"/>
             <tag name="jms_serializer.subscribing_handler"/>
         </service>
+        
+        <!-- exception listener -->
+        <service id="json_api.listener.exception_subscriber"
+                 class="Mango\Bundle\JsonApiBundle\EventListener\ExceptionSubscriber">
+            <tag name="kernel.event_subscriber"/>
+        </service>
 
     </services>
 
