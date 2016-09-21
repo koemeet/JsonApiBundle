@@ -313,6 +313,9 @@ class JsonEventSubscriber implements EventSubscriberInterface
         $relationshipObject = $propertyAccessor->getValue($primaryObject, $relationshipPropertyName);
 
         if (is_array($relationshipObject)) {
+            if (empty($relationshipObject)) {
+                return array();
+            }
             $relationshipObject = current($relationshipObject);
         }
 
