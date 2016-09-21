@@ -78,8 +78,6 @@ class JsonEventSubscriber implements EventSubscriberInterface
      */
     protected $currentPath;
 
-    protected $baseUrl = '/api';
-
     /**
      * @param MetadataFactoryInterface        $hateoasMetadataFactory
      * @param MetadataFactoryInterface        $jmsMetadataFactory
