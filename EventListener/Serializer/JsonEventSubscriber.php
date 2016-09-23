@@ -20,15 +20,16 @@ use JMS\Serializer\EventDispatcher\PreDeserializeEvent;
 use JMS\Serializer\Metadata\ClassMetadata as JmsClassMetadata;
 use JMS\Serializer\Metadata\PropertyMetadata;
 use JMS\Serializer\Naming\PropertyNamingStrategyInterface;
+use JMS\Serializer\SerializationContext;
 use Mango\Bundle\JsonApiBundle\Configuration\Metadata\ClassMetadata;
 use Mango\Bundle\JsonApiBundle\Configuration\Relationship;
 use Mango\Bundle\JsonApiBundle\Serializer\JsonApiSerializationVisitor;
-use Metadata\ClassHierarchyMetadata;
 use Metadata\MetadataFactoryInterface;
 use RuntimeException;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\PropertyAccess\PropertyAccess;
 use Symfony\Component\Routing\RouterInterface;
+use Traversable;
 
 /**
  * @author Steffen Brem <steffenbrem@gmail.com>
@@ -349,6 +350,7 @@ class JsonEventSubscriber implements EventSubscriberInterface
      */
     protected function processRelationship($object, Relationship $relationship, Context $context)
     {
+        /* @var $context SerializationContext */
         if (null === $object) {
             return null;
         }
@@ -376,7 +378,7 @@ class JsonEventSubscriber implements EventSubscriberInterface
         if ($relationship->isIncludedByDefault() && $this->canIncludeRelationship($relationshipMetadata, $relationshipId)) {
             $includedRelationship = $relationshipDataArray; // copy data array so we do not override it with our reference
             $this->includedRelationships[] =& $includedRelationship;
-            $includedRelationship = $context->accept($object); // override previous reference with the serialized data
+//            $includedRelationship = $context->accept($object); // override previous reference with the serialized data
         }
 
         // the relationship data can only contain one reference to another resource
@@ -474,7 +476,7 @@ class JsonEventSubscriber implements EventSubscriberInterface
      */
     protected function isIteratable($data)
     {
-        return (is_array($data) || $data instanceof \Traversable);
+        return (is_array($data) || $data instanceof Traversable);
     }
 
     /**
