@@ -11,13 +11,12 @@
 
 namespace Mango\Bundle\JsonApiBundle\Serializer;
 
-use Hateoas\Representation\CollectionRepresentation;
-use Hateoas\Representation\PaginatedRepresentation;
 use JMS\Serializer\Context;
 use JMS\Serializer\JsonSerializationVisitor;
-use Mango\Bundle\JsonApiBundle\Configuration\Metadata\ClassMetadata as JsonApiClassMetadata;
 use JMS\Serializer\Metadata\ClassMetadata;
 use JMS\Serializer\Naming\PropertyNamingStrategyInterface;
+use Mango\Bundle\JsonApiBundle\Configuration\Metadata\ClassMetadata as ClassMetadata2;
+use Mango\Bundle\JsonApiBundle\Configuration\Metadata\ClassMetadata as JsonApiClassMetadata;
 use Mango\Bundle\JsonApiBundle\EventListener\Serializer\JsonEventSubscriber;
 use Metadata\MetadataFactoryInterface;
 
@@ -207,7 +206,7 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
         if ($context->getDepth() > 0) {
             return $rs;
         }
-
+        
         if ($rs instanceof \ArrayObject) {
             $rs = [];
             $this->setRoot($rs);
@@ -256,11 +255,32 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
             $result['relationships'] = $rs['relationships'];
         }
 
+        $root = (array)$context->getVisitor()->getRoot();
+
+        foreach ($jsonApiMetadata->getRelationships() as $relationship) {
+            $relationshipName = $relationship->getName();
+
+            if ($relationship->isIncludedByDefault()) {
+                if (isset($rs[$relationshipName])) {
+                    if (!isset($root['included'])) {
+                        $root['included'] = [];
+                    }
+                }
+            }
+        }
+
+        $context->getVisitor()->setRoot($root);
+        
         if (isset($rs['links'])) {
             $result['links'] = $rs['links'];
         }
 
         return $result;
+    }
+
+    private function addIncluded(array $root, ClassMetadata2 $jsonApiMetadata, $relationshipData)
+    {
+        
     }
 
     /**

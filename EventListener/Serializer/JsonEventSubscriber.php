@@ -213,7 +213,7 @@ class JsonEventSubscriber implements EventSubscriberInterface
             }
 
             $root = (array)$visitor->getRoot();
-            $root['included'] = array_values($this->includedRelationships);
+//            $root['included'] = array_values($this->includedRelationships);
             $visitor->setRoot($root);
         }
     }
