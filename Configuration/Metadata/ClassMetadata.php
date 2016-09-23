@@ -106,6 +106,20 @@ class ClassMetadata extends MergeableClassMetadata implements ClassMetadataInter
     }
 
     /**
+     * @return bool
+     */
+    public function hasRelationship($name)
+    {
+        foreach ($this->relationships as $relationship) {
+            if ($name === $relationship->getName()) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
      * {@inheritDoc}
      */
     public function merge(MergeableInterface $object)

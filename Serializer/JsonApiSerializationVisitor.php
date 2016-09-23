@@ -234,7 +234,8 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
 
         $idField = $jsonApiMetadata->getIdField();
 
-        $result['attributes'] = array_filter($rs, function($key) use ($idField) {
+        $result['attributes'] = array_filter($rs, function($key) use ($idField, $jsonApiMetadata) {
+            
             switch ($key) {
                 case $idField:
                 case 'relationships':
@@ -244,11 +245,13 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
 
             if ($key === JsonEventSubscriber::EXTRA_DATA_KEY) {
                 return false;
+            } elseif ($jsonApiMetadata->hasRelationship($key)) {
+                return false;
             }
 
             return true;
         }, ARRAY_FILTER_USE_KEY);
-
+        
         if (isset($rs['relationships'])) {
             $result['relationships'] = $rs['relationships'];
         }
