@@ -235,7 +235,6 @@ class JsonEventSubscriber implements EventSubscriberInterface
         $resourceIdName = $metadata->getResource()->getType() . 'Id';
         $params[$resourceIdName] = $this->getId($metadata, $object);
         $this->router->getContext()->setParameters($params);
-                
         $link = $this->router->generate($metadata->getResource()->getRoute());
 
         return $link;

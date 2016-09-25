@@ -288,6 +288,10 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
      */
     private function addIncluded(array &$root, JsonApiClassMetadata $jsonApiMetadata, array $relationshipData)
     {
+        if (!isset($relationshipData['id'])) {
+            return;
+        }
+        
         if (!isset($root['included'])) {
             $root['included'] = [];
         }
@@ -296,7 +300,7 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
         foreach ($root['included'] as $included) {
             if (
                 $relationshipData['id'] === $included['id']
-                && $relationshipData['type'] === $included['type']
+                && $jsonApiMetadata->getResource()->getType() === $included['type']
             ) {
                 return;
             }
