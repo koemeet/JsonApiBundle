@@ -15,7 +15,6 @@ use JMS\Serializer\Context;
 use JMS\Serializer\JsonSerializationVisitor;
 use JMS\Serializer\Metadata\ClassMetadata;
 use JMS\Serializer\Naming\PropertyNamingStrategyInterface;
-use Mango\Bundle\JsonApiBundle\Configuration\Metadata\ClassMetadata as ClassMetadata2;
 use Mango\Bundle\JsonApiBundle\Configuration\Metadata\ClassMetadata as JsonApiClassMetadata;
 use Mango\Bundle\JsonApiBundle\EventListener\Serializer\JsonEventSubscriber;
 use Metadata\MetadataFactoryInterface;
@@ -262,8 +261,12 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
 
             if ($relationship->isIncludedByDefault()) {
                 if (isset($rs[$relationshipName])) {
-                    if (!isset($root['included'])) {
-                        $root['included'] = [];
+                    if ($this->isSequentialArray($rs[$relationshipName])) {
+                        foreach ($rs[$relationshipName] as $relationshipData) {
+                            $this->addIncluded($root, $jsonApiMetadata, $relationshipData);
+                        }
+                    } else {
+                        $this->addIncluded($root, $jsonApiMetadata, $rs[$relationshipName]);
                     }
                 }
             }
@@ -278,9 +281,36 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
         return $result;
     }
 
-    private function addIncluded(array $root, ClassMetadata2 $jsonApiMetadata, $relationshipData)
+    private function addIncluded(array &$root, JsonApiClassMetadata $jsonApiMetadata, $relationshipData)
     {
-        
+        if (!isset($root['included'])) {
+            $root['included'] = [];
+        }
+
+        // filter out dupes
+        foreach ($root['included'] as $included) {
+            if (
+                $relationshipData['id'] === $included['id']
+                && $relationshipData['type'] === $included['type']
+            ) {
+                return;
+            }
+        }
+
+        $root['included'][] = [
+            'id' => $relationshipData['id'],
+            'type' => $jsonApiMetadata->getResource()->getType(),
+            'attributes' => $result['attributes'] = array_filter($relationshipData, function($key) {
+                switch ($key) {
+                    case 'id':
+                    case 'type':
+                    case 'relationships':
+                    case 'links':
+                        return false;
+                }
+                return true;
+            }, ARRAY_FILTER_USE_KEY)
+        ];
     }
 
     /**
@@ -316,5 +346,14 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
         }
 
         return false;
+    }
+
+    /**
+     * @param array $arr
+     * @return bool
+     */
+    private function isSequentialArray(array $arr)
+    {
+        return array_keys($arr) === range(0, count($arr) - 1);
     }
 }
