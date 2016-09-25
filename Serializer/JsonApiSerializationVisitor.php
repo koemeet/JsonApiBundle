@@ -281,7 +281,12 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
         return $result;
     }
 
-    private function addIncluded(array &$root, JsonApiClassMetadata $jsonApiMetadata, $relationshipData)
+    /**
+     * @param array $root
+     * @param JsonApiClassMetadata $jsonApiMetadata
+     * @param array $relationshipData
+     */
+    private function addIncluded(array &$root, JsonApiClassMetadata $jsonApiMetadata, array $relationshipData)
     {
         if (!isset($root['included'])) {
             $root['included'] = [];
