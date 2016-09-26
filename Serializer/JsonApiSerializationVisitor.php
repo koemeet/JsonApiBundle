@@ -222,18 +222,13 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
 
         $result = array();
 
-        if (isset($rs[JsonEventSubscriber::EXTRA_DATA_KEY]['type'])) {
-            $result['type'] = $rs[JsonEventSubscriber::EXTRA_DATA_KEY]['type'];
-        }
-
-        if (isset($rs[JsonEventSubscriber::EXTRA_DATA_KEY]['id'])) {
-            $result['id'] = $rs[JsonEventSubscriber::EXTRA_DATA_KEY]['id'];
-        }
+        $result['type'] = $jsonApiMetadata->getResource()->getType();
 
         $idField = $jsonApiMetadata->getIdField();
 
+        $result['id'] = isset($rs[$idField]) ? $rs[$idField] : null;
+        
         $result['attributes'] = array_filter($rs, function($key) use ($idField, $jsonApiMetadata) {
-            
             switch ($key) {
                 case $idField:
                 case 'relationships':
@@ -256,17 +251,21 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
 
         $root = (array)$context->getVisitor()->getRoot();
 
-        foreach ($jsonApiMetadata->getRelationships() as $relationship) {
-            $relationshipName = $relationship->getName();
+        $contextGroups = $context->attributes->get('groups')->getOrElse([]);
 
-            if ($relationship->isIncludedByDefault()) {
-                if (isset($rs[$relationshipName])) {
-                    if ($this->isSequentialArray($rs[$relationshipName])) {
-                        foreach ($rs[$relationshipName] as $relationshipData) {
-                            $this->addIncluded($root, $jsonApiMetadata, $relationshipData);
+        if (!in_array('Sideload', $contextGroups)) {
+            foreach ($jsonApiMetadata->getRelationships() as $relationship) {
+                $relationshipName = $relationship->getName();
+
+                if ($relationship->isIncludedByDefault()) {
+                    if (isset($rs[$relationshipName])) {
+                        if ($this->isSequentialArray($rs[$relationshipName])) {
+                            foreach ($rs[$relationshipName] as $relationshipData) {
+                                $this->addIncluded($root, $jsonApiMetadata, $relationshipData);
+                            }
+                        } else {
+                            $this->addIncluded($root, $jsonApiMetadata, $rs[$relationshipName]);
                         }
-                    } else {
-                        $this->addIncluded($root, $jsonApiMetadata, $rs[$relationshipName]);
                     }
                 }
             }
