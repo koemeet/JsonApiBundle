@@ -52,6 +52,15 @@
             <tag name="jms_serializer.subscribing_handler"/>
         </service>
         -->
+        
+        <!-- jsonapi resource handler -->
+        <service id="json_api.serializer.handler.jsonapi_resource"
+                 class="Mango\Bundle\JsonApiBundle\Serializer\Handler\JsonApiResourceHandler">
+            <argument type="service" id="json_api.metadata_factory"/>
+            <argument type="service" id="jms_serializer.metadata_factory"/>
+            <tag name="jms_serializer.subscribing_handler"/>
+        </service>
+        
         <!-- exception listener -->
         <service id="json_api.listener.exception_subscriber"
                  class="Mango\Bundle\JsonApiBundle\EventListener\ExceptionSubscriber">

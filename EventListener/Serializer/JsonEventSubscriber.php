@@ -11,12 +11,14 @@
 
 namespace Mango\Bundle\JsonApiBundle\EventListener\Serializer;
 
+use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Util\ClassUtils;
 use JMS\Serializer\Context;
 use JMS\Serializer\EventDispatcher\Events;
 use JMS\Serializer\EventDispatcher\EventSubscriberInterface;
 use JMS\Serializer\EventDispatcher\ObjectEvent;
 use JMS\Serializer\EventDispatcher\PreDeserializeEvent;
+use JMS\Serializer\JsonDeserializationVisitor;
 use JMS\Serializer\Metadata\ClassMetadata as JmsClassMetadata;
 use JMS\Serializer\Metadata\PropertyMetadata;
 use JMS\Serializer\Naming\PropertyNamingStrategyInterface;
@@ -24,6 +26,7 @@ use JMS\Serializer\SerializationContext;
 use Mango\Bundle\JsonApiBundle\Configuration\Metadata\ClassMetadata;
 use Mango\Bundle\JsonApiBundle\Configuration\Relationship;
 use Mango\Bundle\JsonApiBundle\Representation\OffsetPaginatedRepresentation;
+use Mango\Bundle\JsonApiBundle\Serializer\JsonApiResource;
 use Mango\Bundle\JsonApiBundle\Serializer\JsonApiSerializationVisitor;
 use Metadata\MetadataFactoryInterface;
 use RuntimeException;
@@ -516,24 +519,28 @@ class JsonEventSubscriber implements EventSubscriberInterface
         $context = $event->getContext();
         $resourceClassName = $type['name'];
         $data = $event->getData();
+        $visitor = $event->getVisitor();
+        /* @var $visitor JsonDeserializationVisitor */
 
         if (OffsetPaginatedRepresentation::class === $resourceClassName) {
             $target = $context->attributes->get('target')->getOrElse(null);
 //            $target->setTotalResults(count($data['data']));
-            $event->setData($data['data']);
 
+            if (isset($data['data'])) {
+                $event->setType(ArrayCollection::class, [['name' => JsonApiResource::class, 'params' => []]]);
+                $event->setData($data['data']);
+            }
+            
             return;
         }
 
-        if (isset($data['attributes'])) {
-            $event->setData($this->processData($data, $resourceClassName));
-        } elseif (isset($data['data'])) {
-            if ($this->isSequentialArray($data['data'])) {
-                $event->setData($data);
-            } else {
-                $event->setData($this->processData($data['data'], $resourceClassName));
-            }
-        }
+//        if (isset($data['attributes'])) {
+//            $event->setData($this->processData($data, $resourceClassName));
+//        } elseif (isset($data['data'])) {
+//            if (!$this->isSequentialArray($data['data'])) {
+//                $event->setData($this->processData($data['data'], $resourceClassName));
+//            }
+//        }
     }
 
     private function processData(array $data, $resourceClassName)
