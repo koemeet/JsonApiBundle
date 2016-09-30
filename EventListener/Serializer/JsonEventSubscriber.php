@@ -23,6 +23,7 @@ use JMS\Serializer\Naming\PropertyNamingStrategyInterface;
 use JMS\Serializer\SerializationContext;
 use Mango\Bundle\JsonApiBundle\Configuration\Metadata\ClassMetadata;
 use Mango\Bundle\JsonApiBundle\Configuration\Relationship;
+use Mango\Bundle\JsonApiBundle\Representation\OffsetPaginatedRepresentation;
 use Mango\Bundle\JsonApiBundle\Serializer\JsonApiSerializationVisitor;
 use Metadata\MetadataFactoryInterface;
 use RuntimeException;
@@ -512,8 +513,17 @@ class JsonEventSubscriber implements EventSubscriberInterface
     public function onPreDeserialize(PreDeserializeEvent $event)
     {
         $type = $event->getType();
+        $context = $event->getContext();
         $resourceClassName = $type['name'];
         $data = $event->getData();
+
+        if (OffsetPaginatedRepresentation::class === $resourceClassName) {
+            $target = $context->attributes->get('target')->getOrElse(null);
+//            $target->setTotalResults(count($data['data']));
+            $event->setData($data['data']);
+
+            return;
+        }
 
         if (isset($data['attributes'])) {
             $event->setData($this->processData($data, $resourceClassName));
@@ -535,7 +545,6 @@ class JsonEventSubscriber implements EventSubscriberInterface
         if (null === $metadata) {
             return;
         }
-
         $attributes = isset($data['attributes']) ? $data['attributes'] : null;
 
         $relationshipsData = isset($data['relationships']) ? $data['relationships'] : array();

@@ -44,6 +44,14 @@
             <tag name="jms_serializer.subscribing_handler"/>
         </service>
         
+<!--        
+         build-in support for jsonapi representations 
+        <service id="json_api.serializer.handler.jsonapi"
+                 class="Mango\Bundle\JsonApiBundle\Serializer\Handler\JsonApiRepresentationHandler">
+            <argument type="service" id="request_stack"/>
+            <tag name="jms_serializer.subscribing_handler"/>
+        </service>
+        -->
         <!-- exception listener -->
         <service id="json_api.listener.exception_subscriber"
                  class="Mango\Bundle\JsonApiBundle\EventListener\ExceptionSubscriber">
