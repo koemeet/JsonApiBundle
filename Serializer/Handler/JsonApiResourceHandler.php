@@ -6,18 +6,19 @@ use JMS\Serializer\Context;
 use JMS\Serializer\GraphNavigator;
 use JMS\Serializer\Handler\SubscribingHandlerInterface;
 use JMS\Serializer\JsonDeserializationVisitor;
+use Mango\Bundle\JsonApiBundle\Configuration\Metadata\MetadataFactory;
 use Mango\Bundle\JsonApiBundle\Serializer\JsonApiResource;
-use Reconz\Bundle\DatalayerClientBundle\Model\Agent;
-use Symfony\Component\Validator\Mapping\ClassMetadata;
 use Metadata\MetadataFactoryInterface;
+use Reconz\Bundle\DatalayerClientBundle\Model\Agent;
+use Mango\Bundle\JsonApiBundle\Configuration\Metadata\ClassMetadata;
 use Symfony\Component\Validator\Mapping\PropertyMetadata;
 
 class JsonApiResourceHandler implements SubscribingHandlerInterface
 {
     /**
-     * @var MetadataFactoryInterface
+     * @var MetadataFactory
      */
-    protected $hateoasMetadataFactory;
+    protected $jsonapiMetadataFactory;
 
     /**
      * @var MetadataFactoryInterface
@@ -27,9 +28,9 @@ class JsonApiResourceHandler implements SubscribingHandlerInterface
     /**
      * 
      */
-    public function __construct(MetadataFactoryInterface $hateoasMetadataFactory, MetadataFactoryInterface $jmsMetadataFactory)
+    public function __construct(MetadataFactory $jsonapiMetadataFactory, MetadataFactoryInterface $jmsMetadataFactory)
     {
-        $this->hateoasMetadataFactory = $hateoasMetadataFactory;
+        $this->jsonapiMetadataFactory = $jsonapiMetadataFactory;
         $this->jmsMetadataFactory = $jmsMetadataFactory;
     }
 
@@ -55,28 +56,29 @@ class JsonApiResourceHandler implements SubscribingHandlerInterface
         Context $context
     )
     {
-        $type = ['name' => Agent::class, 'params' => []];
-        $data = $this->processData($data, Agent::class);
+        $resourceName = $data['type'];
+        $classMetadata = $this->jsonapiMetadataFactory->getMetadataForResource($resourceName);
+
+        if (null === $classMetadata) {
+            return;
+        }
+
+        $type = ['name' => $classMetadata->name, 'params' => []];
+        $data = $this->processData($data, $classMetadata);
+
 
         return $context->accept($data, $type);
     }
 
-    private function processData(array $data, $resourceClassName)
+    private function processData(array $data, ClassMetadata $classMetadata)
     {
-        /** @var ClassMetadata $metadata */
-        $metadata = $this->hateoasMetadataFactory->getMetadataForClass($resourceClassName);
-
-        // if it has no json api metadata, skip it
-        if (null === $metadata) {
-            return;
-        }
         $attributes = isset($data['attributes']) ? $data['attributes'] : null;
 
         $relationshipsData = isset($data['relationships']) ? $data['relationships'] : array();
 
-        $jmsClassMetadata = $this->jmsMetadataFactory->getMetadataForClass($resourceClassName);
+        $jmsClassMetadata = $this->jmsMetadataFactory->getMetadataForClass($classMetadata->name);
 
-        foreach ($metadata->getRelationships() as $relationshipMeta) {
+        foreach ($classMetadata->getRelationships() as $relationshipMeta) {
             $relationshipName = $relationshipMeta->getName();
 
             $jmsPropertyMetadata = isset($jmsClassMetadata->propertyMetadata[$relationshipName]) ? $jmsClassMetadata->propertyMetadata[$relationshipName] : null;
@@ -104,7 +106,7 @@ class JsonApiResourceHandler implements SubscribingHandlerInterface
            $id = $data['id'];
 
             if (null !== $id) {
-                $attributes[$metadata->getIdField()] = $id;
+                $attributes[$classMetadata->getIdField()] = $id;
             }
         }
 

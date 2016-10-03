@@ -29,7 +29,7 @@ class MetadataFactory extends BaseMetadataFactory implements JsonApiResourceMeta
 
     /**
      * @param string $resourceName
-     * @return ClassHierarchyMetadata|MergeableClassMetadata|null
+     * @return ClassMetadata|ClassHierarchyMetadata|MergeableClassMetadata|null
      */
     public function getMetadataForResource($resourceName)
     {
