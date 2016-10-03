@@ -97,6 +97,8 @@ class JsonEventSubscriber implements EventSubscriberInterface
         RouterInterface $router
     ) {
         $this->hateoasMetadataFactory = $hateoasMetadataFactory;
+
+        
         $this->jmsMetadataFactory = $jmsMetadataFactory;
         $this->namingStrategy = $namingStrategy;
         $this->requestStack = $requestStack;
@@ -522,25 +524,20 @@ class JsonEventSubscriber implements EventSubscriberInterface
         $visitor = $event->getVisitor();
         /* @var $visitor JsonDeserializationVisitor */
 
+        if (1 === $context->getDepth() & isset($data['data'])) {
+            $event->setData($data['data']);
+        }
+        
         if (OffsetPaginatedRepresentation::class === $resourceClassName) {
             $target = $context->attributes->get('target')->getOrElse(null);
 //            $target->setTotalResults(count($data['data']));
 
             if (isset($data['data'])) {
                 $event->setType(ArrayCollection::class, [['name' => JsonApiResource::class, 'params' => []]]);
-                $event->setData($data['data']);
             }
             
             return;
         }
-
-//        if (isset($data['attributes'])) {
-//            $event->setData($this->processData($data, $resourceClassName));
-//        } elseif (isset($data['data'])) {
-//            if (!$this->isSequentialArray($data['data'])) {
-//                $event->setData($this->processData($data['data'], $resourceClassName));
-//            }
-//        }
     }
 
     private function processData(array $data, $resourceClassName)

@@ -7,12 +7,12 @@
     <parameters>
         <parameter key="json_api.metadata.annotation_driver.class">Mango\Bundle\JsonApiBundle\Configuration\Metadata\Driver\AnnotationDriver</parameter>
         <parameter key="json_api.metadata.yaml_driver.class">Mango\Bundle\JsonApiBundle\Configuration\Metadata\Driver\YamlDriver</parameter>
+        <parameter key="json_api.metadata_factory.class">Mango\Bundle\JsonApiBundle\Configuration\Metadata\MetadataFactory</parameter>
     </parameters>
 
     <services>
 
-        <service id="json_api.metadata.annotation_driver" class="%json_api.metadata.annotation_driver.class%"
-                 public="false">
+        <service id="json_api.metadata.annotation_driver" class="%json_api.metadata.annotation_driver.class%">
             <argument type="service" id="annotations.reader"/>
         </service>
 
@@ -36,7 +36,7 @@
 
         <service id="json_api.metadata.cache" alias="json_api.metadata.cache.file_cache" public="false"/>
 
-        <service id="json_api.metadata_factory" class="%jms_serializer.metadata.metadata_factory.class%" public="false">
+        <service id="json_api.metadata_factory" class="%json_api.metadata_factory.class%" public="false">
             <argument type="service" id="json_api.metadata.chain_driver"/>
             <argument>Metadata\ClassHierarchyMetadata</argument>
             <argument>%kernel.debug%</argument>

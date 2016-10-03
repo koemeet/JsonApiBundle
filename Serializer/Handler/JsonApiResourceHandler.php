@@ -43,12 +43,12 @@ class JsonApiResourceHandler implements SubscribingHandlerInterface
                 'direction' => GraphNavigator::DIRECTION_DESERIALIZATION,
                 'format' => 'json',
                 'type' => JsonApiResource::class,
-                'method' => 'deserializeResources'
+                'method' => 'deserializeResource'
             ]
         ];
     }
 
-    public function deserializeResources(
+    public function deserializeResource(
         JsonDeserializationVisitor $visitor,
         $data,
         array $type,
