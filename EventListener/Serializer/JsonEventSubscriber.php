@@ -18,7 +18,6 @@ use JMS\Serializer\EventDispatcher\Events;
 use JMS\Serializer\EventDispatcher\EventSubscriberInterface;
 use JMS\Serializer\EventDispatcher\ObjectEvent;
 use JMS\Serializer\EventDispatcher\PreDeserializeEvent;
-use JMS\Serializer\JsonDeserializationVisitor;
 use JMS\Serializer\Metadata\ClassMetadata as JmsClassMetadata;
 use JMS\Serializer\Naming\PropertyNamingStrategyInterface;
 use JMS\Serializer\SerializationContext;
@@ -44,7 +43,6 @@ class JsonEventSubscriber implements EventSubscriberInterface
     const LINK_SELF = 'self';
     const LINK_RELATED = 'related';
     
-
     /**
      * Keep track of all included relationships, so that we do not duplicate them
      *
@@ -96,8 +94,6 @@ class JsonEventSubscriber implements EventSubscriberInterface
         RouterInterface $router
     ) {
         $this->hateoasMetadataFactory = $hateoasMetadataFactory;
-
-        
         $this->jmsMetadataFactory = $jmsMetadataFactory;
         $this->namingStrategy = $namingStrategy;
         $this->requestStack = $requestStack;
@@ -520,8 +516,6 @@ class JsonEventSubscriber implements EventSubscriberInterface
         $context = $event->getContext();
         $resourceClassName = $type['name'];
         $data = $event->getData();
-        $visitor = $event->getVisitor();
-        /* @var $visitor JsonDeserializationVisitor */
 
         if (1 === $context->getDepth() & isset($data['data'])) {
             $event->setData($data['data']);
@@ -530,14 +524,15 @@ class JsonEventSubscriber implements EventSubscriberInterface
                 $event->setType(JsonApiResource::class);
             } elseif (OffsetPaginatedRepresentation::class === $resourceClassName) {
                 $target = $context->attributes->get('target')->getOrElse(null);
-    //            $target->setTotalResults(count($data['data']));
 
+                if (isset($data['meta']['total-results'])) {
+                    $target->setTotalResults($data['meta']['total-results']);
+                }
+    
                 if (isset($data['data'])) {
                     $event->setType(ArrayCollection::class, [['name' => JsonApiResource::class, 'params' => []]]);
                 }
             }
         }
-        
-        
     }
 }
