@@ -26,7 +26,8 @@ class JsonApiResourceHandler implements SubscribingHandlerInterface
     protected $jmsMetadataFactory;
     
     /**
-     * 
+     * @param MetadataFactory $jsonapiMetadataFactory
+     * @param MetadataFactoryInterface $jmsMetadataFactory
      */
     public function __construct(MetadataFactory $jsonapiMetadataFactory, MetadataFactoryInterface $jmsMetadataFactory)
     {
@@ -60,12 +61,11 @@ class JsonApiResourceHandler implements SubscribingHandlerInterface
         $classMetadata = $this->jsonapiMetadataFactory->getMetadataForResource($resourceName);
 
         if (null === $classMetadata) {
-            return;
+            return $visitor->visitArray($data, ['name' => 'array', 'params' => []], $context);
         }
 
         $type = ['name' => $classMetadata->name, 'params' => []];
         $data = $this->processData($data, $classMetadata);
-
 
         return $context->accept($data, $type);
     }
