@@ -517,11 +517,17 @@ class JsonEventSubscriber implements EventSubscriberInterface
         $resourceClassName = $type['name'];
         $data = $event->getData();
 
+        dump($this->requestStack, $context->getDepth(), $data, $type);exit;
+
         if (1 === $context->getDepth() & isset($data['data'])) {
             $event->setData($data['data']);
             
             if ($this->hateoasMetadataFactory->getMetadataForClass($resourceClassName)) {
                 $event->setType(JsonApiResource::class);
+            }  elseif (ArrayCollection::class === $resourceClassName) {
+                $context->attributes->set('target', new ArrayCollection());
+                
+                $event->setType(ArrayCollection::class, [['name' => JsonApiResource::class, 'params' => []]]);
             } elseif (OffsetPaginatedRepresentation::class === $resourceClassName) {
                 $target = $context->attributes->get('target')->getOrElse(null);
 

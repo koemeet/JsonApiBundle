@@ -6,11 +6,10 @@ use JMS\Serializer\Context;
 use JMS\Serializer\GraphNavigator;
 use JMS\Serializer\Handler\SubscribingHandlerInterface;
 use JMS\Serializer\JsonDeserializationVisitor;
+use Mango\Bundle\JsonApiBundle\Configuration\Metadata\ClassMetadata;
 use Mango\Bundle\JsonApiBundle\Configuration\Metadata\MetadataFactory;
 use Mango\Bundle\JsonApiBundle\Serializer\JsonApiResource;
 use Metadata\MetadataFactoryInterface;
-use Reconz\Bundle\DatalayerClientBundle\Model\Agent;
-use Mango\Bundle\JsonApiBundle\Configuration\Metadata\ClassMetadata;
 use Symfony\Component\Validator\Mapping\PropertyMetadata;
 
 class JsonApiResourceHandler implements SubscribingHandlerInterface
