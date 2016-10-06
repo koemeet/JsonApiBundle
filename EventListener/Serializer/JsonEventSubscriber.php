@@ -429,7 +429,7 @@ class JsonEventSubscriber implements EventSubscriberInterface
 
     /**
      * @param array $resources
-     * @param int   $index
+     * @param int $index
      *
      * @return array
      */
@@ -516,8 +516,6 @@ class JsonEventSubscriber implements EventSubscriberInterface
         $context = $event->getContext();
         $resourceClassName = $type['name'];
         $data = $event->getData();
-
-        dump($this->requestStack, $context->getDepth(), $data, $type);exit;
 
         if (1 === $context->getDepth() & isset($data['data'])) {
             $event->setData($data['data']);
