@@ -111,4 +111,13 @@ class JsonApiResourceHandler implements SubscribingHandlerInterface
 
         return $attributes;
     }
+
+    /**
+     * @param array $data
+     * @return bool
+     */
+    private function isSequentialArray($data)
+    {
+        return is_array($data) && array_keys($data) === range(0, count($data) - 1);
+    }
 }
