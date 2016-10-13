@@ -12,6 +12,7 @@
 namespace Mango\Bundle\JsonApiBundle\EventListener;
 
 use Mango\Bundle\JsonApiBundle\Exception\InvalidDataException;
+use Mango\Bundle\JsonApiBundle\Exception\ResourceNotFoundException;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpKernel\Event\GetResponseForExceptionEvent;
@@ -45,20 +46,34 @@ class ExceptionSubscriber implements EventSubscriberInterface
         
         $exception = $event->getException();
 
-        if (!($exception instanceof InvalidDataException)) {
-            return;
+        if ($exception instanceof InvalidDataException) {
+            /* @var $exception InvalidDataException */
+
+            $response = new JsonResponse([
+                    'errors' => $this->transformConstraintListToArray($exception->getErrors())
+                ], 400
+            );
+            $event->setResponse($response);
+        } elseif ($exception instanceof ResourceNotFoundException) {
+            /* @var $exception ResourceNotFoundException */
+            $response = new JsonResponse([
+                    'errors' => [
+                        [
+                            'status' => 404,
+                            'title' => 'Resource not found',
+                            'Details' => sprintf('Resource %s#%s not found', $exception->getResourceType(), $exception->getResourceId()),
+                            'source' => [
+                                'pointer' => '/data/id'
+                            ]
+                        ]
+                    ]
+                ], 404
+            );
+            $event->setResponse($response);
         }
 
-        /* @var $exception InvalidDataException */
-
-        $response = new JsonResponse(
-            [
-                'data' => $this->transformConstraintListToArray($exception->getErrors())
-            ],
-            400
-        );
         
-        $event->setResponse($response);
+        
     }
 
     /**
