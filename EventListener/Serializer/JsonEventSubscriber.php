@@ -377,17 +377,10 @@ class JsonEventSubscriber implements EventSubscriberInterface
         $groups = $context->attributes->get('groups')->getOrElse([]);
 
         // only include this relationship if it is needed
-        if ($relationship->isIncludedByDefault() && $this->canIncludeRelationship($relationshipMetadata, $relationshipId) && !in_array('Sideload', $groups)) {
+        if ($relationship->isIncludedByDefault() && $this->canIncludeRelationship($relationshipMetadata, $relationshipId)) {
             $includedRelationship = $relationshipDataArray; // copy data array so we do not override it with our reference
-            $this->includedRelationships[] =& $includedRelationship;
-            
-            $sideLoadContext = new SerializationContext();
-            $sideLoadContext->setGroups(['Sideload'])
-                ->setSerializeNull(true)->enableMaxDepthChecks();
-            $sideLoadContext->initialize('json', $context->getVisitor(), $context->getNavigator(), $context->getMetadataFactory());
-            
-            $includedRelationship = $sideLoadContext->accept($object); // override previous reference with the serialized data
-
+//            $this->includedRelationships[] =& $includedRelationship;
+//            $includedRelationship = $context->accept($object); // override previous reference with the serialized data
         }
 
         // the relationship data can only contain one reference to another resource

@@ -120,6 +120,20 @@ class ClassMetadata extends MergeableClassMetadata implements ClassMetadataInter
     }
 
     /**
+     * @return Relationship
+     */
+    public function getRelationship($name)
+    {
+        foreach ($this->relationships as $relationship) {
+            if ($name === $relationship->getName()) {
+                return $relationship;
+            }
+        }
+
+        return null;
+    }
+
+    /**
      * {@inheritDoc}
      */
     public function merge(MergeableInterface $object)
