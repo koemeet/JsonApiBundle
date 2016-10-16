@@ -42,13 +42,6 @@ class JsonEventSubscriber implements EventSubscriberInterface
 
     const LINK_SELF = 'self';
     const LINK_RELATED = 'related';
-    
-    /**
-     * Keep track of all included relationships, so that we do not duplicate them
-     *
-     * @var array
-     */
-    protected $includedRelationships = array();
 
     /**
      * @var MetadataFactoryInterface
@@ -214,7 +207,7 @@ class JsonEventSubscriber implements EventSubscriberInterface
             }
 
             $root = (array)$visitor->getRoot();
-            $root['included'] = array_values($this->includedRelationships);
+
             $visitor->setRoot($root);
         }
     }
@@ -376,13 +369,6 @@ class JsonEventSubscriber implements EventSubscriberInterface
 
         $groups = $context->attributes->get('groups')->getOrElse([]);
 
-        // only include this relationship if it is needed
-        if ($relationship->isIncludedByDefault() && $this->canIncludeRelationship($relationshipMetadata, $relationshipId)) {
-            $includedRelationship = $relationshipDataArray; // copy data array so we do not override it with our reference
-//            $this->includedRelationships[] =& $includedRelationship;
-//            $includedRelationship = $context->accept($object); // override previous reference with the serialized data
-        }
-
         // the relationship data can only contain one reference to another resource
         return $relationshipDataArray;
     }
@@ -479,25 +465,6 @@ class JsonEventSubscriber implements EventSubscriberInterface
     protected function isIteratable($data)
     {
         return (is_array($data) || $data instanceof Traversable);
-    }
-
-    /**
-     * @param ClassMetadata $classMetadata
-     * @param               $id
-     *
-     * @return bool
-     */
-    protected function canIncludeRelationship(ClassMetadata $classMetadata, $id)
-    {
-        foreach ($this->includedRelationships as $includedRelationship) {
-            if ($includedRelationship['type'] === $classMetadata->getResource()->getType()
-                && $includedRelationship['id'] === $id
-            ) {
-                return false;
-            }
-        }
-
-        return true;
     }
 
     /**

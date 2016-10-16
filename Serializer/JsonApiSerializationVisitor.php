@@ -193,6 +193,8 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
             return parent::visitProperty($metadata, $data, $context);
         }
 
+        $relationship = $jsonApiMetadata->getRelationship($metadata->name);
+
         $propertyData = $metadata->getValue($data);
 
         $included = [];
@@ -209,7 +211,7 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
                     'id' => $propertyMetadata->getIdValue($v)
                 ];
 
-                if ($context->getDepth() < 2) {
+                if ($relationship->isIncludedByDefault() && $context->getDepth() < 2) {
                     $this->addIncluded($propertyMetadata, $context->accept($v));
                 }
             }
@@ -220,7 +222,7 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
                 'type' => $propertyMetadata->getResource()->getType(),
                 'id' => $propertyMetadata->getIdValue($propertyData)
             ];
-            if ($context->getDepth() < 2) {
+            if ($relationship->isIncludedByDefault() && $context->getDepth() < 2) {
                 $this->addIncluded($propertyMetadata, $context->accept($propertyData));
             }
         }
