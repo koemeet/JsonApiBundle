@@ -20,6 +20,8 @@ use Metadata\MergeableInterface;
 
 /**
  * @author Steffen Brem <steffenbrem@gmail.com>
+ *
+ * @property \ReflectionClass $reflection
  */
 class ClassMetadata extends MergeableClassMetadata implements ClassMetadataInterface
 {
@@ -79,6 +81,18 @@ class ClassMetadata extends MergeableClassMetadata implements ClassMetadataInter
     public function setIdField($idField)
     {
         $this->idField = $idField;
+    }
+
+    /**
+     * @return string
+     */
+    public function getIdValue($object)
+    {
+        $idField = $this->getIdField();
+
+        $idReflection = $this->reflection->getProperty($idField);
+        $idReflection->setAccessible(true);
+        $idReflection->getValue($object);
     }
 
     /**
