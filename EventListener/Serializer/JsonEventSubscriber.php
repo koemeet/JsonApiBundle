@@ -474,6 +474,8 @@ class JsonEventSubscriber implements EventSubscriberInterface
     {
         $type = $event->getType();
         $context = $event->getContext();
+        /* @var $context \JMS\Serializer\DeserializationContext */
+        
         $resourceClassName = $type['name'];
         $data = $event->getData();
 
@@ -498,5 +500,11 @@ class JsonEventSubscriber implements EventSubscriberInterface
                 }
             }
         }
+
+//        if ($context->getDepth() && isset($data['included'])) {
+//            foreach ($data['included'] as $includedData) {
+//                $included = $context->accept($includedData, ['name' => JsonApiResource::class, 'params' => []]);
+//            }
+//        }
     }
 }

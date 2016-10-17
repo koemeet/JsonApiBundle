@@ -23,26 +23,14 @@ class JsonApiDeserializationVisitor extends JsonDeserializationVisitor
 
     protected $includedResources = [];
 
-    protected $root;
-
     public function __construct(
         PropertyNamingStrategyInterface $namingStrategy,
         ObjectConstructorInterface $objectConstructor,
         MetadataFactory $metadataFactory
     )
     {
-        
         parent::__construct($namingStrategy, $objectConstructor);
         $this->metadataFactory = $metadataFactory;
-    }
-
-    public function prepare($data)
-    {
-        $data = parent::prepare($data);
-
-        $this->root = $data;
-        
-        return $data;
     }
 
     public function visitProperty(PropertyMetadata $metadata, $data, Context $context)
@@ -51,16 +39,5 @@ class JsonApiDeserializationVisitor extends JsonDeserializationVisitor
 
         return $obj;
     }
-//
-//    public function setNavigator(GraphNavigator $navigator)
-//    {
-//        parent::setNavigator($navigator);
-//
-//        if (isset($this->root['included'])) {
-//            foreach ($this->root['included'] as $included) {
-//                $includedObject = $navigator->accept($included, ['name' => JsonApiResource::class, 'params' => []], new \JMS\Serializer\DeserializationContext());
-//                dump($includedObject);exit;
-//            }
-//        }
-//    }
+
 }
