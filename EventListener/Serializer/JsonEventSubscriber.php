@@ -357,7 +357,7 @@ class JsonEventSubscriber implements EventSubscriberInterface
 
         if (null === $relationshipMetadata) {
             throw new RuntimeException(sprintf(
-                'Metadata for class %s not found. Did you define at as a JSON-API resource?',
+                'Metadata for class %s not found. Did you define it as a JSON-API resource?',
                 ClassUtils::getRealClass(get_class($object))
             ));
         }
