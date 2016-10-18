@@ -61,7 +61,7 @@ class ExceptionSubscriber implements EventSubscriberInterface
                         [
                             'status' => 404,
                             'title' => 'Resource not found',
-                            'Details' => sprintf('Resource %s#%s not found', $exception->getResourceType(), $exception->getResourceId()),
+                            'details' => sprintf('Resource %s#%s not found', $exception->getResourceType(), $exception->getResourceId()),
                             'source' => [
                                 'pointer' => '/data/id'
                             ]
