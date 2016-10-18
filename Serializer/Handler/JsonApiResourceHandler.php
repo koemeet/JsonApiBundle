@@ -86,8 +86,10 @@ class JsonApiResourceHandler implements SubscribingHandlerInterface
             $serializedName = $jmsPropertyMetadata->serializedName ?: $relationshipName;
             if (isset($relationshipsData[$serializedName])) {
                 $relationshipData = $relationshipsData[$serializedName];
-
-                if ($this->isSequentialArray($relationshipData['data'])) {
+                if (empty($relationshipData['data'])) {
+                    dump($relationshipData);
+                    // don't know whether this is a collection
+                } elseif ($this->isSequentialArray($relationshipData['data'])) {
                     foreach ($relationshipData['data'] as $relationship) {
                         $relationshipId = $relationship['id'];
                         $relationshipType = $relationship['type'];
@@ -102,8 +104,7 @@ class JsonApiResourceHandler implements SubscribingHandlerInterface
         }
 
         if (isset($data['id'])) {
-           $id = $data['id'];
-
+            $id = $data['id'];
             if (null !== $id) {
                 $attributes[$classMetadata->getIdField()] = $id;
             }
