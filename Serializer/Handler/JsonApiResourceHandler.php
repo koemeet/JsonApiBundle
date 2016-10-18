@@ -87,7 +87,6 @@ class JsonApiResourceHandler implements SubscribingHandlerInterface
             if (isset($relationshipsData[$serializedName])) {
                 $relationshipData = $relationshipsData[$serializedName];
                 if (empty($relationshipData['data'])) {
-                    dump($relationshipData);
                     // don't know whether this is a collection
                 } elseif ($this->isSequentialArray($relationshipData['data'])) {
                     foreach ($relationshipData['data'] as $relationship) {
