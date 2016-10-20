@@ -14,6 +14,7 @@ namespace Mango\Bundle\JsonApiBundle\EventListener\Serializer;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Util\ClassUtils;
 use JMS\Serializer\Context;
+use JMS\Serializer\DeserializationContext;
 use JMS\Serializer\EventDispatcher\Events;
 use JMS\Serializer\EventDispatcher\EventSubscriberInterface;
 use JMS\Serializer\EventDispatcher\ObjectEvent;
@@ -73,6 +74,8 @@ class JsonEventSubscriber implements EventSubscriberInterface
      */
     protected $currentPath;
 
+    protected $includedData;
+
     /**
      * @param MetadataFactoryInterface        $hateoasMetadataFactory
      * @param MetadataFactoryInterface        $jmsMetadataFactory
@@ -91,6 +94,7 @@ class JsonEventSubscriber implements EventSubscriberInterface
         $this->namingStrategy = $namingStrategy;
         $this->requestStack = $requestStack;
         $this->router = $router;
+        $this->includedData = [];
     }
 
     /**
@@ -108,6 +112,11 @@ class JsonEventSubscriber implements EventSubscriberInterface
                 'event' => Events::PRE_DESERIALIZE,
                 'format' => 'json',
                 'method' => 'onPreDeserialize',
+            ),
+            array(
+                'event' => Events::POST_DESERIALIZE,
+                'format' => 'json',
+                'method' => 'onPostDeserialize',
             ),
         );
     }
@@ -474,7 +483,7 @@ class JsonEventSubscriber implements EventSubscriberInterface
     {
         $type = $event->getType();
         $context = $event->getContext();
-        /* @var $context \JMS\Serializer\DeserializationContext */
+        /* @var $context DeserializationContext */
         
         $resourceClassName = $type['name'];
         $data = $event->getData();
@@ -499,12 +508,23 @@ class JsonEventSubscriber implements EventSubscriberInterface
                     $event->setType(ArrayCollection::class, [['name' => JsonApiResource::class, 'params' => []]]);
                 }
             }
-        }
 
-//        if ($context->getDepth() && isset($data['included'])) {
-//            foreach ($data['included'] as $includedData) {
-//                $included = $context->accept($includedData, ['name' => JsonApiResource::class, 'params' => []]);
-//            }
-//        }
+            if (isset($data['included'])) {
+                $this->includedData = $data['included'];
+            }
+        }
+    }
+
+    /**
+     * @param ObjectEvent $event
+     */
+    public function onPostDeserialize(ObjectEvent $event)
+    {
+        $context = $event->getContext();
+        /* @var $context DeserializationContext */
+
+        while ($includedData = array_pop($this->includedData)) {
+            $included = $context->accept($includedData, ['name' => JsonApiResource::class, 'params' => []]);
+        }
     }
 }

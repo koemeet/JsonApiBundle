@@ -18,6 +18,7 @@ use JMS\Serializer\Metadata\ClassMetadata;
 use JMS\Serializer\VisitorInterface;
 use Mango\Bundle\JsonApiBundle\Configuration\Metadata\MetadataFactory as JsonApiMetadataFactory;
 use Metadata\MetadataFactoryInterface;
+use Mango\Bundle\JsonApiBundle\Configuration\Metadata\ClassMetadata as JsonApiClassMetadata;
 
 /**
  * 
@@ -40,8 +41,7 @@ class UnserializeJsonApiConstructor extends UnserializeObjectConstructor
     protected $repository;
 
     /**
-     * @param ObjectConstructorInterface $fallbackConstructor
-     * @param JsonApiMetadataFactory $jsonapiMetadataFactory
+     * 
      */
     public function __construct(ObjectConstructorInterface $fallbackConstructor, JsonApiMetadataFactory $jsonapiMetadataFactory)
     {
@@ -49,32 +49,54 @@ class UnserializeJsonApiConstructor extends UnserializeObjectConstructor
         $this->jsonapiMetadataFactory = $jsonapiMetadataFactory;
     }
 
+    /**
+     * @inheritDoc
+     */
     public function construct(VisitorInterface $visitor, ClassMetadata $metadata, $data, array $type, DeserializationContext $context)
     {
-        $object = $this->findObject($metadata, $type);
+        $jsonapiClassMetadata = $this->jsonapiMetadataFactory->getMetadataForClass($metadata->name);
 
-        if ($object) {
-            return $object;
+        if ($jsonapiClassMetadata && $jsonapiClassMetadata->getResource()) {
+            $object = $this->findObject($jsonapiClassMetadata, $data);
+
+            if ($object) {
+                return $object;
+            }
         }
 
         $object = $this->fallbackConstructor->construct($visitor, $metadata, $data, $type, $context);
-
         
+        $this->storeObject($jsonapiClassMetadata, $object, $data);
 
         return $object;
     }
 
+    protected function storeObject(JsonApiClassMetadata $jsonapiClassMetadata, $object, array $data)
+    {
+        $idField = $jsonapiClassMetadata->getIdField();
+        if (!isset($data[$idField])) {
+            return null;
+        }
+
+        $resourceId = $data[$idField];
+        $resourceType = $jsonapiClassMetadata->getResource()->getType();
+
+        $this->repository[$resourceType][$resourceId] = $object;
+    }
+
     /**
-     * @param ClassMetadata $metadata
-     * @param array $data
      * @return object|null
      */
-    protected function findObject(ClassMetadata $metadata, $data)
+    protected function findObject(JsonApiClassMetadata $jsonapiClassMetadata, array $data)
     {
-        $jsonapiClassMetadata = $this->jsonapiMetadataFactory->getMetadataForResource($data['type']);
-        $resourceId = $data['id'];
-        $resourceType = $metadata->getResource()->getType();
-        
+        $idField = $jsonapiClassMetadata->getIdField();
+        if (!isset($data[$idField])) {
+            return null;
+        }
+
+        $resourceId = $data[$idField];
+        $resourceType = $jsonapiClassMetadata->getResource()->getType();
+
         if (isset($this->repository[$resourceType][$resourceId])) {
             return $this->repository[$resourceType][$resourceId];
         }
