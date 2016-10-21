@@ -56,12 +56,14 @@ class UnserializeJsonApiConstructor extends UnserializeObjectConstructor
     {
         $jsonapiClassMetadata = $this->jsonapiMetadataFactory->getMetadataForClass($metadata->name);
 
-        if ($jsonapiClassMetadata && $jsonapiClassMetadata->getResource()) {
-            $object = $this->findObject($jsonapiClassMetadata, $data);
+        if (!$jsonapiClassMetadata || !$jsonapiClassMetadata->getResource()) {
+            return $this->fallbackConstructor->construct($visitor, $metadata, $data, $type, $context);
+        }
 
-            if ($object) {
-                return $object;
-            }
+        $object = $this->findObject($jsonapiClassMetadata, $data);
+
+        if ($object) {
+            return $object;
         }
 
         $object = $this->fallbackConstructor->construct($visitor, $metadata, $data, $type, $context);
