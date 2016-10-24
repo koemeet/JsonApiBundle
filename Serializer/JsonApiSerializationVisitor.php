@@ -270,6 +270,7 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
                 case $idField:
                 case 'relationships':
                 case 'links':
+                case '__DATA__':
                     return false;
             }
 
@@ -313,7 +314,8 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
             }
         }
 
-        $this->includedResources[] = [
+        $resource =
+        [
             'id' => $relationshipData['id'],
             'type' => $jsonApiMetadata->getResource()->getType(),
             'attributes' => $result['attributes'] = array_filter($relationshipData, function($key) {
@@ -321,12 +323,23 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
                     case 'id':
                     case 'type':
                     case 'relationships':
+                    case '__DATA__':
                     case 'links':
                         return false;
                 }
                 return true;
             }, ARRAY_FILTER_USE_KEY)
         ];
+            
+        if (isset($relationshipData['relationships'])) {
+            $resource['relationships'] = $relationshipData['relationships'];
+        }
+
+        if (isset($relationshipData['links'])) {
+            $resource['links'] = $relationshipData['links'];
+        }
+
+        $this->includedResources[] = $resource;
     }
 
     /**
