@@ -11,19 +11,28 @@
 
 namespace Mango\Bundle\JsonApiBundle\EventListener\Serializer;
 
+use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Util\ClassUtils;
 use JMS\Serializer\Context;
+use JMS\Serializer\DeserializationContext;
 use JMS\Serializer\EventDispatcher\Events;
 use JMS\Serializer\EventDispatcher\EventSubscriberInterface;
 use JMS\Serializer\EventDispatcher\ObjectEvent;
+use JMS\Serializer\EventDispatcher\PreDeserializeEvent;
+use JMS\Serializer\Metadata\ClassMetadata as JmsClassMetadata;
 use JMS\Serializer\Naming\PropertyNamingStrategyInterface;
-use JMS\Serializer\VisitorInterface;
+use JMS\Serializer\SerializationContext;
 use Mango\Bundle\JsonApiBundle\Configuration\Metadata\ClassMetadata;
 use Mango\Bundle\JsonApiBundle\Configuration\Relationship;
+use Mango\Bundle\JsonApiBundle\Representation\OffsetPaginatedRepresentation;
+use Mango\Bundle\JsonApiBundle\Serializer\JsonApiResource;
 use Mango\Bundle\JsonApiBundle\Serializer\JsonApiSerializationVisitor;
 use Metadata\MetadataFactoryInterface;
+use RuntimeException;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\PropertyAccess\PropertyAccess;
+use Symfony\Component\Routing\RouterInterface;
+use Traversable;
 
 /**
  * @author Steffen Brem <steffenbrem@gmail.com>
@@ -32,12 +41,8 @@ class JsonEventSubscriber implements EventSubscriberInterface
 {
     const EXTRA_DATA_KEY = '__DATA__';
 
-    /**
-     * Keep track of all included relationships, so that we do not duplicate them
-     *
-     * @var array
-     */
-    protected $includedRelationships = array();
+    const LINK_SELF = 'self';
+    const LINK_RELATED = 'related';
 
     /**
      * @var MetadataFactoryInterface
@@ -60,11 +65,16 @@ class JsonEventSubscriber implements EventSubscriberInterface
     protected $requestStack;
 
     /**
+     * @var RouterInterface
+     */
+    protected $router;
+
+    /**
      * @var string
      */
     protected $currentPath;
 
-    protected $baseUrl = '/api';
+    protected $includedData;
 
     /**
      * @param MetadataFactoryInterface        $hateoasMetadataFactory
@@ -76,12 +86,15 @@ class JsonEventSubscriber implements EventSubscriberInterface
         MetadataFactoryInterface $hateoasMetadataFactory,
         MetadataFactoryInterface $jmsMetadataFactory,
         PropertyNamingStrategyInterface $namingStrategy,
-        RequestStack $requestStack
+        RequestStack $requestStack,
+        RouterInterface $router
     ) {
         $this->hateoasMetadataFactory = $hateoasMetadataFactory;
         $this->jmsMetadataFactory = $jmsMetadataFactory;
         $this->namingStrategy = $namingStrategy;
         $this->requestStack = $requestStack;
+        $this->router = $router;
+        $this->includedData = [];
     }
 
     /**
@@ -94,6 +107,16 @@ class JsonEventSubscriber implements EventSubscriberInterface
                 'event' => Events::POST_SERIALIZE,
                 'format' => 'json',
                 'method' => 'onPostSerialize',
+            ),
+            array(
+                'event' => Events::PRE_DESERIALIZE,
+                'format' => 'json',
+                'method' => 'onPreDeserialize',
+            ),
+            array(
+                'event' => Events::POST_DESERIALIZE,
+                'format' => 'json',
+                'method' => 'onPostDeserialize',
             ),
         );
     }
@@ -108,11 +131,11 @@ class JsonEventSubscriber implements EventSubscriberInterface
         $metadata = $this->hateoasMetadataFactory->getMetadataForClass(get_class($object));
 
         // if it has no json api metadata, skip it
-        if (null === $metadata) {
+        if (null === $metadata || !$metadata->getResource()) {
             return;
         }
 
-        /** @var \JMS\Serializer\Metadata\ClassMetadata $jmsMetadata */
+        /** @var JmsClassMetadata $jmsMetadata */
         $jmsMetadata = $this->jmsMetadataFactory->getMetadataForClass(get_class($object));
 
         $propertyAccessor = PropertyAccess::createPropertyAccessor();
@@ -129,6 +152,10 @@ class JsonEventSubscriber implements EventSubscriberInterface
 
                 $relationshipObject = $propertyAccessor->getValue($object, $relationshipPropertyName);
 
+                if (null === $relationshipObject) {
+                    return;
+                }
+
                 // JMS Serializer support
                 if (!isset($jmsMetadata->propertyMetadata[$relationshipPropertyName])) {
                     continue;
@@ -140,7 +167,7 @@ class JsonEventSubscriber implements EventSubscriberInterface
                 $relationshipData = array();
 
                 // add `links`
-                $links = $this->processRelationshipLinks($object, $relationship, $relationshipPayloadKey);
+                $links = $this->processRelationshipLinks($object, $relationship);
                 if ($links) {
                     $relationshipData['links'] = $links;
                 }
@@ -184,44 +211,135 @@ class JsonEventSubscriber implements EventSubscriberInterface
                 $visitor->addData('relationships', $relationships);
             }
 
-            // TODO: Improve link handling
-            if (true === $metadata->getResource()->getShowLinkSelf()) {
-                $visitor->addData('links', array(
-                    'self' => $this->baseUrl.'/'.$metadata->getResource()
-                            ->getType().'/'.$this->getId($metadata, $object),
-                ));
+            if ($metadata->getResource() && true === $metadata->getResource()->getShowLinkSelf()) {
+                $visitor->addData('links', array(self::LINK_SELF => $this->generateUrlSelf($metadata, $object)));
             }
 
             $root = (array)$visitor->getRoot();
-            $root['included'] = array_values($this->includedRelationships);
+
             $visitor->setRoot($root);
         }
     }
 
     /**
+     * @param ClassMetadata $resource
+     * @param mixed $object
+     * @return string
+     */
+    private function generateUrlSelf(ClassMetadata $metadata, $object)
+    {
+        $params = $this->router->getContext()->getParameters();
+        
+        if ($request = $this->requestStack->getCurrentRequest()) {
+            $params = array_merge($params, $request->attributes->get('_route_params'));
+        }
+
+        $params['id'] = $this->getId($metadata, $object);
+        $resourceIdName = $metadata->getResource()->getType() . 'Id';
+        $params[$resourceIdName] = $this->getId($metadata, $object);
+        $this->router->getContext()->setParameters($params);
+        $link = $this->router->generate($metadata->getResource()->getRoute());
+
+        return $link;
+    }
+    
+    /**
+     * @param mixed $primaryObject
+     * @param mixed $relationshipObject
+     * @param ClassMetadata $primaryMetadata
+     * @param ClassMetadata $relationshipMetadata
      * @param Relationship $relationship
-     *
+     * @return string
+     */
+    private function generateRelationshipUrl($primaryObject, $relationshipObject, ClassMetadata $primaryMetadata, ClassMetadata $relationshipMetadata, Relationship $relationship)
+    {
+        $params = $this->router->getContext()->getParameters();
+
+        if ($request = $this->requestStack->getCurrentRequest()) {
+            $params = array_merge($params, $request->attributes->get('_route_params'));
+        }
+
+        $primaryIdName = $primaryMetadata->getResource()->getType() . 'Id';
+        $params[$primaryIdName] = $this->getId($primaryMetadata, $primaryObject);
+
+        $relationshipIdName = $relationshipMetadata->getResource()->getType() . 'Id';
+        $params[$relationshipIdName] = $this->getId($relationshipMetadata, $relationshipObject);
+
+        $this->router->getContext()->setParameters($params);
+
+        $link = $this->router->generate($relationship->getRoute());
+
+        return $link;
+    }
+
+    /**
+     * @param mixed $primaryObject
+     * @param ClassMetadata $primaryMetadata
+     * @param ClassMetadata $relationshipMetadata
+     * @param Relationship $relationship
+     * @return string
+     */
+    private function generateRelationshipCollectionUrl($primaryObject, ClassMetadata $primaryMetadata, ClassMetadata $relationshipMetadata, Relationship $relationship)
+    {
+        $params = $this->router->getContext()->getParameters();
+
+        if ($request = $this->requestStack->getCurrentRequest()) {
+            $params = array_merge($params, $request->attributes->get('_route_params'));
+        }
+
+        $primaryIdName = $primaryMetadata->getResource()->getType() . 'Id';
+
+        $params[$primaryIdName] = $this->getId($primaryMetadata, $primaryObject);
+
+        $this->router->getContext()->setParameters($params);
+
+        $link = $this->router->generate($relationship->getRoute());
+
+        return $link;
+    }
+
+    /**
+     * @param mixed $primaryObject
+     * @param Relationship $relationship
      * @return array
      */
-    protected function processRelationshipLinks($primaryObject, Relationship $relationship, $relationshipPayloadKey)
+    protected function processRelationshipLinks($primaryObject, Relationship $relationship)
     {
+        $className = get_class($primaryObject);
         /** @var ClassMetadata $relationshipMetadata */
-        $primaryMetadata = $this->hateoasMetadataFactory->getMetadataForClass(get_class($primaryObject));
+        $primaryMetadata = $this->hateoasMetadataFactory->getMetadataForClass($className);
         $primaryId = $this->getId($primaryMetadata, $primaryObject);
+        $relationshipPropertyName = $relationship->getName();
 
+        $propertyAccessor = PropertyAccess::createPropertyAccessor();
+        $relationshipObject = $propertyAccessor->getValue($primaryObject, $relationshipPropertyName);
+
+        if (is_array($relationshipObject)) {
+            if (empty($relationshipObject)) {
+                return array();
+            }
+            $relationshipObject = current($relationshipObject);
+        }
+
+        $relationshipClassName = get_class($relationshipObject);
+        $relationshipMetadata = $this->hateoasMetadataFactory->getMetadataForClass($relationshipClassName);
+            
         $links = array();
 
-        // TODO: Improve this
-        if ($relationship->getShowLinkSelf()) {
-            $links['self'] = $this->baseUrl.'/'.$primaryMetadata->getResource()
-                    ->getType().'/'.$primaryId.'/relationships/'.$relationshipPayloadKey;
-        }
+        if ($this->isIteratable($relationshipObject)) {
+            if ($relationship->getShowLinkSelf()) {
+                $links[self::LINK_SELF] = $this->generateRelationshipCollectionUrl($primaryObject, $primaryMetadata, $relationshipMetadata, $relationship);
+            }
+        } else {
+            if ($relationship->getShowLinkSelf()) {
+                $links[self::LINK_SELF] = $this->generateRelationshipUrl($primaryObject, $relationshipObject, $primaryMetadata, $relationshipMetadata, $relationship);
+            }
 
-        if ($relationship->getShowLinkRelated()) {
-            $links['related'] = $this->baseUrl.'/'.$primaryMetadata->getResource()
-                    ->getType().'/'.$primaryId.'/'.$relationshipPayloadKey;
+            if ($relationship->getShowLinkRelated()) {
+                $links[self::LINK_RELATED] = $this->generateUrlSelf($relationshipMetadata, $relationshipObject);
+            }
         }
-
+        
         return $links;
     }
 
@@ -234,20 +352,21 @@ class JsonEventSubscriber implements EventSubscriberInterface
      */
     protected function processRelationship($object, Relationship $relationship, Context $context)
     {
+        /* @var $context SerializationContext */
         if (null === $object) {
             return null;
         }
 
         if (!is_object($object)) {
-            throw new \RuntimeException(sprintf('Cannot process relationship "%s", because it is not an object but a %s.', $relationship->getName(), gettype($object)));
+            throw new RuntimeException(sprintf('Cannot process relationship "%s", because it is not an object but a %s.', $relationship->getName(), gettype($object)));
         }
 
         /** @var ClassMetadata $relationshipMetadata */
         $relationshipMetadata = $this->hateoasMetadataFactory->getMetadataForClass(get_class($object));
 
         if (null === $relationshipMetadata) {
-            throw new \RuntimeException(sprintf(
-                'Metadata for class %s not found. Did you define at as a JSON-API resource?',
+            throw new RuntimeException(sprintf(
+                'Metadata for class %s not found. Did you define it as a JSON-API resource?',
                 ClassUtils::getRealClass(get_class($object))
             ));
         }
@@ -257,12 +376,7 @@ class JsonEventSubscriber implements EventSubscriberInterface
         // contains the relations type and id
         $relationshipDataArray = $this->getRelationshipDataArray($relationshipMetadata, $relationshipId);
 
-        // only include this relationship if it is needed
-        if ($relationship->isIncludedByDefault() && $this->canIncludeRelationship($relationshipMetadata, $relationshipId)) {
-            $includedRelationship = $relationshipDataArray; // copy data array so we do not override it with our reference
-            $this->includedRelationships[] =& $includedRelationship;
-            $includedRelationship = $context->accept($object); // override previous reference with the serialized data
-        }
+        $groups = $context->attributes->get('groups')->getOrElse([]);
 
         // the relationship data can only contain one reference to another resource
         return $relationshipDataArray;
@@ -303,7 +417,7 @@ class JsonEventSubscriber implements EventSubscriberInterface
 
     /**
      * @param array $resources
-     * @param int   $index
+     * @param int $index
      *
      * @return array
      */
@@ -330,6 +444,10 @@ class JsonEventSubscriber implements EventSubscriberInterface
      */
     protected function getRelationshipDataArray(ClassMetadata $classMetadata, $id)
     {
+        if (null === $classMetadata->getResource()) {
+            return null;
+        }
+        
         return array(
             'type' => $classMetadata->getResource()->getType(),
             'id' => $id,
@@ -355,25 +473,58 @@ class JsonEventSubscriber implements EventSubscriberInterface
      */
     protected function isIteratable($data)
     {
-        return (is_array($data) || $data instanceof \Traversable);
+        return (is_array($data) || $data instanceof Traversable);
     }
 
     /**
-     * @param ClassMetadata $classMetadata
-     * @param               $id
-     *
-     * @return bool
+     * @param PreDeserializeEvent $event
      */
-    protected function canIncludeRelationship(ClassMetadata $classMetadata, $id)
+    public function onPreDeserialize(PreDeserializeEvent $event)
     {
-        foreach ($this->includedRelationships as $includedRelationship) {
-            if ($includedRelationship['type'] === $classMetadata->getResource()->getType()
-                && $includedRelationship['id'] === $id
-            ) {
-                return false;
+        $type = $event->getType();
+        $context = $event->getContext();
+        /* @var $context DeserializationContext */
+        
+        $resourceClassName = $type['name'];
+        $data = $event->getData();
+
+        if (1 === $context->getDepth() & isset($data['data'])) {
+            $event->setData($data['data']);
+            
+            if ($this->hateoasMetadataFactory->getMetadataForClass($resourceClassName)) {
+                $event->setType(JsonApiResource::class);
+            }  elseif (ArrayCollection::class === $resourceClassName) {
+                $context->attributes->set('target', new ArrayCollection());
+                
+                $event->setType(ArrayCollection::class, [['name' => JsonApiResource::class, 'params' => []]]);
+            } elseif (OffsetPaginatedRepresentation::class === $resourceClassName) {
+                $target = $context->attributes->get('target')->getOrElse(null);
+
+                if (isset($data['meta']['total-results'])) {
+                    $target->setTotalResults($data['meta']['total-results']);
+                }
+    
+                if (isset($data['data'])) {
+                    $event->setType(ArrayCollection::class, [['name' => JsonApiResource::class, 'params' => []]]);
+                }
+            }
+
+            if (isset($data['included'])) {
+                $this->includedData = $data['included'];
             }
         }
+    }
 
-        return true;
+    /**
+     * @param ObjectEvent $event
+     */
+    public function onPostDeserialize(ObjectEvent $event)
+    {
+        $context = $event->getContext();
+        /* @var $context DeserializationContext */
+
+        while ($includedData = array_pop($this->includedData)) {
+            $included = $context->accept($includedData, ['name' => JsonApiResource::class, 'params' => []]);
+        }
     }
 }

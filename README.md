@@ -66,7 +66,7 @@ use Mango\Bundle\JsonApiBundle\Configuration\Annotation as JsonApi;
     // ..
     
     /**
-     * @JsonApi\Relationship(includeByDefault=true, showLinkSelf=false, showLinkRelated=false)
+     * @JsonApi\Relationship(includeByDefault=true, includeMaxDepth=3, showLinkSelf=false, showLinkRelated=false)
      */
     protected $comments;
  }
@@ -74,6 +74,7 @@ use Mango\Bundle\JsonApiBundle\Configuration\Annotation as JsonApi;
 | Property              | Default | Required  | Content   | Info  |
 | ---                   | ---     | ---       | ---       | ---   |
 | includeByDefault      | false   | No        | boolean   | This will include (sideload) the relationship with it's primary resource |
+| includeMaxDepth          | null    | No        | integer   | This will include (sideload) the relationship up to the specified serialization depth |
 | showData              | false   | No        | boolean   | Shows `data`, which consists of ids of the relationship data |
 | showLinkSelf          | false   | No        | boolean   | Add `self` link of the relationship |
 | showLinkRelated       | false   | No        | boolean   | Add `related` link of the relationship |

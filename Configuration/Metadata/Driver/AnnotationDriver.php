@@ -12,7 +12,6 @@
 namespace Mango\Bundle\JsonApiBundle\Configuration\Metadata\Driver;
 
 use Doctrine\Common\Annotations\Reader;
-use Doctrine\Common\Util\Inflector;
 use Mango\Bundle\JsonApiBundle\Configuration\Annotation;
 use Mango\Bundle\JsonApiBundle\Configuration\Metadata\ClassMetadata;
 use Mango\Bundle\JsonApiBundle\Configuration\Relationship;
@@ -58,7 +57,8 @@ class AnnotationDriver implements DriverInterface
                 if (!$annotation->type) {
                     $annotation->type = StringUtil::dasherize($class->getShortName());
                 }
-                $classMetadata->setResource(new Resource($annotation->type, $annotation->showLinkSelf));
+                
+                $classMetadata->setResource(new Resource($annotation->type, $annotation->route, $annotation->showLinkSelf));
             }
         }
 
@@ -74,9 +74,11 @@ class AnnotationDriver implements DriverInterface
                     $classMetadata->addRelationship(new Relationship(
                         $property->getName(),
                         $annotation->includeByDefault,
+                        $annotation->includeMaxDepth,
                         $annotation->showData,
                         $annotation->showLinkSelf,
-                        $annotation->showLinkRelated
+                        $annotation->showLinkRelated,
+                        $annotation->route
                     ));
                 }
             }

@@ -20,6 +20,8 @@ use Metadata\MergeableInterface;
 
 /**
  * @author Steffen Brem <steffenbrem@gmail.com>
+ *
+ * @property \ReflectionClass $reflection
  */
 class ClassMetadata extends MergeableClassMetadata implements ClassMetadataInterface
 {
@@ -82,6 +84,18 @@ class ClassMetadata extends MergeableClassMetadata implements ClassMetadataInter
     }
 
     /**
+     * @return string
+     */
+    public function getIdValue($object)
+    {
+        $idField = $this->getIdField();
+
+        $idReflection = $this->reflection->getProperty($idField);
+        $idReflection->setAccessible(true);
+        $idReflection->getValue($object);
+    }
+
+    /**
      * {@inheritdoc}
      */
     public function getRelationships()
@@ -103,6 +117,34 @@ class ClassMetadata extends MergeableClassMetadata implements ClassMetadataInter
     public function addRelationship($relationship)
     {
         $this->relationships->add($relationship);
+    }
+
+    /**
+     * @return bool
+     */
+    public function hasRelationship($name)
+    {
+        foreach ($this->relationships as $relationship) {
+            if ($name === $relationship->getName()) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * @return Relationship
+     */
+    public function getRelationship($name)
+    {
+        foreach ($this->relationships as $relationship) {
+            if ($name === $relationship->getName()) {
+                return $relationship;
+            }
+        }
+
+        return null;
     }
 
     /**

@@ -11,8 +11,10 @@ namespace Mango\Bundle\JsonApiBundle\Serializer\Handler;
 use JMS\Serializer\Context;
 use JMS\Serializer\GraphNavigator;
 use JMS\Serializer\Handler\SubscribingHandlerInterface;
+use JMS\Serializer\JsonDeserializationVisitor;
 use Mango\Bundle\JsonApiBundle\Representation\PaginatedRepresentation;
 use Mango\Bundle\JsonApiBundle\Serializer\JsonApiSerializationVisitor;
+use Reconz\Bundle\DatalayerClientBundle\Model\Agent;
 use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
@@ -46,6 +48,12 @@ abstract class AbstractPaginationHandler implements SubscribingHandlerInterface
                 'format' => 'json',
                 'type' => static::getType(),
                 'method' => 'serialize',
+            ),
+            array(
+                'direction' => GraphNavigator::DIRECTION_DESERIALIZATION,
+                'format' => 'json',
+                'type' => static::getType(),
+                'method' => 'deserialize',
             ),
         );
     }
@@ -146,4 +154,17 @@ abstract class AbstractPaginationHandler implements SubscribingHandlerInterface
      * @return PaginatedRepresentation
      */
     abstract protected function createPaginatedRepresentation($object);
+
+    public function deserialize(JsonDeserializationVisitor $visitor, $data, $type, Context $context)
+    {
+        // See above.
+
+        $target = $context->attributes->get('target')->getOrElse(null);
+        $type['name'] = 'array';
+        $items = $visitor->visitArray($data, $type, $context);
+
+        $target->setElements($items);
+
+        return $target;
+    }
 }

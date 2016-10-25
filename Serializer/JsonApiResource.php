@@ -1,5 +1,4 @@
 <?php
-
 /*
  * This file is part of the Mango package.
  *
@@ -9,17 +8,10 @@
  * file that was distributed with this source code.
  */
 
-namespace Mango\Bundle\JsonApiBundle\Configuration\Annotation;
+namespace Mango\Bundle\JsonApiBundle\Serializer;
 
 /**
- * @Annotation
- * @Target("CLASS")
- *
- * @author Steffen Brem <steffenbrem@gmail.com>
+ * 
  */
-final class Resource
-{
-    public $type;
-    public $showLinkSelf;
-    public $route;
-}
+class JsonApiResource
+{}

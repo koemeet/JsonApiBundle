@@ -15,7 +15,7 @@
         }
     ],
     "require": {
-        "php": ">=5.3.9",
+        "php": "^5.5.9|~7.0",
         "symfony/framework-bundle": "~2.3|~3.0",
         "jms/serializer-bundle": "~0.13|~1.0",
         "pagerfanta/pagerfanta": "~1.0",

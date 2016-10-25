@@ -19,7 +19,9 @@ namespace Mango\Bundle\JsonApiBundle\Configuration\Annotation;
 final class Relationship
 {
     public $includeByDefault;
+    public $includeMaxDepth;
     public $showData;
     public $showLinkSelf;
     public $showLinkRelated;
+    public $route;
 }

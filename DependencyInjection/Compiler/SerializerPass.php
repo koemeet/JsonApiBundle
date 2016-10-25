@@ -30,7 +30,6 @@ class SerializerPass implements CompilerPassInterface
             ->setClass('Mango\Bundle\JsonApiBundle\Serializer\JsonApiSerializationVisitor')
         ;
 
-        $container->setAlias('jms_serializer', 'json_api.serializer');
         $container->setAlias('serializer', 'json_api.serializer');
         $container->setAlias('fos_rest.serializer', 'json_api.serializer');
     }

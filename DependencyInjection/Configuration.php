@@ -24,12 +24,17 @@ class Configuration implements ConfigurationInterface
         $rootNode
             ->children()
                 ->booleanNode('show_version_info')->defaultValue(true)->end()
+                ->integerNode('include_max_depth')->defaultNull(true)->end()
+                ->arrayNode('resources')
+                    ->prototype('scalar')
+                        ->validate()
+                        ->ifTrue(function($value) { return false === class_exists($value); })
+                            ->thenInvalid('Invalid resource class name %s')
+                        ->end()
+                    ->end()
+                ->end()
             ->end()
         ;
-
-        // Here you should define the parameters that are allowed to
-        // configure your bundle. See the documentation linked above for
-        // more information on that topic.
 
         return $treeBuilder;
     }

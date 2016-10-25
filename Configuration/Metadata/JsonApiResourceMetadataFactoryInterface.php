@@ -9,17 +9,12 @@
  * file that was distributed with this source code.
  */
 
-namespace Mango\Bundle\JsonApiBundle\Configuration\Annotation;
+namespace Mango\Bundle\JsonApiBundle\Configuration\Metadata;
 
 /**
- * @Annotation
- * @Target("CLASS")
- *
- * @author Steffen Brem <steffenbrem@gmail.com>
+ * 
  */
-final class Resource
+interface JsonApiResourceMetadataFactoryInterface
 {
-    public $type;
-    public $showLinkSelf;
-    public $route;
+    function getMetadataForResource($resourceName);
 }

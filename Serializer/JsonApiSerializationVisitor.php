@@ -11,13 +11,12 @@
 
 namespace Mango\Bundle\JsonApiBundle\Serializer;
 
-use Hateoas\Representation\CollectionRepresentation;
-use Hateoas\Representation\PaginatedRepresentation;
 use JMS\Serializer\Context;
 use JMS\Serializer\JsonSerializationVisitor;
-use Mango\Bundle\JsonApiBundle\Configuration\Metadata\ClassMetadata as JsonApiClassMetadata;
 use JMS\Serializer\Metadata\ClassMetadata;
+use JMS\Serializer\Metadata\PropertyMetadata;
 use JMS\Serializer\Naming\PropertyNamingStrategyInterface;
+use Mango\Bundle\JsonApiBundle\Configuration\Metadata\ClassMetadata as JsonApiClassMetadata;
 use Mango\Bundle\JsonApiBundle\EventListener\Serializer\JsonEventSubscriber;
 use Metadata\MetadataFactoryInterface;
 
@@ -36,22 +35,32 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
      */
     protected $showVersionInfo;
 
-    protected $isJsonApiDocument = false;
+    /**
+     * @var integer
+     */
+    protected $includeMaxDepth = false;
+
+    private $isJsonApiDocument = false;
+
+    private $includedResources = [];
 
     /**
      * @param PropertyNamingStrategyInterface $propertyNamingStrategy
-     * @param MetadataFactoryInterface        $metadataFactory
-     * @param                                 $showVersionInfo
+     * @param MetadataFactoryInterface $metadataFactory
+     * @param bool $showVersionInfo
+     * @param integer $includeMaxDepth
      */
     public function __construct(
         PropertyNamingStrategyInterface $propertyNamingStrategy,
         MetadataFactoryInterface $metadataFactory,
-        $showVersionInfo
+        $showVersionInfo,
+        $includeMaxDepth = null
     ) {
         parent::__construct($propertyNamingStrategy);
 
         $this->metadataFactory = $metadataFactory;
         $this->showVersionInfo = $showVersionInfo;
+        $this->includeMaxDepth = $includeMaxDepth;
     }
 
     /**
@@ -140,15 +149,10 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
         if ($root) {
             $data = array();
             $meta = array();
-            $included = array();
             $links = array();
 
             if (isset($root['data'])) {
                 $data = $root['data'];
-            }
-
-            if (isset($root['included'])) {
-                $included = $root['included'];
             }
 
             if (isset($root['meta'])) {
@@ -158,15 +162,6 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
             if (isset($root['links'])) {
                 $links = $root['links'];
             }
-
-            // filter out duplicate primary resource objects that are in `included`
-            $included = array_udiff(
-                (array)$included,
-                (isset($data['type'])) ? [$data] : $data,
-                function($a, $b) {
-                    return strcmp($a['type'].$a['id'], $b['type'].$b['id']);
-                }
-            );
 
             // start building new root array
             $root = array();
@@ -187,8 +182,8 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
 
             $root['data'] = $data;
 
-            if ($included) {
-                $root['included'] = array_values($included);
+            if ($this->includedResources) {
+                $root['included'] = $this->includedResources;
             }
 
             $this->setRoot($root);
@@ -197,13 +192,71 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
         return parent::getResult();
     }
 
+    public function visitProperty(PropertyMetadata $metadata, $data, Context $context)
+    {
+        /** @var JsonApiClassMetadata $jsonApiMetadata */
+        $jsonApiMetadata = $this->metadataFactory->getMetadataForClass($metadata->class);
+
+        if (!$jsonApiMetadata || !$jsonApiMetadata->getResource() || !$jsonApiMetadata->hasRelationship($metadata->name)) {
+            return parent::visitProperty($metadata, $data, $context);
+        }
+
+        $relationship = $jsonApiMetadata->getRelationship($metadata->name);
+        $includeMaxDepth = $relationship->getIncludeDepth() ?: $this->includeMaxDepth;
+
+        $propertyData = $metadata->getValue($data);
+
+        if (null === $propertyData) {
+            $data = null;
+        } elseif (is_array($propertyData) || $propertyData instanceof \Traversable) {
+            $data = [];
+            foreach ($propertyData as $v) {
+                $propertyMetadata = $this->metadataFactory->getMetadataForClass(get_class($v));
+                
+                $data[] = [
+                    'type' => $propertyMetadata->getResource()->getType(),
+                    'id' => $propertyMetadata->getIdValue($v)
+                ];
+
+                if ($relationship->isIncludedByDefault()) {
+                    if (null === $includeMaxDepth || $context->getDepth() < $includeMaxDepth) {
+                        $this->addIncluded($propertyMetadata, $context->accept($v));
+                    }
+                }
+            }
+        } else {
+            $propertyMetadata = $this->metadataFactory->getMetadataForClass(get_class($propertyData));
+
+            $data = [
+                'type' => $propertyMetadata->getResource()->getType(),
+                'id' => $propertyMetadata->getIdValue($propertyData)
+            ];
+            if ($relationship->isIncludedByDefault()) {
+                if (null === $includeMaxDepth || $context->getDepth() < $includeMaxDepth) {
+                    $this->addIncluded($propertyMetadata, $context->accept($propertyData));
+                }
+            }
+        }
+
+        $key = $this->namingStrategy->translateName($metadata);
+
+        $this->data[$key] = $data;
+    }
+
     /**
      * {@inheritdoc}
      */
     public function endVisitingObject(ClassMetadata $metadata, $data, array $type, Context $context)
     {
+        /** @var JsonApiClassMetadata $jsonApiMetadata */
+        $jsonApiMetadata = $this->metadataFactory->getMetadataForClass(get_class($data));
+
         $rs = parent::endVisitingObject($metadata, $data, $type, $context);
 
+        if ($context->getDepth() > 0) {
+            return $rs;
+        }
+        
         if ($rs instanceof \ArrayObject) {
             $rs = [];
             $this->setRoot($rs);
@@ -211,40 +264,34 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
             return $rs;
         }
 
-        /** @var JsonApiClassMetadata $jsonApiMetadata */
-        $jsonApiMetadata = $this->metadataFactory->getMetadataForClass(get_class($data));
-
         if (null === $jsonApiMetadata) {
             return $rs;
         }
 
         $result = array();
 
-        if (isset($rs[JsonEventSubscriber::EXTRA_DATA_KEY]['type'])) {
-            $result['type'] = $rs[JsonEventSubscriber::EXTRA_DATA_KEY]['type'];
-        }
-
-        if (isset($rs[JsonEventSubscriber::EXTRA_DATA_KEY]['id'])) {
-            $result['id'] = $rs[JsonEventSubscriber::EXTRA_DATA_KEY]['id'];
-        }
+        $result['type'] = $jsonApiMetadata->getResource()->getType();
 
         $idField = $jsonApiMetadata->getIdField();
 
-        $result['attributes'] = array_filter($rs, function($key) use ($idField) {
+        $result['id'] = isset($rs[$idField]) ? $rs[$idField] : null;
+        
+        $result['attributes'] = array_filter($rs, function($key) use ($idField, $jsonApiMetadata) {
             switch ($key) {
                 case $idField:
                 case 'relationships':
                 case 'links':
+                case JsonEventSubscriber::EXTRA_DATA_KEY:
                     return false;
             }
 
-            if ($key === JsonEventSubscriber::EXTRA_DATA_KEY) {
+            if ($jsonApiMetadata->hasRelationship($key)) {
                 return false;
             }
 
             return true;
         }, ARRAY_FILTER_USE_KEY);
-
+        
         if (isset($rs['relationships'])) {
             $result['relationships'] = $rs['relationships'];
         }
@@ -254,6 +301,54 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
         }
 
         return $result;
+    }
+
+    /**
+     * @param JsonApiClassMetadata $jsonApiMetadata
+     * @param array $relationshipData
+     */
+    private function addIncluded(JsonApiClassMetadata $jsonApiMetadata, $relationshipData)
+    {
+        if (!is_array($relationshipData) || !isset($relationshipData['id'])) {
+            return;
+        }
+        
+        // filter out dupes
+        foreach ($this->includedResources as $included) {
+            if (
+                $relationshipData['id'] === $included['id']
+                && $jsonApiMetadata->getResource()->getType() === $included['type']
+            ) {
+                return;
+            }
+        }
+
+        $resource =
+        [
+            'id' => $relationshipData['id'],
+            'type' => $jsonApiMetadata->getResource()->getType(),
+            'attributes' => array_filter($relationshipData, function($key) {
+                switch ($key) {
+                    case 'id':
+                    case 'type':
+                    case 'relationships':
+                    case JsonEventSubscriber::EXTRA_DATA_KEY:
+                    case 'links':
+                        return false;
+                }
+                return true;
+            }, ARRAY_FILTER_USE_KEY)
+        ];
+            
+        if (isset($relationshipData['relationships'])) {
+            $resource['relationships'] = $relationshipData['relationships'];
+        }
+
+        if (isset($relationshipData['links'])) {
+            $resource['links'] = $relationshipData['links'];
+        }
+
+        $this->includedResources[] = $resource;
     }
 
     /**

@@ -15,18 +15,20 @@
             <argument type="service" id="jms_serializer.metadata_factory"/>
             <argument type="service" id="jms_serializer.naming_strategy"/>
             <argument type="service" id="request_stack"/>
+            <argument type="service" id="router"/>
             <tag name="jms_serializer.event_subscriber"/>
         </service>
-
+        
         <service id="json_api.serializer" class="Mango\Bundle\JsonApiBundle\Serializer\Serializer"
-                 parent="jms_serializer.serializer" public="false">
+                 public="false">
+            <argument type="service" id="jms_serializer.serializer"/>
+            
             <call method="setExclusionStrategies">
                 <argument type="collection">
-                    <argument type="service" id="json_api.serializer.relationship_exclusion_strategy"/>
                 </argument>
             </call>
         </service>
-
+        
         <!-- build-in support for pagerfanta -->
         <service id="json_api.serializer.handler.pagerfanta"
                  class="Mango\Bundle\JsonApiBundle\Serializer\Handler\PagerfantaHandler">
@@ -39,6 +41,29 @@
                  class="Mango\Bundle\JsonApiBundle\Serializer\Handler\HateoasRepresentationHandler">
             <argument type="service" id="request_stack"/>
             <tag name="jms_serializer.subscribing_handler"/>
+        </service>
+        
+<!--        
+         build-in support for jsonapi representations 
+        <service id="json_api.serializer.handler.jsonapi"
+                 class="Mango\Bundle\JsonApiBundle\Serializer\Handler\JsonApiRepresentationHandler">
+            <argument type="service" id="request_stack"/>
+            <tag name="jms_serializer.subscribing_handler"/>
+        </service>
+        -->
+        
+        <!-- jsonapi resource handler -->
+        <service id="json_api.serializer.handler.jsonapi_resource"
+                 class="Mango\Bundle\JsonApiBundle\Serializer\Handler\JsonApiResourceHandler">
+            <argument type="service" id="json_api.metadata_factory"/>
+            <argument type="service" id="jms_serializer.metadata_factory"/>
+            <tag name="jms_serializer.subscribing_handler"/>
+        </service>
+        
+        <!-- exception listener -->
+        <service id="json_api.listener.exception_subscriber"
+                 class="Mango\Bundle\JsonApiBundle\EventListener\ExceptionSubscriber">
+            <tag name="kernel.event_subscriber"/>
         </service>
 
     </services>
