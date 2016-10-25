@@ -51,6 +51,7 @@ class YamlDriver extends AbstractFileDriver
                     $classMetadata->addRelationship(new Relationship(
                         $name,
                         (isset($relation['includeByDefault'])) ? $relation['includeByDefault'] : null,
+                        (isset($relation['includeMaxDepth'])) ? $relation['includeMaxDepth'] : null,
                         (isset($relation['showData'])) ? $relation['showData'] : null,
                         (isset($relation['showLinkSelf'])) ? $relation['showLinkSelf'] : null,
                         (isset($relation['showLinkRelated'])) ? $relation['showLinkRelated'] : null,

@@ -53,6 +53,7 @@ class MangoJsonApiExtension extends Extension implements PrependExtensionInterfa
         }
 
         $container->setParameter('json_api.show_version_info', $config['show_version_info']);
+        $container->setParameter('json_api.include_max_depth', $config['include_max_depth']);
 
         if (isset($config['resources'])) {
             $metadataFactoryDefinition = $container->getDefinition('json_api.metadata_factory');

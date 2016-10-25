@@ -28,6 +28,11 @@ class Relationship
     protected $includedByDefault = false;
 
     /**
+     * @var int
+     */
+    protected $includeMaxDepth;
+
+    /**
      * @var bool
      */
     protected $showData = false;
@@ -50,17 +55,22 @@ class Relationship
     /**
      * @param             $name
      * @param bool|false  $includedByDefault
+     * @param int|null    $includeMaxDepth
      * @param bool|false  $showData
      * @param bool|false  $showLinkSelf
      * @param bool|false  $showLinkRelated
      * @param string|null $route
      */
-    public function __construct($name, $includedByDefault = null, $showData = null, $showLinkSelf = null, $showLinkRelated = null, $route = null)
+    public function __construct($name, $includedByDefault = null, $includeMaxDepth = null, $showData = null, $showLinkSelf = null, $showLinkRelated = null, $route = null)
     {
         $this->name = $name;
 
         if (null !== $includedByDefault) {
             $this->includedByDefault = $includedByDefault;
+        }
+
+        if (null !== $includeMaxDepth) {
+            $this->includeMaxDepth = $includeMaxDepth;
         }
 
         if (null !== $showData) {
@@ -106,6 +116,14 @@ class Relationship
         $this->includedByDefault = $bool;
     }
 
+    /**
+     * @return int|null
+     */
+    public function getIncludeDepth()
+    {
+        return $this->includeMaxDepth;
+    }
+    
     /**
      * @return boolean
      */

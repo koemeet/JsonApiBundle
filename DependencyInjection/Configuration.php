@@ -24,6 +24,7 @@ class Configuration implements ConfigurationInterface
         $rootNode
             ->children()
                 ->booleanNode('show_version_info')->defaultValue(true)->end()
+                ->integerNode('include_max_depth')->defaultNull(true)->end()
                 ->arrayNode('resources')
                     ->prototype('scalar')
                         ->validate()

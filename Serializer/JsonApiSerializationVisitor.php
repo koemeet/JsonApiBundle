@@ -35,24 +35,32 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
      */
     protected $showVersionInfo;
 
-    protected $isJsonApiDocument = false;
+    /**
+     * @var integer
+     */
+    protected $includeMaxDepth = false;
 
-    protected $includedResources = [];
+    private $isJsonApiDocument = false;
+
+    private $includedResources = [];
 
     /**
      * @param PropertyNamingStrategyInterface $propertyNamingStrategy
-     * @param MetadataFactoryInterface        $metadataFactory
-     * @param                                 $showVersionInfo
+     * @param MetadataFactoryInterface $metadataFactory
+     * @param bool $showVersionInfo
+     * @param integer $includeMaxDepth
      */
     public function __construct(
         PropertyNamingStrategyInterface $propertyNamingStrategy,
         MetadataFactoryInterface $metadataFactory,
-        $showVersionInfo
+        $showVersionInfo,
+        $includeMaxDepth = null
     ) {
         parent::__construct($propertyNamingStrategy);
 
         $this->metadataFactory = $metadataFactory;
         $this->showVersionInfo = $showVersionInfo;
+        $this->includeMaxDepth = $includeMaxDepth;
     }
 
     /**
@@ -194,10 +202,9 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
         }
 
         $relationship = $jsonApiMetadata->getRelationship($metadata->name);
+        $includeMaxDepth = $relationship->getIncludeDepth() ?: $this->includeMaxDepth;
 
         $propertyData = $metadata->getValue($data);
-
-        $included = [];
 
         if (null === $propertyData) {
             $data = null;
@@ -211,8 +218,10 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
                     'id' => $propertyMetadata->getIdValue($v)
                 ];
 
-                if ($relationship->isIncludedByDefault() && $context->getDepth() < 2) {
-                    $this->addIncluded($propertyMetadata, $context->accept($v));
+                if ($relationship->isIncludedByDefault()) {
+                    if (null === $includeMaxDepth || $context->getDepth() < $includeMaxDepth) {
+                        $this->addIncluded($propertyMetadata, $context->accept($v));
+                    }
                 }
             }
         } else {
@@ -222,8 +231,10 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
                 'type' => $propertyMetadata->getResource()->getType(),
                 'id' => $propertyMetadata->getIdValue($propertyData)
             ];
-            if ($relationship->isIncludedByDefault() && $context->getDepth() < 2) {
-                $this->addIncluded($propertyMetadata, $context->accept($propertyData));
+            if ($relationship->isIncludedByDefault()) {
+                if (null === $includeMaxDepth || $context->getDepth() < $includeMaxDepth) {
+                    $this->addIncluded($propertyMetadata, $context->accept($propertyData));
+                }
             }
         }
 
@@ -270,13 +281,11 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
                 case $idField:
                 case 'relationships':
                 case 'links':
-                case '__DATA__':
+                case JsonEventSubscriber::EXTRA_DATA_KEY:
                     return false;
             }
 
-            if ($key === JsonEventSubscriber::EXTRA_DATA_KEY) {
-                return false;
-            } elseif ($jsonApiMetadata->hasRelationship($key)) {
+            if ($jsonApiMetadata->hasRelationship($key)) {
                 return false;
             }
 
@@ -298,9 +307,9 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
      * @param JsonApiClassMetadata $jsonApiMetadata
      * @param array $relationshipData
      */
-    private function addIncluded(JsonApiClassMetadata $jsonApiMetadata, array $relationshipData)
+    private function addIncluded(JsonApiClassMetadata $jsonApiMetadata, $relationshipData)
     {
-        if (!isset($relationshipData['id'])) {
+        if (!is_array($relationshipData) || !isset($relationshipData['id'])) {
             return;
         }
         
@@ -318,12 +327,12 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
         [
             'id' => $relationshipData['id'],
             'type' => $jsonApiMetadata->getResource()->getType(),
-            'attributes' => $result['attributes'] = array_filter($relationshipData, function($key) {
+            'attributes' => array_filter($relationshipData, function($key) {
                 switch ($key) {
                     case 'id':
                     case 'type':
                     case 'relationships':
-                    case '__DATA__':
+                    case JsonEventSubscriber::EXTRA_DATA_KEY:
                     case 'links':
                         return false;
                 }
