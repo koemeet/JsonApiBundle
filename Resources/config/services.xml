@@ -25,7 +25,6 @@
             
             <call method="setExclusionStrategies">
                 <argument type="collection">
-<!--                    <argument type="service" id="json_api.serializer.relationship_exclusion_strategy"/>-->
                 </argument>
             </call>
         </service>
