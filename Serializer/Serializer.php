@@ -10,27 +10,31 @@
 
 namespace Mango\Bundle\JsonApiBundle\Serializer;
 
+use JMS\Serializer\DeserializationContext;
 use JMS\Serializer\Exclusion\ExclusionStrategyInterface;
+use JMS\Serializer\scalar;
 use JMS\Serializer\SerializationContext;
-use JMS\Serializer\Serializer as BaseSerializer;
-use Pagerfanta\Pagerfanta;
+use JMS\Serializer\SerializerInterface;
 
 /**
  * @author Steffen Brem <steffenbrem@gmail.com>
  */
-class Serializer extends BaseSerializer
+final class Serializer implements SerializerInterface
 {
     /**
-     * @var ExclusionStrategyInterface[]
+     * @var SerializerInterface
      */
-    protected $exclusionStrategies;
+    private $jmsSerializer;
 
     /**
-     * @param mixed $exclusionStrategies
+     * @var ExclusionStrategyInterface
      */
-    public function setExclusionStrategies($exclusionStrategies)
+    private $exclusionStrategy;
+
+    public function __construct(SerializerInterface $jmsSerializer, ExclusionStrategyInterface $exclusionStrategy)
     {
-        $this->exclusionStrategies = $exclusionStrategies;
+        $this->jmsSerializer = $jmsSerializer;
+        $this->exclusionStrategy = $exclusionStrategy;
     }
 
     /**
@@ -43,11 +47,17 @@ class Serializer extends BaseSerializer
         }
 
         if ($format === 'json') {
-            foreach ($this->exclusionStrategies as $exclusionStrategy) {
-                $context->addExclusionStrategy($exclusionStrategy);
-            }
+            $context->addExclusionStrategy($this->exclusionStrategy);
         }
 
-        return parent::serialize($data, $format, $context);
+        return $this->jmsSerializer->serialize($data, $format, $context);
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function deserialize($data, $type, $format, DeserializationContext $context = null)
+    {
+        return $this->jmsSerializer->deserialize($data, $type, $format, $context);
     }
 }
