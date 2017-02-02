@@ -18,13 +18,9 @@
             <tag name="jms_serializer.event_subscriber"/>
         </service>
 
-        <service id="json_api.serializer" class="Mango\Bundle\JsonApiBundle\Serializer\Serializer"
-                 parent="jms_serializer.serializer" public="false">
-            <call method="setExclusionStrategies">
-                <argument type="collection">
-                    <argument type="service" id="json_api.serializer.relationship_exclusion_strategy"/>
-                </argument>
-            </call>
+        <service id="json_api.serializer" class="Mango\Bundle\JsonApiBundle\Serializer\Serializer" decorates="jms_serializer.serializer">
+            <argument type="service" id="json_api.serializer.inner"/>
+            <argument type="service" id="json_api.serializer.relationship_exclusion_strategy"/>
         </service>
 
         <!-- build-in support for pagerfanta -->
