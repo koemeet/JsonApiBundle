@@ -29,7 +29,7 @@ use Mango\Bundle\JsonApiBundle\Configuration\Annotation as JsonApi;
 ```
 | Property      | Default | Required  | Content   | Info  |
 | ---           | ---     | ---       | ---       | ---   |
-| type          | ~       | No        | string    | If not present, it will use the dasherized classname as it's type |
+| type          | ~       | No        | string    | If left default, it will resolve its type dynamically based on the short class name. |
 | showLinkSelf  | true    | No        | boolean   | Add `self` link to the resource |
 
 ### @Id (optional, it defaults to `id`)

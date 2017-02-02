@@ -42,7 +42,7 @@ class JsonEventSubscriber implements EventSubscriberInterface
     /**
      * @var MetadataFactoryInterface
      */
-    protected $hateoasMetadataFactory;
+    protected $jsonApiMetadataFactory;
 
     /**
      * @var MetadataFactoryInterface
@@ -67,18 +67,18 @@ class JsonEventSubscriber implements EventSubscriberInterface
     protected $baseUrl = '/api';
 
     /**
-     * @param MetadataFactoryInterface        $hateoasMetadataFactory
+     * @param MetadataFactoryInterface        $jsonApiMetadataFactory
      * @param MetadataFactoryInterface        $jmsMetadataFactory
      * @param PropertyNamingStrategyInterface $namingStrategy
      * @param RequestStack                    $requestStack
      */
     public function __construct(
-        MetadataFactoryInterface $hateoasMetadataFactory,
+        MetadataFactoryInterface $jsonApiMetadataFactory,
         MetadataFactoryInterface $jmsMetadataFactory,
         PropertyNamingStrategyInterface $namingStrategy,
         RequestStack $requestStack
     ) {
-        $this->hateoasMetadataFactory = $hateoasMetadataFactory;
+        $this->jsonApiMetadataFactory = $jsonApiMetadataFactory;
         $this->jmsMetadataFactory = $jmsMetadataFactory;
         $this->namingStrategy = $namingStrategy;
         $this->requestStack = $requestStack;
@@ -105,7 +105,7 @@ class JsonEventSubscriber implements EventSubscriberInterface
         $context = $event->getContext();
 
         /** @var ClassMetadata $metadata */
-        $metadata = $this->hateoasMetadataFactory->getMetadataForClass(get_class($object));
+        $metadata = $this->jsonApiMetadataFactory->getMetadataForClass(get_class($object));
 
         // if it has no json api metadata, skip it
         if (null === $metadata) {
@@ -118,9 +118,12 @@ class JsonEventSubscriber implements EventSubscriberInterface
         $propertyAccessor = PropertyAccess::createPropertyAccessor();
 
         if ($visitor instanceof JsonApiSerializationVisitor) {
-            $visitor->addData(self::EXTRA_DATA_KEY, $this->getRelationshipDataArray(
-                $metadata, $this->getId($metadata, $object)
-            ));
+            $visitor->addData(
+                self::EXTRA_DATA_KEY,
+                $this->getRelationshipDataArray(
+                    $metadata, $object
+                )
+            );
 
             $relationships = array();
 
@@ -188,7 +191,7 @@ class JsonEventSubscriber implements EventSubscriberInterface
             if (true === $metadata->getResource()->getShowLinkSelf()) {
                 $visitor->addData('links', array(
                     'self' => $this->baseUrl.'/'.$metadata->getResource()
-                            ->getType().'/'.$this->getId($metadata, $object),
+                            ->getType($object).'/'.$this->getId($metadata, $object),
                 ));
             }
 
@@ -206,7 +209,7 @@ class JsonEventSubscriber implements EventSubscriberInterface
     protected function processRelationshipLinks($primaryObject, Relationship $relationship, $relationshipPayloadKey)
     {
         /** @var ClassMetadata $relationshipMetadata */
-        $primaryMetadata = $this->hateoasMetadataFactory->getMetadataForClass(get_class($primaryObject));
+        $primaryMetadata = $this->jsonApiMetadataFactory->getMetadataForClass(get_class($primaryObject));
         $primaryId = $this->getId($primaryMetadata, $primaryObject);
 
         $links = array();
@@ -214,12 +217,11 @@ class JsonEventSubscriber implements EventSubscriberInterface
         // TODO: Improve this
         if ($relationship->getShowLinkSelf()) {
             $links['self'] = $this->baseUrl.'/'.$primaryMetadata->getResource()
-                    ->getType().'/'.$primaryId.'/relationships/'.$relationshipPayloadKey;
+                    ->getType($primaryObject).'/'.$primaryId.'/relationships/'.$relationshipPayloadKey;
         }
 
         if ($relationship->getShowLinkRelated()) {
-            $links['related'] = $this->baseUrl.'/'.$primaryMetadata->getResource()
-                    ->getType().'/'.$primaryId.'/'.$relationshipPayloadKey;
+            $links['related'] = $this->baseUrl.'/'.$primaryMetadata->getResource()->getType($primaryObject).'/'.$primaryId.'/'.$relationshipPayloadKey;
         }
 
         return $links;
@@ -243,7 +245,7 @@ class JsonEventSubscriber implements EventSubscriberInterface
         }
 
         /** @var ClassMetadata $relationshipMetadata */
-        $relationshipMetadata = $this->hateoasMetadataFactory->getMetadataForClass(get_class($object));
+        $relationshipMetadata = $this->jsonApiMetadataFactory->getMetadataForClass(get_class($object));
 
         if (null === $relationshipMetadata) {
             throw new \RuntimeException(sprintf(
@@ -252,13 +254,11 @@ class JsonEventSubscriber implements EventSubscriberInterface
             ));
         }
 
-        $relationshipId = $this->getId($relationshipMetadata, $object);
-
         // contains the relations type and id
-        $relationshipDataArray = $this->getRelationshipDataArray($relationshipMetadata, $relationshipId);
+        $relationshipDataArray = $this->getRelationshipDataArray($relationshipMetadata, $object);
 
         // only include this relationship if it is needed
-        if ($relationship->isIncludedByDefault() && $this->canIncludeRelationship($relationshipMetadata, $relationshipId)) {
+        if ($relationship->isIncludedByDefault() && $this->canIncludeRelationship($relationshipMetadata, $object)) {
             $includedRelationship = $relationshipDataArray; // copy data array so we do not override it with our reference
             $this->includedRelationships[] =& $includedRelationship;
             $includedRelationship = $context->accept($object); // override previous reference with the serialized data
@@ -328,11 +328,11 @@ class JsonEventSubscriber implements EventSubscriberInterface
      *
      * @return array
      */
-    protected function getRelationshipDataArray(ClassMetadata $classMetadata, $id)
+    protected function getRelationshipDataArray(ClassMetadata $classMetadata, $object)
     {
         return array(
-            'type' => $classMetadata->getResource()->getType(),
-            'id' => $id,
+            'type' => $classMetadata->getResource()->getType($object),
+            'id' => $this->getId($classMetadata, $object),
         );
     }
 
@@ -364,11 +364,11 @@ class JsonEventSubscriber implements EventSubscriberInterface
      *
      * @return bool
      */
-    protected function canIncludeRelationship(ClassMetadata $classMetadata, $id)
+    protected function canIncludeRelationship(ClassMetadata $classMetadata, $object)
     {
         foreach ($this->includedRelationships as $includedRelationship) {
-            if ($includedRelationship['type'] === $classMetadata->getResource()->getType()
-                && $includedRelationship['id'] === $id
+            if ($includedRelationship['type'] === $classMetadata->getResource()->getType($object)
+                && $includedRelationship['id'] === $this->getId($classMetadata, $object)
             ) {
                 return false;
             }
