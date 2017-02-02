@@ -54,10 +54,6 @@ class AnnotationDriver implements DriverInterface
 
         foreach ($annotations as $annotation) {
             if ($annotation instanceof Annotation\Resource) {
-                // auto transform type from class name
-                if (!$annotation->type) {
-                    $annotation->type = StringUtil::dasherize($class->getShortName());
-                }
                 $classMetadata->setResource(new Resource($annotation->type, $annotation->showLinkSelf));
             }
         }
