@@ -29,8 +29,10 @@ use Mango\Bundle\JsonApiBundle\Configuration\Annotation as JsonApi;
 ```
 | Property      | Default | Required  | Content   | Info  |
 | ---           | ---     | ---       | ---       | ---   |
-| type          | ~       | No        | string    | If not present, it will use the dasherized classname as it's type |
+| type          | ~       | No        | string    | If left default, it will use the dasherized classname as it's type. |
 | showLinkSelf  | true    | No        | boolean   | Add `self` link to the resource |
+
+> TIP: You can use the type `auto` if you want to determine its type automatically at runtime. This can be useful if you only define a mapping for an abstract class.
 
 ### @Id (optional, it defaults to `id`)
 This will define the property that will be used as the `id` of a resource. It needs to be unique for every resource of the same type.
