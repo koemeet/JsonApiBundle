@@ -11,6 +11,13 @@ Integration of JSON API with Symfony 2 (FOSRestBundle)
 
 If you want to experiment with this implementation, you can just enable this bundle in your `AppKernel` and everything should work directly. Try to serialize some annotated php classes and check it out!
 
+### Configuration reference
+```yml
+mango_json_api:
+    show_version_info: true # default
+    base_uri: /api # default
+```
+
 ## Annotations
 ### @Resource
 This will define your class as a JSON-API resource, and you can optionally set it's type name.

@@ -23,7 +23,8 @@ class Configuration implements ConfigurationInterface
 
         $rootNode
             ->children()
-                ->booleanNode('show_version_info')->defaultValue(true)->end()
+            ->booleanNode('show_version_info')->defaultValue(true)->end()
+            ->scalarNode('base_uri')->defaultValue('/api')->end()
             ->end()
         ;
 
