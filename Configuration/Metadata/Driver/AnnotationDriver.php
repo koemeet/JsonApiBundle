@@ -44,7 +44,11 @@ class AnnotationDriver implements DriverInterface
     public function loadMetadataForClass(\ReflectionClass $class)
     {
         $annotations = $this->reader->getClassAnnotations($class);
-
+        
+        if ($class->isAbstract()) {
+            return null;
+        }
+        
         if (0 === count($annotations)) {
             return null;
         }
