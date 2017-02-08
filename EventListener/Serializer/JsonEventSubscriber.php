@@ -17,9 +17,9 @@ use JMS\Serializer\EventDispatcher\Events;
 use JMS\Serializer\EventDispatcher\EventSubscriberInterface;
 use JMS\Serializer\EventDispatcher\ObjectEvent;
 use JMS\Serializer\Naming\PropertyNamingStrategyInterface;
-use JMS\Serializer\VisitorInterface;
 use Mango\Bundle\JsonApiBundle\Configuration\Metadata\ClassMetadata;
 use Mango\Bundle\JsonApiBundle\Configuration\Relationship;
+use Mango\Bundle\JsonApiBundle\Resolver\BaseUri\BaseUriResolverInterface;
 use Mango\Bundle\JsonApiBundle\Serializer\JsonApiSerializationVisitor;
 use Metadata\MetadataFactoryInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
@@ -64,7 +64,10 @@ class JsonEventSubscriber implements EventSubscriberInterface
      */
     protected $currentPath;
 
-    protected $baseUrl = '/api';
+    /**
+     * @var BaseUriResolverInterface
+     */
+    protected $baseUriResolver;
 
     /**
      * @param MetadataFactoryInterface        $jsonApiMetadataFactory
@@ -76,12 +79,14 @@ class JsonEventSubscriber implements EventSubscriberInterface
         MetadataFactoryInterface $jsonApiMetadataFactory,
         MetadataFactoryInterface $jmsMetadataFactory,
         PropertyNamingStrategyInterface $namingStrategy,
-        RequestStack $requestStack
+        RequestStack $requestStack,
+        BaseUriResolverInterface $baseUriResolver
     ) {
         $this->jsonApiMetadataFactory = $jsonApiMetadataFactory;
         $this->jmsMetadataFactory = $jmsMetadataFactory;
         $this->namingStrategy = $namingStrategy;
         $this->requestStack = $requestStack;
+        $this->baseUriResolver = $baseUriResolver;
     }
 
     /**
@@ -190,7 +195,7 @@ class JsonEventSubscriber implements EventSubscriberInterface
             // TODO: Improve link handling
             if (true === $metadata->getResource()->getShowLinkSelf()) {
                 $visitor->addData('links', array(
-                    'self' => $this->baseUrl.'/'.$metadata->getResource()
+                    'self' => $this->baseUriResolver->getBaseUri().'/'.$metadata->getResource()
                             ->getType($object).'/'.$this->getId($metadata, $object),
                 ));
             }
@@ -216,12 +221,12 @@ class JsonEventSubscriber implements EventSubscriberInterface
 
         // TODO: Improve this
         if ($relationship->getShowLinkSelf()) {
-            $links['self'] = $this->baseUrl.'/'.$primaryMetadata->getResource()
+            $links['self'] = $this->baseUriResolver->getBaseUri().'/'.$primaryMetadata->getResource()
                     ->getType($primaryObject).'/'.$primaryId.'/relationships/'.$relationshipPayloadKey;
         }
 
         if ($relationship->getShowLinkRelated()) {
-            $links['related'] = $this->baseUrl.'/'.$primaryMetadata->getResource()->getType($primaryObject).'/'.$primaryId.'/'.$relationshipPayloadKey;
+            $links['related'] = $this->baseUriResolver->getBaseUri().'/'.$primaryMetadata->getResource()->getType($primaryObject).'/'.$primaryId.'/'.$relationshipPayloadKey;
         }
 
         return $links;
