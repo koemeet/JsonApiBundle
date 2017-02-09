@@ -55,6 +55,8 @@ class AnnotationDriver implements DriverInterface
         foreach ($annotations as $annotation) {
             if ($annotation instanceof Annotation\Resource) {
                 $classMetadata->setResource(new Resource($annotation->type, $annotation->showLinkSelf));
+            } elseif ($annotation instanceof Annotation\Error) {
+                $classMetadata->markAsError();
             }
         }
 

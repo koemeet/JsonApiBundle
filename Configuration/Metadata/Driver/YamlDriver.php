@@ -35,11 +35,11 @@ class YamlDriver extends AbstractFileDriver
 
         $config = $config[$name];
 
-        if (isset($config['resource'])) {
-            $classMetadata = new ClassMetadata($name);
-            $classMetadata->fileResources[] = $file;
-            $classMetadata->fileResources[] = $class->getFileName();
+        $classMetadata = new ClassMetadata($name);
+        $classMetadata->fileResources[] = $file;
+        $classMetadata->fileResources[] = $class->getFileName();
 
+        if (isset($config['resource'])) {
             $classMetadata->setResource($this->parseResource($config, $class));
 
             if (isset($config['resource']['idField'])) {
@@ -57,6 +57,12 @@ class YamlDriver extends AbstractFileDriver
                     ));
                 }
             }
+
+            return $classMetadata;
+        }
+
+        if (!isset($config['error'])) {
+            $classMetadata->markAsError();
 
             return $classMetadata;
         }

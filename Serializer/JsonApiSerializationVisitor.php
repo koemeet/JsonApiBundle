@@ -19,7 +19,10 @@ use Mango\Bundle\JsonApiBundle\Configuration\Metadata\ClassMetadata as JsonApiCl
 use JMS\Serializer\Metadata\ClassMetadata;
 use JMS\Serializer\Naming\PropertyNamingStrategyInterface;
 use Mango\Bundle\JsonApiBundle\EventListener\Serializer\JsonEventSubscriber;
+use Mango\Bundle\JsonApiBundle\Serializer\Handler\HateoasRepresentationHandler;
+use Mango\Bundle\JsonApiBundle\Serializer\Handler\PagerfantaHandler;
 use Metadata\MetadataFactoryInterface;
+use Pagerfanta\Pagerfanta;
 
 /**
  * @author Steffen Brem <steffenbrem@gmail.com>
@@ -37,6 +40,8 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
     protected $showVersionInfo;
 
     protected $isJsonApiDocument = false;
+
+    protected $isJsonApiErrorDocument = false;
 
     /**
      * @param PropertyNamingStrategyInterface $propertyNamingStrategy
@@ -63,11 +68,34 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
     }
 
     /**
+     * @return bool
+     */
+    public function isJsonApiErrorDocument()
+    {
+        return $this->isJsonApiErrorDocument;
+    }
+
+    /**
      * @param mixed $root
      *
      * @return array
      */
     public function prepare($root)
+    {
+        if ($this->isJsonApiDocument = $this->validateJsonApiDocument($root)) {
+            return $this->prepareResource($root);
+        } elseif ($this->isJsonApiErrorDocument = $this->validateJsonApiErrorDocument($root)) {
+            return $this->prepareErrors($root);
+        }
+
+        return $root;
+    }
+    /**
+     * @param mixed $root
+     *
+     * @return array
+     */
+    protected function prepareResource($root)
     {
         if (is_array($root) && array_key_exists('data', $root)) {
             $data = $root['data'];
@@ -75,24 +103,48 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
             $data = $root;
         }
 
-        $this->isJsonApiDocument = $this->validateJsonApiDocument($data);
-
-        if ($this->isJsonApiDocument) {
-            $meta = null;
-            if (is_array($root) && isset($root['meta']) && is_array($root['meta'])) {
-                $meta = $root['meta'];
-            }
-
-            return $this->buildJsonApiRoot($data, $meta);
+        $meta = null;
+        if (is_array($root) && isset($root['meta']) && is_array($root['meta'])) {
+            $meta = $root['meta'];
         }
 
-        return $root;
+        return $this->buildJsonApiRoot($data, $meta);
+    }
+
+    /**
+     * @param mixed $root
+     *
+     * @return array
+     */
+    protected function prepareErrors($root)
+    {
+        if (is_array($root) && array_key_exists('errors', $root)) {
+            $errors = $root['errors'];
+        } else {
+            $errors = $root;
+        }
+
+        if (is_object($errors)) {
+            $errors = array($errors);
+        }
+
+        return $this->buildJsonApiRoot($errors);
     }
 
     protected function buildJsonApiRoot($data, array $meta = null)
     {
+        $key = 'unknown';
+
+        if ($this->isJsonApiDocument) {
+            $key = 'data';
+        }
+
+        if ($this->isJsonApiErrorDocument) {
+            $key = 'errors';
+        }
+
         $root = array(
-            'data' => $data,
+            $key    => $data,
         );
 
         if ($meta) {
@@ -114,7 +166,42 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
      */
     protected function validateJsonApiDocument($data)
     {
+        if (is_object($data) && !$this->isPaginator($data) && !$this->isResource($data)) {
+            return false;
+        }
+
+        if ($this->isPaginator($data) && !$this->hasResource($data)) {
+            return false;
+        }
+
         if (is_array($data) && count($data) > 0 && !$this->hasResource($data)) {
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * it is a JSON-API document if:
+     *  - it is an object and is a JSON-API resource
+     *  - it is an array containing objects which are JSON-API resources
+     *  - it is empty (we cannot identify it)
+     *
+     * @param mixed $errors
+     *
+     * @return bool
+     */
+    protected function validateJsonApiErrorDocument($errors)
+    {
+        if (is_object($errors) && !$this->isPaginator($errors) && !$this->isError($errors)) {
+            return false;
+        }
+
+        if ($this->isPaginator($errors) && !$this->hasErrors($errors)) {
+            return false;
+        }
+
+        if (is_array($errors) && count($errors) > 0 && !$this->hasErrors($errors)) {
             return false;
         }
 
@@ -126,6 +213,18 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
      */
     public function getResult()
     {
+        if ($this->isJsonApiErrorDocument) {
+            if ($this->showVersionInfo) {
+                $root = $this->getRoot();
+
+                $root['jsonapi'] = array(
+                    'version' => '1.0',
+                );
+
+                $this->setRoot($root);
+            }
+        }
+
         if (false === $this->isJsonApiDocument) {
             return parent::getResult();
         }
@@ -211,24 +310,37 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
             return $rs;
         }
 
-        /** @var JsonApiClassMetadata $jsonApiMetadata */
-        $jsonApiMetadata = $this->metadataFactory->getMetadataForClass(get_class($data));
+        $jsonApiMetadata = $this->getMetadataForClass($data);
 
-        if (null === $jsonApiMetadata) {
+        if (null !== $jsonApiMetadata && $jsonApiMetadata->getResource()) {
+            return $this->endVisitingResource($jsonApiMetadata, $rs);
+        } elseif (null !== $jsonApiMetadata && $jsonApiMetadata->isError()) {
+            return $this->endVisitingError($jsonApiMetadata, $rs);
+        }
+
+        return $rs;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    protected function endVisitingResource(JsonApiClassMetadata $metadata, $rs)
+    {
+        if (!$metadata->getResource()) {
             return $rs;
         }
 
         $result = array();
 
         if (isset($rs[JsonEventSubscriber::EXTRA_DATA_KEY]['type'])) {
-            $result['type'] = $rs[JsonEventSubscriber::EXTRA_DATA_KEY]['type'];
+            $result['type'] = (string) $rs[JsonEventSubscriber::EXTRA_DATA_KEY]['type'];
         }
 
         if (isset($rs[JsonEventSubscriber::EXTRA_DATA_KEY]['id'])) {
-            $result['id'] = $rs[JsonEventSubscriber::EXTRA_DATA_KEY]['id'];
+            $result['id'] = (string) $rs[JsonEventSubscriber::EXTRA_DATA_KEY]['id'];
         }
 
-        $idField = $jsonApiMetadata->getIdField();
+        $idField = $metadata->getIdField();
 
         $result['attributes'] = array_filter($rs, function($key) use ($idField) {
             switch ($key) {
@@ -257,6 +369,59 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
     }
 
     /**
+     * {@inheritdoc}
+     */
+    protected function endVisitingError(JsonApiClassMetadata $metadata, $rs)
+    {
+        if (!$metadata->isError()) {
+            return $rs;
+        }
+
+        $result = array_filter($rs, function($key) {
+            return in_array($key, ['id', 'title', 'detail', 'meta']);
+        }, ARRAY_FILTER_USE_KEY);
+
+        if (isset($rs['status'])) {
+            $result['status'] = (string) $rs['status'];
+        }
+
+        if (isset($rs['code'])) {
+            $result['code'] = (string) $rs['code'];
+        }
+
+        if (isset($rs['source'])) {
+            $result['source'] = array_filter($rs['source'], function($key) {
+                return in_array($key, ['pointer', 'parameter']);
+            }, ARRAY_FILTER_USE_KEY);
+        }
+
+        if (isset($result['source']) && empty($result['source'])) {
+            unset($result['source']);
+        }
+
+        if (isset($rs['links'])) {
+            $result['links'] = array_filter($rs['links'], function($key) {
+                return 'about' === $key;
+            }, ARRAY_FILTER_USE_KEY);
+        }
+
+        return $result;
+    }
+
+    /**
+     * @param mixed $data
+     * @return JsonApiClassMetadata $metadata
+     */
+    protected function getMetadataForClass($data)
+    {
+        if (!is_object($data)) {
+            return false;
+        }
+
+        return $this->metadataFactory->getMetadataForClass(get_class($data));
+    }
+
+    /**
      * @param $items
      *
      * @return bool
@@ -279,12 +444,63 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
      */
     protected function isResource($data)
     {
-        if (is_object($data)) {
-            /** @var JsonApiClassMetadata $metadata */
-            if ($metadata = $this->metadataFactory->getMetadataForClass(get_class($data))) {
-                if ($metadata->getResource()) {
-                    return true;
-                }
+        if ($metadata = $this->getMetadataForClass($data)) {
+            return $metadata->getResource();
+        }
+
+        return false;
+    }
+
+    /**
+     * @param $items
+     *
+     * @return bool
+     */
+    protected function hasErrors($items)
+    {
+        foreach ($items as $item) {
+            return $this->isError($item);
+        }
+
+        return false;
+    }
+
+    /**
+     * Check if the given variable is a valid JSON-API error.
+     *
+     * @param $error
+     *
+     * @return bool
+     */
+    protected function isError($error)
+    {
+        if ($metadata = $this->getMetadataForClass($error)) {
+            return $metadata->isError();
+        }
+
+        return false;
+    }
+
+    /**
+     * Is data a paginated object with resource(s)
+     *
+     * @param mixed $data
+     * @return bool
+     */
+    protected function isPaginator($data)
+    {
+        if (!is_object($data)) {
+            return false;
+        }
+
+        $paginatedClasses = array(
+            PagerfantaHandler::getType(),
+            HateoasRepresentationHandler::getType(),
+        );
+
+        foreach ($paginatedClasses as $paginatedClass) {
+            if (is_a($data, $paginatedClass)) {
+                return true;
             }
         }
 
