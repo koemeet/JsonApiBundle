@@ -114,7 +114,7 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
      */
     protected function validateJsonApiDocument($data)
     {
-        if (is_array($data) && count($data) > 0 && $this->hasResource($data)) {
+        if ((is_array($data) || $data instanceof \Traversable) && count($data) > 0 && $this->hasResource($data)) {
             return true;
         }
 
