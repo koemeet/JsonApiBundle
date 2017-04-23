@@ -41,21 +41,21 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
 
     /**
      * @param PropertyNamingStrategyInterface $propertyNamingStrategy
-     * @param AccessorStrategyInterface       $accessorStrategy
-     * @param MetadataFactoryInterface        $metadataFactory
-     * @param                                 $showVersionInfo
+     * @param AccessorStrategyInterface|null  $accessorStrategy
+     * @param MetadataFactoryInterface|null   $metadataFactory
+     * @param bool                            $showVersionInfo
      */
     public function __construct(
         PropertyNamingStrategyInterface $propertyNamingStrategy,
         AccessorStrategyInterface $accessorStrategy = null,
         MetadataFactoryInterface $metadataFactory,
-        $showVersionInfo
+        $showVersionInfo = false
     ) {
         parent::__construct($propertyNamingStrategy, $accessorStrategy);
 
-        $this->metadataFactory = $metadataFactory;
-        $this->showVersionInfo = $showVersionInfo;
-    }
+    $this->metadataFactory = $metadataFactory;
+    $this->showVersionInfo = $showVersionInfo;
+  }
 
     /**
      * @return bool
