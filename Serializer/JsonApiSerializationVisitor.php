@@ -51,9 +51,9 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
     ) {
         parent::__construct($propertyNamingStrategy, $accessorStrategy);
 
-        $this->metadataFactory = $metadataFactory;
-        $this->showVersionInfo = $showVersionInfo;
-    }
+    $this->metadataFactory = $metadataFactory;
+    $this->showVersionInfo = $showVersionInfo;
+  }
 
     /**
      * @return bool
