@@ -1,9 +1,16 @@
 <?php
 
+/*
+ * (c) Steffen Brem <steffenbrem@gmail.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
 namespace Mango\Bundle\JsonApiBundle\Tests\Serializer;
 
 use Doctrine\Common\Annotations\AnnotationReader;
-use Doctrine\Common\Annotations\AnnotationRegistry;
+use JMS\Serializer;
 use JMS\Serializer\Handler\HandlerRegistry;
 use JMS\Serializer\Naming\CamelCaseNamingStrategy;
 use JMS\Serializer\Naming\SerializedNameAnnotationStrategy;
@@ -17,44 +24,25 @@ use Mango\Bundle\JsonApiBundle\Tests\Fixtures\OrderAddress;
 use Mango\Bundle\JsonApiBundle\Tests\TestCase;
 use Metadata\MetadataFactory;
 use PhpCollection\Map;
-use JMS\Serializer;
 
 class SerializerTest extends TestCase
 {
-  /** @var JsonApiSerializer */
+    /** @var JsonApiSerializer */
   protected $jsonApiSerializer;
 
-  /** @var  Serializer\Serializer */
+  /** @var Serializer\Serializer */
   protected $serializer;
-  protected $dispatcher;
-  protected $objectConstructor;
-  protected $factory;
-  protected $handlerRegistry;
-  protected $serializationVisitors;
-  protected $deserializationVisitors;
+    protected $dispatcher;
+    protected $objectConstructor;
+    protected $factory;
+    protected $handlerRegistry;
+    protected $serializationVisitors;
+    protected $deserializationVisitors;
 
-  public function testDeserializeId()
-  {
-    $id = 'ORDER-1';
-    $data = json_encode(['data' => ['id' => $id]]);
-
-    /** @var Order $order */
-    $order = $this->jsonApiSerializer->deserialize(
-      $data,
-      Order::class,
-      'json',
-      Serializer\DeserializationContext::create()->setSerializeNull(true)
-    );
-
-    $this->assertEquals($order->getId(), $id);
-  }
-
-  public function testDeserializeAttribute()
-  {
-    $id = 'ORDER-1';
-    $email = 'hello@example.com';
-
-    $data = json_encode(['data' => ['id' => $id, 'attributes' => ['email' => $email]]]);
+    public function testDeserializeId()
+    {
+        $id = 'ORDER-1';
+        $data = json_encode(array('data' => array('id' => $id)));
 
     /** @var Order $order */
     $order = $this->jsonApiSerializer->deserialize(
@@ -64,16 +52,15 @@ class SerializerTest extends TestCase
       Serializer\DeserializationContext::create()->setSerializeNull(true)
     );
 
-    $this->assertEquals($order->getId(), $id);
-    $this->assertEquals($order->getEmail(), $email);
-  }
+        $this->assertSame($order->getId(), $id);
+    }
 
-  public function testDeserializeDasherizedAttributes()
-  {
-    $id = 'ORDER-1';
-    $adminComments = 'Admin comment';
+    public function testDeserializeAttribute()
+    {
+        $id = 'ORDER-1';
+        $email = 'hello@example.com';
 
-    $data = json_encode(['data' => ['id' => $id, 'attributes' => ['admin-comments' => $adminComments]]]);
+        $data = json_encode(array('data' => array('id' => $id, 'attributes' => array('email' => $email))));
 
     /** @var Order $order */
     $order = $this->jsonApiSerializer->deserialize(
@@ -83,38 +70,57 @@ class SerializerTest extends TestCase
       Serializer\DeserializationContext::create()->setSerializeNull(true)
     );
 
-    $this->assertEquals($order->getId(), $id);
-    $this->assertEquals($order->getAdminComments(), $adminComments);
-  }
+        $this->assertSame($order->getId(), $id);
+        $this->assertSame($order->getEmail(), $email);
+    }
 
-  public function testDeserializeSingleRelationship()
-  {
-    $id = 'ORDER-1';
-    $addressId = 'ORDER-ADDRESS-1';
-    $addressStreet = 'Address street';
+    public function testDeserializeDasherizedAttributes()
+    {
+        $id = 'ORDER-1';
+        $adminComments = 'Admin comment';
 
-    $data = json_encode([
-      'data' => [
+        $data = json_encode(array('data' => array('id' => $id, 'attributes' => array('admin-comments' => $adminComments))));
+
+    /** @var Order $order */
+    $order = $this->jsonApiSerializer->deserialize(
+      $data,
+      Order::class,
+      'json',
+      Serializer\DeserializationContext::create()->setSerializeNull(true)
+    );
+
+        $this->assertSame($order->getId(), $id);
+        $this->assertSame($order->getAdminComments(), $adminComments);
+    }
+
+    public function testDeserializeSingleRelationship()
+    {
+        $id = 'ORDER-1';
+        $addressId = 'ORDER-ADDRESS-1';
+        $addressStreet = 'Address street';
+
+        $data = json_encode(array(
+      'data' => array(
         'id' => $id,
-        'relationships' => [
-          'address' => [
-            'data' => [
+        'relationships' => array(
+          'address' => array(
+            'data' => array(
               'type' => 'order/address',
               'id' => $addressId,
-            ]
-          ]
-        ]
-      ],
-      'included' => [
-        [
+            ),
+          ),
+        ),
+      ),
+      'included' => array(
+        array(
           'type' => 'order/address',
           'id' => $addressId,
-          'attributes' => [
-            'street' => $addressStreet
-          ]
-        ]
-      ]
-    ]);
+          'attributes' => array(
+            'street' => $addressStreet,
+          ),
+        ),
+      ),
+    ));
 
     /** @var Order $order */
     $order = $this->jsonApiSerializer->deserialize(
@@ -124,35 +130,35 @@ class SerializerTest extends TestCase
       Serializer\DeserializationContext::create()->setSerializeNull(true)
     );
 
-    $this->assertEquals($id, $order->getId());
-    $this->assertEquals(true, $order->getAddress() instanceof OrderAddress);
-    $this->assertEquals($addressStreet, $order->getAddress()->getStreet());
-  }
+        $this->assertSame($id, $order->getId());
+        $this->assertSame(true, $order->getAddress() instanceof OrderAddress);
+        $this->assertSame($addressStreet, $order->getAddress()->getStreet());
+    }
 
-  protected function setUp()
-  {
-    $this->factory = new MetadataFactory(new AnnotationDriver(new AnnotationReader()));
+    protected function setUp()
+    {
+        $this->factory = new MetadataFactory(new AnnotationDriver(new AnnotationReader()));
 
-    $this->handlerRegistry = new HandlerRegistry();
+        $this->handlerRegistry = new HandlerRegistry();
 
-    $this->dispatcher = new Serializer\EventDispatcher\EventDispatcher();
-    $this->dispatcher->addSubscriber(new Serializer\EventDispatcher\Subscriber\DoctrineProxySubscriber());
+        $this->dispatcher = new Serializer\EventDispatcher\EventDispatcher();
+        $this->dispatcher->addSubscriber(new Serializer\EventDispatcher\Subscriber\DoctrineProxySubscriber());
 
-    $namingStrategy = new SerializedNameAnnotationStrategy(new CamelCaseNamingStrategy('-'));
+        $namingStrategy = new SerializedNameAnnotationStrategy(new CamelCaseNamingStrategy('-'));
 
-    $this->serializationVisitors = new Map(array(
+        $this->serializationVisitors = new Map(array(
       'json' => new JsonApiSerializationVisitor($namingStrategy),
     ));
-    $this->deserializationVisitors = new Map(array(
+        $this->deserializationVisitors = new Map(array(
       'json' => new JsonApiDeserializationVisitor($namingStrategy),
     ));
 
-    $this->objectConstructor = new Serializer\Construction\UnserializeObjectConstructor();
+        $this->objectConstructor = new Serializer\Construction\UnserializeObjectConstructor();
 
-    $this->serializer = new Serializer\Serializer($this->factory, $this->handlerRegistry, $this->objectConstructor, $this->serializationVisitors, $this->deserializationVisitors, $this->dispatcher);
+        $this->serializer = new Serializer\Serializer($this->factory, $this->handlerRegistry, $this->objectConstructor, $this->serializationVisitors, $this->deserializationVisitors, $this->dispatcher);
 
-    $exclusionStrategy = new RelationshipExclusionStrategy($this->factory);
+        $exclusionStrategy = new RelationshipExclusionStrategy($this->factory);
 
-    $this->jsonApiSerializer = new JsonApiSerializer($this->serializer, $exclusionStrategy);
-  }
+        $this->jsonApiSerializer = new JsonApiSerializer($this->serializer, $exclusionStrategy);
+    }
 }

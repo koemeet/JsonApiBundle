@@ -1,14 +1,21 @@
 <?php
 
+/*
+ * (c) Steffen Brem <steffenbrem@gmail.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
 namespace Mango\Bundle\JsonApiBundle\Tests\Fixtures;
 
-use Mango\Bundle\JsonApiBundle\Configuration\Annotation as JsonApi;
 use JMS\Serializer\Annotation as JMS;
+use Mango\Bundle\JsonApiBundle\Configuration\Annotation as JsonApi;
 
 /** @JsonApi\Resource(type="order", showLinkSelf=false) */
 class Order
 {
-  /**
+    /**
    * @JsonApi\Id()
    * @JMS\Type("string")
    */
@@ -31,22 +38,22 @@ class Order
    */
   private $address;
 
-  public function getId()
-  {
-    return $this->id;
-  }
+    public function getId()
+    {
+        return $this->id;
+    }
 
-  public function setId($id)
-  {
-    $this->id = $id;
-  }
+    public function setId($id)
+    {
+        $this->id = $id;
+    }
 
   /**
    * @return mixed
    */
   public function getEmail()
   {
-    return $this->email;
+      return $this->email;
   }
 
   /**
@@ -54,7 +61,7 @@ class Order
    */
   public function setEmail($email)
   {
-    $this->email = $email;
+      $this->email = $email;
   }
 
   /**
@@ -62,7 +69,7 @@ class Order
    */
   public function getPhone()
   {
-    return $this->phone;
+      return $this->phone;
   }
 
   /**
@@ -70,7 +77,7 @@ class Order
    */
   public function setPhone($phone)
   {
-    $this->phone = $phone;
+      $this->phone = $phone;
   }
 
   /**
@@ -78,7 +85,7 @@ class Order
    */
   public function getAdminComments()
   {
-    return $this->adminComments;
+      return $this->adminComments;
   }
 
   /**
@@ -86,7 +93,7 @@ class Order
    */
   public function setAdminComments($adminComments)
   {
-    $this->adminComments = $adminComments;
+      $this->adminComments = $adminComments;
   }
 
   /**
@@ -94,7 +101,7 @@ class Order
    */
   public function getAddress()
   {
-    return $this->address;
+      return $this->address;
   }
 
   /**
@@ -102,6 +109,6 @@ class Order
    */
   public function setAddress($address)
   {
-    $this->address = $address;
+      $this->address = $address;
   }
 }

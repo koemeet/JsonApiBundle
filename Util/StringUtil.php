@@ -16,7 +16,7 @@ use Doctrine\Common\Inflector\Inflector;
 class StringUtil
 {
     /**
-     * Dasherize string
+     * Dasherize string.
      *
      * @param string $string
      *

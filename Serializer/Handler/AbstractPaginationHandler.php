@@ -1,6 +1,6 @@
 <?php
-/*
- * (c) Steffen Brem <steffenbrem@gmail.com>
+/**
+ * (c) Steffen Brem <steffenbrem@gmail.com>.
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -94,14 +94,14 @@ abstract class AbstractPaginationHandler implements SubscribingHandlerInterface
             'page' => $representation->getPage(),
             'limit' => $representation->getLimit(),
             'pages' => $representation->getPages(),
-            'total' => $representation->getTotal()
+            'total' => $representation->getTotal(),
         );
 
         $root['links'] = array(
             'first' => $this->getUriForPage(1),
             'last' => $this->getUriForPage($representation->getPages()),
             'next' => $representation->hasNextPage() ? $this->getUriForPage($representation->getNextPage()) : null,
-            'previous' => $representation->hasPreviousPage() ? $this->getUriForPage($representation->getPreviousPage()) : null
+            'previous' => $representation->hasPreviousPage() ? $this->getUriForPage($representation->getPreviousPage()) : null,
         );
 
         $visitor->setRoot($root);
@@ -121,7 +121,7 @@ abstract class AbstractPaginationHandler implements SubscribingHandlerInterface
 
         $query = urldecode(http_build_query($request->query->all()));
 
-        return $request->getSchemeAndHttpHost() . $request->getBaseUrl() . $request->getPathInfo() . '?' . $query;
+        return $request->getSchemeAndHttpHost().$request->getBaseUrl().$request->getPathInfo().'?'.$query;
     }
 
     /**

@@ -1,4 +1,5 @@
 <?php
+
 /*
  * (c) Steffen Brem <steffenbrem@gmail.com>
  *
@@ -55,12 +56,12 @@ final class Serializer implements SerializerInterface
     }
 
     /**
-     * @inheritDoc
+     * {@inheritdoc}
      */
     public function deserialize($data, $type, $format, DeserializationContext $context = null)
     {
         if (null === $context) {
-          $context = new DeserializationContext();
+            $context = new DeserializationContext();
         }
 
         return $this->jmsSerializer->deserialize($data, $type, $format, $context);
