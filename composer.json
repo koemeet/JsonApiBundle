@@ -22,6 +22,7 @@
         "willdurand/hateoas": ">2.0"
     },
     "require-dev": {
+        "friendsofphp/php-cs-fixer": "^1.11",
         "symfony/expression-language": "~2.4",
         "twig/twig": "~1.12",
         "phpunit/phpunit": "~4.5"
@@ -33,7 +34,7 @@
     },
     "target-dir": "Mango/Bundle/JsonApiBundle",
     "config": {
-        "bin-dir": "bin"
+        "bin-dir": "vendor/bin"
     },
     "extra": {
         "branch-alias": {
