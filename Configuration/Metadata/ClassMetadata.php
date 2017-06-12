@@ -1,8 +1,6 @@
 <?php
 
 /*
- * This file is part of the Mango package.
- *
  * (c) Steffen Brem <steffenbrem@gmail.com>
  *
  * For the full copyright and license information, please view the LICENSE
@@ -23,7 +21,7 @@ use Metadata\MergeableInterface;
 class ClassMetadata extends \JMS\Serializer\Metadata\ClassMetadata implements ClassMetadataInterface
 {
     /**
-     * @var Resource
+     * @var resource
      */
     protected $resource;
 
@@ -45,7 +43,7 @@ class ClassMetadata extends \JMS\Serializer\Metadata\ClassMetadata implements Cl
     }
 
     /**
-     * @return Resource
+     * @return resource
      */
     public function getResource()
     {
@@ -53,7 +51,7 @@ class ClassMetadata extends \JMS\Serializer\Metadata\ClassMetadata implements Cl
     }
 
     /**
-     * @param Resource $resource
+     * @param resource $resource
      */
     public function setResource(Resource $resource)
     {
@@ -105,7 +103,7 @@ class ClassMetadata extends \JMS\Serializer\Metadata\ClassMetadata implements Cl
     }
 
     /**
-     * {@inheritDoc}
+     * {@inheritdoc}
      */
     public function merge(MergeableInterface $object)
     {

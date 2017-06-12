@@ -1,8 +1,6 @@
 <?php
 
 /*
- * This file is part of the Mango package.
- *
  * (c) Steffen Brem <steffenbrem@gmail.com>
  *
  * For the full copyright and license information, please view the LICENSE
@@ -19,7 +17,7 @@ use Doctrine\Common\Inflector\Inflector;
 class StringUtil
 {
     /**
-     * Dasherize string
+     * Dasherize string.
      *
      * @param string $string
      *

@@ -1,8 +1,6 @@
 <?php
 
 /*
- * This file is part of the Mango package.
- *
  * (c) Steffen Brem <steffenbrem@gmail.com>
  *
  * For the full copyright and license information, please view the LICENSE
@@ -11,7 +9,9 @@
 
 namespace Mango\Bundle\JsonApiBundle\EventListener\Serializer;
 
+use Doctrine\Common\Persistence\Proxy;
 use Doctrine\Common\Util\ClassUtils;
+use Doctrine\ORM\Proxy\Proxy as ORMProxy;
 use JMS\Serializer\Context;
 use JMS\Serializer\EventDispatcher\Events;
 use JMS\Serializer\EventDispatcher\EventSubscriberInterface;
@@ -24,8 +24,6 @@ use Mango\Bundle\JsonApiBundle\Serializer\JsonApiSerializationVisitor;
 use Metadata\MetadataFactoryInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\PropertyAccess\PropertyAccess;
-use Doctrine\Common\Persistence\Proxy;
-use Doctrine\ORM\Proxy\Proxy as ORMProxy;
 
 /**
  * @author Steffen Brem <steffenbrem@gmail.com>
@@ -35,7 +33,7 @@ class JsonEventSubscriber implements EventSubscriberInterface
     const EXTRA_DATA_KEY = '__DATA__';
 
     /**
-     * Keep track of all included relationships, so that we do not duplicate them
+     * Keep track of all included relationships, so that we do not duplicate them.
      *
      * @var array
      */
@@ -112,9 +110,9 @@ class JsonEventSubscriber implements EventSubscriberInterface
         $context = $event->getContext();
 
         if ($object instanceof Proxy || $object instanceof ORMProxy) {
-          $class = get_parent_class($object);
+            $class = get_parent_class($object);
         } else {
-          $class = get_class($object);
+            $class = get_class($object);
         }
 
         /** @var ClassMetadata $metadata */
@@ -152,7 +150,7 @@ class JsonEventSubscriber implements EventSubscriberInterface
                 $jmsPropertyMetadata = $jmsMetadata->propertyMetadata[$relationshipPropertyName];
                 $relationshipPayloadKey = $this->namingStrategy->translateName($jmsPropertyMetadata);
 
-                $relationshipData =& $relationships[$relationshipPayloadKey];
+                $relationshipData = &$relationships[$relationshipPayloadKey];
                 $relationshipData = array();
 
                 // add `links`
@@ -161,7 +159,7 @@ class JsonEventSubscriber implements EventSubscriberInterface
                     $relationshipData['links'] = $links;
                 }
 
-                $include = [];
+                $include = array();
                 if ($request = $this->requestStack->getCurrentRequest()) {
                     $include = $request->query->get('include');
                     $include = $this->parseInclude($include);
@@ -208,7 +206,7 @@ class JsonEventSubscriber implements EventSubscriberInterface
                 ));
             }
 
-            $root = (array)$visitor->getRoot();
+            $root = (array) $visitor->getRoot();
             $root['included'] = array_values($this->includedRelationships);
             $visitor->setRoot($root);
         }
@@ -222,9 +220,9 @@ class JsonEventSubscriber implements EventSubscriberInterface
     protected function processRelationshipLinks($primaryObject, Relationship $relationship, $relationshipPayloadKey)
     {
         if ($primaryObject instanceof Proxy || $primaryObject instanceof ORMProxy) {
-          $class = get_parent_class($primaryObject);
+            $class = get_parent_class($primaryObject);
         } else {
-          $class = get_class($primaryObject);
+            $class = get_class($primaryObject);
         }
 
         /** @var ClassMetadata $relationshipMetadata */
@@ -263,11 +261,11 @@ class JsonEventSubscriber implements EventSubscriberInterface
             throw new \RuntimeException(sprintf('Cannot process relationship "%s", because it is not an object but a %s.', $relationship->getName(), gettype($object)));
         }
 
-      if ($object instanceof Proxy || $object instanceof ORMProxy) {
-        $class = get_parent_class($object);
-      } else {
-        $class = get_class($object);
-      }
+        if ($object instanceof Proxy || $object instanceof ORMProxy) {
+            $class = get_parent_class($object);
+        } else {
+            $class = get_class($object);
+        }
 
         /** @var ClassMetadata $relationshipMetadata */
         $relationshipMetadata = $this->jsonApiMetadataFactory->getMetadataForClass($class);
@@ -285,7 +283,7 @@ class JsonEventSubscriber implements EventSubscriberInterface
         // only include this relationship if it is needed
         if ($relationship->isIncludedByDefault() && $this->canIncludeRelationship($relationshipMetadata, $object)) {
             $includedRelationship = $relationshipDataArray; // copy data array so we do not override it with our reference
-            $this->includedRelationships[] =& $includedRelationship;
+            $this->includedRelationships[] = &$includedRelationship;
             $includedRelationship = $context->accept($object); // override previous reference with the serialized data
         }
 
@@ -312,7 +310,7 @@ class JsonEventSubscriber implements EventSubscriberInterface
     }
 
     /**
-     * Get the real ID of the given object by it's metadata
+     * Get the real ID of the given object by it's metadata.
      *
      * @param ClassMetadata $classMetadata
      * @param               $object
@@ -358,7 +356,7 @@ class JsonEventSubscriber implements EventSubscriberInterface
         $resource = $classMetadata->getResource();
 
         if (!$resource) {
-          return null;
+            return null;
         }
 
         return array(
@@ -386,7 +384,7 @@ class JsonEventSubscriber implements EventSubscriberInterface
      */
     protected function isIteratable($data)
     {
-        return (is_array($data) || $data instanceof \Traversable);
+        return is_array($data) || $data instanceof \Traversable;
     }
 
     /**

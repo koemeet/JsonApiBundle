@@ -1,8 +1,6 @@
 <?php
 
 /*
- * This file is part of the Mango package.
- *
  * (c) Steffen Brem <steffenbrem@gmail.com>
  *
  * For the full copyright and license information, please view the LICENSE
@@ -50,6 +48,7 @@ class Resource
     {
         if (!$this->type) {
             $reflectionClass = new \ReflectionClass($object);
+
             return StringUtil::dasherize($reflectionClass->getShortName());
         }
 
@@ -57,10 +56,10 @@ class Resource
     }
 
     /**
-     * @return boolean
+     * @return bool
      */
     public function getShowLinkSelf()
     {
-        return (bool)$this->showLinkSelf;
+        return (bool) $this->showLinkSelf;
     }
 }

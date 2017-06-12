@@ -1,7 +1,6 @@
 <?php
+
 /*
- * This file is part of the Mango package.
- *
  * (c) Steffen Brem <steffenbrem@gmail.com>
  *
  * For the full copyright and license information, please view the LICENSE
@@ -53,12 +52,12 @@ final class Serializer implements SerializerInterface
     }
 
     /**
-     * @inheritDoc
+     * {@inheritdoc}
      */
     public function deserialize($data, $type, $format, DeserializationContext $context = null)
     {
         if (null === $context) {
-          $context = new DeserializationContext();
+            $context = new DeserializationContext();
         }
 
         return $this->jmsSerializer->deserialize($data, $type, $format, $context);

@@ -1,8 +1,6 @@
 <?php
 
 /*
- * This file is part of the Mango package.
- *
  * (c) Steffen Brem <steffenbrem@gmail.com>
  *
  * For the full copyright and license information, please view the LICENSE
@@ -11,14 +9,12 @@
 
 namespace Mango\Bundle\JsonApiBundle\Serializer;
 
-use Hateoas\Representation\CollectionRepresentation;
-use Hateoas\Representation\PaginatedRepresentation;
 use JMS\Serializer\Accessor\AccessorStrategyInterface;
 use JMS\Serializer\Context;
 use JMS\Serializer\JsonSerializationVisitor;
-use Mango\Bundle\JsonApiBundle\Configuration\Metadata\ClassMetadata as JsonApiClassMetadata;
 use JMS\Serializer\Metadata\ClassMetadata;
 use JMS\Serializer\Naming\PropertyNamingStrategyInterface;
+use Mango\Bundle\JsonApiBundle\Configuration\Metadata\ClassMetadata as JsonApiClassMetadata;
 use Mango\Bundle\JsonApiBundle\EventListener\Serializer\JsonEventSubscriber;
 use Metadata\MetadataFactoryInterface;
 
@@ -39,22 +35,22 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
 
     protected $isJsonApiDocument = false;
 
-    /**
-     * @param PropertyNamingStrategyInterface $propertyNamingStrategy
-     * @param AccessorStrategyInterface|null  $accessorStrategy
-     * @param MetadataFactoryInterface|null   $metadataFactory
-     * @param bool                            $showVersionInfo
-     */
-    public function __construct(
-        PropertyNamingStrategyInterface $propertyNamingStrategy,
-        AccessorStrategyInterface $accessorStrategy = null,
-        MetadataFactoryInterface $metadataFactory,
-        $showVersionInfo = false
-    ) {
-        parent::__construct($propertyNamingStrategy, $accessorStrategy);
+  /**
+   * @param PropertyNamingStrategyInterface $propertyNamingStrategy
+   * @param AccessorStrategyInterface|null  $accessorStrategy
+   * @param MetadataFactoryInterface|null   $metadataFactory
+   * @param bool                            $showVersionInfo
+   */
+  public function __construct(
+    PropertyNamingStrategyInterface $propertyNamingStrategy,
+    AccessorStrategyInterface $accessorStrategy = null,
+    MetadataFactoryInterface $metadataFactory = null,
+    $showVersionInfo = false
+  ) {
+    parent::__construct($propertyNamingStrategy, $accessorStrategy);
 
-    $this->metadataFactory = $metadataFactory;
-    $this->showVersionInfo = $showVersionInfo;
+      $this->metadataFactory = $metadataFactory;
+      $this->showVersionInfo = $showVersionInfo;
   }
 
     /**
@@ -164,9 +160,9 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
 
             // filter out duplicate primary resource objects that are in `included`
             $included = array_udiff(
-                (array)$included,
-                (isset($data['type'])) ? [$data] : $data,
-                function($a, $b) {
+                (array) $included,
+                (isset($data['type'])) ? array($data) : $data,
+                function ($a, $b) {
                     return strcmp($a['type'].$a['id'], $b['type'].$b['id']);
                 }
             );
@@ -208,7 +204,7 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
         $rs = parent::endVisitingObject($metadata, $data, $type, $context);
 
         if ($rs instanceof \ArrayObject) {
-            $rs = [];
+            $rs = array();
             $this->setRoot($rs);
 
             return $rs;
@@ -233,7 +229,7 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
 
         $idField = $jsonApiMetadata->getIdField();
 
-        $result['attributes'] = array_filter($rs, function($key) use ($idField) {
+        $result['attributes'] = array_filter($rs, function ($key) use ($idField) {
             switch ($key) {
                 case $idField:
                 case 'relationships':
