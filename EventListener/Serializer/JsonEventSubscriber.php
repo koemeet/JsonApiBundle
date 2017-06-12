@@ -21,6 +21,8 @@ use Mango\Bundle\JsonApiBundle\Serializer\JsonApiSerializationVisitor;
 use Metadata\MetadataFactoryInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\PropertyAccess\PropertyAccess;
+use Doctrine\Common\Persistence\Proxy;
+use Doctrine\ORM\Proxy\Proxy as ORMProxy;
 
 /**
  * @author Steffen Brem <steffenbrem@gmail.com>
@@ -109,8 +111,14 @@ class JsonEventSubscriber implements EventSubscriberInterface
         $object = $event->getObject();
         $context = $event->getContext();
 
+        if ($object instanceof Proxy || $object instanceof ORMProxy) {
+          $class = get_parent_class($object);
+        } else {
+          $class = get_class($object);
+        }
+
         /** @var ClassMetadata $metadata */
-        $metadata = $this->jsonApiMetadataFactory->getMetadataForClass(get_class($object));
+        $metadata = $this->jsonApiMetadataFactory->getMetadataForClass($class);
 
         // if it has no json api metadata, skip it
         if (null === $metadata) {
@@ -118,7 +126,7 @@ class JsonEventSubscriber implements EventSubscriberInterface
         }
 
         /** @var \JMS\Serializer\Metadata\ClassMetadata $jmsMetadata */
-        $jmsMetadata = $this->jmsMetadataFactory->getMetadataForClass(get_class($object));
+        $jmsMetadata = $this->jmsMetadataFactory->getMetadataForClass($class);
 
         $propertyAccessor = PropertyAccess::createPropertyAccessor();
 
@@ -194,7 +202,7 @@ class JsonEventSubscriber implements EventSubscriberInterface
             }
 
             // TODO: Improve link handling
-            if (true === $metadata->getResource()->getShowLinkSelf()) {
+            if ($metadata->getResource() && true === $metadata->getResource()->getShowLinkSelf()) {
                 $visitor->addData('links', array(
                     'self' => $this->baseUriResolver->getBaseUri().'/'.$metadata->getResource()
                             ->getType($object).'/'.$this->getId($metadata, $object),
@@ -214,8 +222,14 @@ class JsonEventSubscriber implements EventSubscriberInterface
      */
     protected function processRelationshipLinks($primaryObject, Relationship $relationship, $relationshipPayloadKey)
     {
+        if ($primaryObject instanceof Proxy || $primaryObject instanceof ORMProxy) {
+          $class = get_parent_class($primaryObject);
+        } else {
+          $class = get_class($primaryObject);
+        }
+
         /** @var ClassMetadata $relationshipMetadata */
-        $primaryMetadata = $this->jsonApiMetadataFactory->getMetadataForClass(get_class($primaryObject));
+        $primaryMetadata = $this->jsonApiMetadataFactory->getMetadataForClass($class);
         $primaryId = $this->getId($primaryMetadata, $primaryObject);
 
         $links = array();
@@ -250,8 +264,14 @@ class JsonEventSubscriber implements EventSubscriberInterface
             throw new \RuntimeException(sprintf('Cannot process relationship "%s", because it is not an object but a %s.', $relationship->getName(), gettype($object)));
         }
 
+      if ($object instanceof Proxy || $object instanceof ORMProxy) {
+        $class = get_parent_class($object);
+      } else {
+        $class = get_class($object);
+      }
+
         /** @var ClassMetadata $relationshipMetadata */
-        $relationshipMetadata = $this->jsonApiMetadataFactory->getMetadataForClass(get_class($object));
+        $relationshipMetadata = $this->jsonApiMetadataFactory->getMetadataForClass($class);
 
         if (null === $relationshipMetadata) {
             throw new \RuntimeException(sprintf(
@@ -336,8 +356,14 @@ class JsonEventSubscriber implements EventSubscriberInterface
      */
     protected function getRelationshipDataArray(ClassMetadata $classMetadata, $object)
     {
+        $resource = $classMetadata->getResource();
+
+        if (!$resource) {
+          return null;
+        }
+
         return array(
-            'type' => $classMetadata->getResource()->getType($object),
+            'type' => $resource->getType($object),
             'id' => $this->getId($classMetadata, $object),
         );
     }

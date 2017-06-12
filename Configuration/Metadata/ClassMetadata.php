@@ -12,13 +12,12 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Mango\Bundle\JsonApiBundle\Configuration\Relationship;
 use Mango\Bundle\JsonApiBundle\Configuration\Resource;
-use Metadata\MergeableClassMetadata;
 use Metadata\MergeableInterface;
 
 /**
  * @author Steffen Brem <steffenbrem@gmail.com>
  */
-class ClassMetadata extends MergeableClassMetadata implements ClassMetadataInterface
+class ClassMetadata extends \JMS\Serializer\Metadata\ClassMetadata implements ClassMetadataInterface
 {
     /**
      * @var Resource

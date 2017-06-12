@@ -28,5 +28,8 @@ class SerializerPass implements CompilerPassInterface
         $definition->addArgument($container->getDefinition('json_api.metadata_factory'))
             ->addArgument('%json_api.show_version_info%')
             ->setClass('Mango\Bundle\JsonApiBundle\Serializer\JsonApiSerializationVisitor');
+
+        $container->getDefinition('jms_serializer.json_deserialization_visitor')
+            ->setClass('Mango\Bundle\JsonApiBundle\Serializer\JsonApiDeserializationVisitor');
     }
 }
