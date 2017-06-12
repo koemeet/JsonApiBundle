@@ -12,7 +12,6 @@ namespace Mango\Bundle\JsonApiBundle\Serializer;
 
 use JMS\Serializer\DeserializationContext;
 use JMS\Serializer\Exclusion\ExclusionStrategyInterface;
-use JMS\Serializer\scalar;
 use JMS\Serializer\SerializationContext;
 use JMS\Serializer\SerializerInterface;
 
@@ -58,6 +57,10 @@ final class Serializer implements SerializerInterface
      */
     public function deserialize($data, $type, $format, DeserializationContext $context = null)
     {
+        if (null === $context) {
+          $context = new DeserializationContext();
+        }
+
         return $this->jmsSerializer->deserialize($data, $type, $format, $context);
     }
 }
