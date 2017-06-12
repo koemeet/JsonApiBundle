@@ -30,7 +30,7 @@
     },
     "target-dir": "Mango/Bundle/JsonApiBundle",
     "config": {
-        "bin-dir": "bin"
+        "bin-dir": "vendor/bin"
     },
     "extra": {
         "branch-alias": {
