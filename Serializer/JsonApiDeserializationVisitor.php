@@ -41,8 +41,14 @@ class JsonApiDeserializationVisitor extends JsonDeserializationVisitor
             }
         } elseif (isset($data['data']['relationships'][$metadata->name]) || isset($data['relationships'][$metadata->name])) { // TODO: add this property
 
-      $included = $data['included'];
-            $relationship = $data['data']['relationships'][$metadata->name]['data'];
+            $included = isset($data['included']) ? $data['included'] : [];
+
+            $relationship = [];
+            if (isset($data['data']['relationships'][$metadata->name]['data'])) {
+                $relationship = $data['data']['relationships'][$metadata->name]['data'];
+            } elseif (isset($data['relationships'][$metadata->name]['data'])) {
+                $relationship = $data['relationships'][$metadata->name]['data'];
+            }
 
             $relationshipData = array();
             foreach ($included as $include) {
@@ -52,6 +58,10 @@ class JsonApiDeserializationVisitor extends JsonDeserializationVisitor
                 }
             }
 
+            if (!$relationshipData) {
+              $relationshipData = $relationship;
+            }
+
             if ($relationshipData) {
                 parent::visitProperty($metadata, array($metadata->name => $relationshipData), $context);
             }
@@ -59,6 +69,8 @@ class JsonApiDeserializationVisitor extends JsonDeserializationVisitor
             parent::visitProperty($metadata, $data['data']['attributes'], $context);
         } elseif (isset($data['attributes'])) {
             parent::visitProperty($metadata, $data['attributes'], $context);
+        } else {
+            parent::visitProperty($metadata, [], $context);
         }
     }
 }

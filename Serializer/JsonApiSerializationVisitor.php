@@ -12,6 +12,8 @@ namespace Mango\Bundle\JsonApiBundle\Serializer;
 use JMS\Serializer\Accessor\AccessorStrategyInterface;
 use JMS\Serializer\Context;
 use JMS\Serializer\JsonSerializationVisitor;
+use Doctrine\Common\Persistence\Proxy;
+use Doctrine\ORM\Proxy\Proxy as ORMProxy;
 use JMS\Serializer\Metadata\ClassMetadata;
 use JMS\Serializer\Naming\PropertyNamingStrategyInterface;
 use Mango\Bundle\JsonApiBundle\Configuration\Metadata\ClassMetadata as JsonApiClassMetadata;
@@ -210,8 +212,14 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
             return $rs;
         }
 
+        if ($data instanceof Proxy || $data instanceof ORMProxy) {
+            $class = get_parent_class($data);
+        } else {
+            $class = get_class($data);
+        }
+
         /** @var JsonApiClassMetadata $jsonApiMetadata */
-        $jsonApiMetadata = $this->metadataFactory->getMetadataForClass(get_class($data));
+        $jsonApiMetadata = $this->metadataFactory->getMetadataForClass($class);
 
         if (null === $jsonApiMetadata) {
             return $rs;
@@ -279,8 +287,14 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
     protected function isResource($data)
     {
         if (is_object($data)) {
+            if ($data instanceof Proxy || $data instanceof ORMProxy) {
+                $class = get_parent_class($data);
+            } else {
+                $class = get_class($data);
+            }
+
             /** @var JsonApiClassMetadata $metadata */
-            if ($metadata = $this->metadataFactory->getMetadataForClass(get_class($data))) {
+            if ($metadata = $this->metadataFactory->getMetadataForClass($class)) {
                 if ($metadata->getResource()) {
                     return true;
                 }
