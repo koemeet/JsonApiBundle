@@ -23,6 +23,14 @@
         "pagerfanta/pagerfanta": "~1.0",
         "willdurand/hateoas": ">2.0"
     },
+    "require-dev": {
+        "doctrine/orm": "^2.4.8",
+        "symfony/property-access": "^3.3",
+        "friendsofphp/php-cs-fixer": "^1.11",
+        "symfony/expression-language": "~2.4",
+        "twig/twig": "~1.12",
+        "phpunit/phpunit": "~4.5"
+    },
     "autoload": {
         "psr-0": {
             "Mango\\Bundle\\JsonApiBundle": ""

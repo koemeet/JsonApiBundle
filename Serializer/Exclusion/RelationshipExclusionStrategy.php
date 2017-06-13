@@ -8,6 +8,8 @@
 
 namespace Mango\Bundle\JsonApiBundle\Serializer\Exclusion;
 
+use Doctrine\Common\Persistence\Proxy;
+use Doctrine\ORM\Proxy\Proxy as ORMProxy;
 use JMS\Serializer\Context;
 use JMS\Serializer\Exclusion\ExclusionStrategyInterface;
 use JMS\Serializer\Metadata\ClassMetadata;
@@ -59,8 +61,14 @@ class RelationshipExclusionStrategy implements ExclusionStrategyInterface
             return false;
         }
 
+        if ($context->getObject() instanceof Proxy || $context->getObject() instanceof ORMProxy) {
+            $class = get_parent_class($context->getObject());
+        } else {
+            $class = get_class($context->getObject());
+        }
+
         /** @var \Mango\Bundle\JsonApiBundle\Configuration\Metadata\ClassMetadata $metadata */
-        $metadata = $this->metadataFactory->getMetadataForClass(get_class($context->getObject()));
+        $metadata = $this->metadataFactory->getMetadataForClass($class);
 
         if ($metadata) {
             foreach ($metadata->getRelationships() as $relationship) {
