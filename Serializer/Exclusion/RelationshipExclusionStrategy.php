@@ -61,23 +61,23 @@ class RelationshipExclusionStrategy implements ExclusionStrategyInterface
             return false;
         }
 
-        if ($context->getObject() instanceof Proxy || $context->getObject() instanceof ORMProxy) {
-            $class = get_parent_class($context->getObject());
+        $object = $context->getObject();
+
+        if ($object instanceof Proxy || $object instanceof ORMProxy) {
+            $class = get_parent_class($object);
         } else {
-            $class = get_class($context->getObject());
+            $class = get_class($object);
         }
 
         /** @var \Mango\Bundle\JsonApiBundle\Configuration\Metadata\ClassMetadata $metadata */
         $metadata = $this->metadataFactory->getMetadataForClass($class);
 
-        if ($metadata) {
-            foreach ($metadata->getRelationships() as $relationship) {
-                if ($property->name === $relationship->getName()) {
-                    return true;
-                }
-            }
+        if (!$metadata) {
+            return false;
         }
 
-        return false;
+        $relationshipHash = $metadata->getRelationshipsHash();
+
+        return isset($relationshipHash[$property->name]);
     }
 }

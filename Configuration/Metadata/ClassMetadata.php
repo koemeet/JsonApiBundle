@@ -34,11 +34,17 @@ class ClassMetadata extends \JMS\Serializer\Metadata\ClassMetadata implements Cl
      */
     protected $relationships;
 
+    /**
+     * @var array
+     */
+    protected $relationshipsHash;
+
     public function __construct($name)
     {
         parent::__construct($name);
 
         $this->relationships = new ArrayCollection();
+        $this->relationshipsHash = [];
     }
 
     /**
@@ -85,12 +91,21 @@ class ClassMetadata extends \JMS\Serializer\Metadata\ClassMetadata implements Cl
         return $this->relationships;
     }
 
+    public function getRelationshipsHash()
+    {
+        return $this->relationshipsHash;
+    }
+
     /**
      * {@inheritdoc}
      */
     public function setRelationships(Collection $collection)
     {
         $this->relationships = $collection;
+
+        foreach ($collection as $relationship) {
+            $this->relationshipsHash[$relationship->getName()] = $relationship;
+        }
     }
 
     /**
@@ -99,6 +114,7 @@ class ClassMetadata extends \JMS\Serializer\Metadata\ClassMetadata implements Cl
     public function addRelationship($relationship)
     {
         $this->relationships->add($relationship);
+        $this->relationshipsHash[$relationship->getName()] = $relationship;
     }
 
     /**
@@ -144,6 +160,10 @@ class ClassMetadata extends \JMS\Serializer\Metadata\ClassMetadata implements Cl
             $this->relationships,
             $parentStr
             ) = unserialize($str);
+
+        foreach ($this->relationships as $relationship) {
+            $this->relationshipsHash[$relationship->getName()] = $relationship;
+        }
 
         parent::unserialize($parentStr);
     }
