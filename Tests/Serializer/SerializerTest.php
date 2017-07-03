@@ -28,10 +28,10 @@ use PhpCollection\Map;
 class SerializerTest extends TestCase
 {
     /** @var JsonApiSerializer */
-  protected $jsonApiSerializer;
+    protected $jsonApiSerializer;
 
-  /** @var Serializer\Serializer */
-  protected $serializer;
+    /** @var Serializer\Serializer */
+    protected $serializer;
     protected $dispatcher;
     protected $objectConstructor;
     protected $factory;
@@ -42,15 +42,15 @@ class SerializerTest extends TestCase
     public function testDeserializeId()
     {
         $id = 'ORDER-1';
-        $data = json_encode(array('data' => array('id' => $id)));
+        $data = json_encode(['data' => ['id' => $id]]);
 
-    /** @var Order $order */
-    $order = $this->jsonApiSerializer->deserialize(
-      $data,
-      Order::class,
-      'json',
-      Serializer\DeserializationContext::create()->setSerializeNull(true)
-    );
+        /** @var Order $order */
+        $order = $this->jsonApiSerializer->deserialize(
+            $data,
+            Order::class,
+            'json',
+            Serializer\DeserializationContext::create()->setSerializeNull(true)
+        );
 
         $this->assertSame($order->getId(), $id);
     }
@@ -60,15 +60,15 @@ class SerializerTest extends TestCase
         $id = 'ORDER-1';
         $email = 'hello@example.com';
 
-        $data = json_encode(array('data' => array('id' => $id, 'attributes' => array('email' => $email))));
+        $data = json_encode(['data' => ['id' => $id, 'attributes' => ['email' => $email]]]);
 
-    /** @var Order $order */
-    $order = $this->jsonApiSerializer->deserialize(
-      $data,
-      Order::class,
-      'json',
-      Serializer\DeserializationContext::create()->setSerializeNull(true)
-    );
+        /** @var Order $order */
+        $order = $this->jsonApiSerializer->deserialize(
+            $data,
+            Order::class,
+            'json',
+            Serializer\DeserializationContext::create()->setSerializeNull(true)
+        );
 
         $this->assertSame($order->getId(), $id);
         $this->assertSame($order->getEmail(), $email);
@@ -79,15 +79,15 @@ class SerializerTest extends TestCase
         $id = 'ORDER-1';
         $adminComments = 'Admin comment';
 
-        $data = json_encode(array('data' => array('id' => $id, 'attributes' => array('admin-comments' => $adminComments))));
+        $data = json_encode(['data' => ['id' => $id, 'attributes' => ['admin-comments' => $adminComments]]]);
 
-    /** @var Order $order */
-    $order = $this->jsonApiSerializer->deserialize(
-      $data,
-      Order::class,
-      'json',
-      Serializer\DeserializationContext::create()->setSerializeNull(true)
-    );
+        /** @var Order $order */
+        $order = $this->jsonApiSerializer->deserialize(
+            $data,
+            Order::class,
+            'json',
+            Serializer\DeserializationContext::create()->setSerializeNull(true)
+        );
 
         $this->assertSame($order->getId(), $id);
         $this->assertSame($order->getAdminComments(), $adminComments);
@@ -99,36 +99,36 @@ class SerializerTest extends TestCase
         $addressId = 'ORDER-ADDRESS-1';
         $addressStreet = 'Address street';
 
-        $data = json_encode(array(
-      'data' => array(
-        'id' => $id,
-        'relationships' => array(
-          'address' => array(
-            'data' => array(
-              'type' => 'order/address',
-              'id' => $addressId,
-            ),
-          ),
-        ),
-      ),
-      'included' => array(
-        array(
-          'type' => 'order/address',
-          'id' => $addressId,
-          'attributes' => array(
-            'street' => $addressStreet,
-          ),
-        ),
-      ),
-    ));
+        $data = json_encode([
+            'data' => [
+                'id' => $id,
+                'relationships' => [
+                    'address' => [
+                        'data' => [
+                            'type' => 'order/address',
+                            'id' => $addressId,
+                        ],
+                    ],
+                ],
+            ],
+            'included' => [
+                [
+                    'type' => 'order/address',
+                    'id' => $addressId,
+                    'attributes' => [
+                        'street' => $addressStreet,
+                    ],
+                ],
+            ],
+        ]);
 
-    /** @var Order $order */
-    $order = $this->jsonApiSerializer->deserialize(
-      $data,
-      Order::class,
-      'json',
-      Serializer\DeserializationContext::create()->setSerializeNull(true)
-    );
+        /** @var Order $order */
+        $order = $this->jsonApiSerializer->deserialize(
+            $data,
+            Order::class,
+            'json',
+            Serializer\DeserializationContext::create()->setSerializeNull(true)
+        );
 
         $this->assertSame($id, $order->getId());
         $this->assertSame(true, $order->getAddress() instanceof OrderAddress);
@@ -146,12 +146,12 @@ class SerializerTest extends TestCase
 
         $namingStrategy = new SerializedNameAnnotationStrategy(new CamelCaseNamingStrategy('-'));
 
-        $this->serializationVisitors = new Map(array(
-      'json' => new JsonApiSerializationVisitor($namingStrategy),
-    ));
-        $this->deserializationVisitors = new Map(array(
-      'json' => new JsonApiDeserializationVisitor($namingStrategy),
-    ));
+        $this->serializationVisitors = new Map([
+            'json' => new JsonApiSerializationVisitor($namingStrategy),
+        ]);
+        $this->deserializationVisitors = new Map([
+            'json' => new JsonApiDeserializationVisitor($namingStrategy),
+        ]);
 
         $this->objectConstructor = new Serializer\Construction\UnserializeObjectConstructor();
 
