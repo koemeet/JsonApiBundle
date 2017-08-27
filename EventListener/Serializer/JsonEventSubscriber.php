@@ -22,6 +22,8 @@ use Mango\Bundle\JsonApiBundle\Configuration\Relationship;
 use Mango\Bundle\JsonApiBundle\Resolver\BaseUri\BaseUriResolverInterface;
 use Mango\Bundle\JsonApiBundle\Serializer\JsonApiSerializationVisitor;
 use Metadata\MetadataFactoryInterface;
+use PhpOption\None;
+use Symfony\Component\ExpressionLanguage;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\PropertyAccess\PropertyAccess;
 use Symfony\Component\PropertyAccess\PropertyAccessor;
@@ -135,7 +137,10 @@ class JsonEventSubscriber implements EventSubscriberInterface
             return;
         }
 
-        $objectProps = $this->getObjectMainProps($metadata, $object);
+        $groups = $context->attributes->get('groups');
+        $groups = $groups instanceof None ? [] : $groups->get();
+
+        $objectProps = $this->getObjectMainProps($metadata, $object, $groups);
 
         $visitor->addData(
             self::EXTRA_DATA_KEY,
@@ -269,15 +274,26 @@ class JsonEventSubscriber implements EventSubscriberInterface
             ));
         }
 
+        $groups = $context->attributes->get('groups');
+        $groups = $groups instanceof None ? [] : $groups->get();
+
         // contains the relations type and id
-        $relationshipDataArray = $this->getRelationshipDataArray($relationshipMetadata, $object);
+        $relationshipDataArray = $this->getRelationshipDataArray($relationshipMetadata, $object, $groups);
 
         // only include this relationship if it is needed
-        if ($relationship->isIncludedByDefault() && $this->canIncludeRelationship($relationshipMetadata, $object)) {
+        if ($relationship->isIncludedByDefault() && $this->canIncludeRelationship($relationshipMetadata, $object, $groups)) {
             $includedRelationship = $relationshipDataArray; // copy data array so we do not override it with our reference
 
             $objectId = $includedRelationship['id'];
             $type = $includedRelationship['type'];
+
+            $language = new ExpressionLanguage\ExpressionLanguage();
+
+            try {
+                $type = $language->evaluate($type, ['groups' => $groups]);
+            } catch (ExpressionLanguage\SyntaxError $e) {
+            }
+
             $hashKey = $this->getRelationshipHashKey($type, $objectId);
 
             $this->includedRelationships[$hashKey] = &$includedRelationship;
@@ -372,11 +388,12 @@ class JsonEventSubscriber implements EventSubscriberInterface
 
     /**
      * @param ClassMetadata $classMetadata
-     * @param               $id
+     * @param               $object
+     * @param array         $groups
      *
      * @return array
      */
-    protected function getRelationshipDataArray(ClassMetadata $classMetadata, $object)
+    protected function getRelationshipDataArray(ClassMetadata $classMetadata, $object, $groups = [])
     {
         $resource = $classMetadata->getResource();
 
@@ -384,7 +401,7 @@ class JsonEventSubscriber implements EventSubscriberInterface
             return null;
         }
 
-        $objectProps = $this->getObjectMainProps($classMetadata, $object);
+        $objectProps = $this->getObjectMainProps($classMetadata, $object, $groups);
 
         return array(
             'type' => $objectProps['type'],
@@ -422,24 +439,32 @@ class JsonEventSubscriber implements EventSubscriberInterface
     /**
      * @param ClassMetadata $classMetadata
      * @param               $object
+     * @param array         $groups
      *
      * @return bool
      */
-    protected function canIncludeRelationship(ClassMetadata $classMetadata, $object)
+    protected function canIncludeRelationship(ClassMetadata $classMetadata, $object, $groups = [])
     {
-        $objectProps = $this->getObjectMainProps($classMetadata, $object);
+        $objectProps = $this->getObjectMainProps($classMetadata, $object, $groups);
         $hash = $objectProps['hash'];
 
         return !isset($this->includedRelationships[$hash]);
     }
 
-    protected function getObjectMainProps(ClassMetadata $classMetadata, $object)
+    protected function getObjectMainProps(ClassMetadata $classMetadata, $object, $groups = [])
     {
         $hash = spl_object_hash($object);
 
         if (!isset($this->objectHash[$hash])) {
             $id = $this->getId($classMetadata, $object);
             $type = $classMetadata->getResource()->getType($object);
+
+            $language = new ExpressionLanguage\ExpressionLanguage();
+
+            try {
+                $type = $language->evaluate($type, ['groups' => $groups]);
+            } catch (ExpressionLanguage\SyntaxError $e) {
+            }
 
             $this->objectHash[$hash] = [
                 'id' => $id,

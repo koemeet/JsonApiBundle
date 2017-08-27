@@ -19,6 +19,8 @@ use JMS\Serializer\Naming\PropertyNamingStrategyInterface;
 use Mango\Bundle\JsonApiBundle\Configuration\Metadata\ClassMetadata as JsonApiClassMetadata;
 use Mango\Bundle\JsonApiBundle\EventListener\Serializer\JsonEventSubscriber;
 use Metadata\MetadataFactoryInterface;
+use PhpOption\None;
+use Symfony\Component\ExpressionLanguage;
 
 /**
  * @author Steffen Brem <steffenbrem@gmail.com>
@@ -228,7 +230,17 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
         $result = array();
 
         if (isset($rs[JsonEventSubscriber::EXTRA_DATA_KEY]['type'])) {
-            $result['type'] = $rs[JsonEventSubscriber::EXTRA_DATA_KEY]['type'];
+            $language = new ExpressionLanguage\ExpressionLanguage();
+            $type =  $rs[JsonEventSubscriber::EXTRA_DATA_KEY]['type'];
+
+            $groups = $context->attributes->get('groups');
+            $groups = $groups instanceof None ? [] : $groups->get();
+
+            try {
+                $result['type'] = $language->evaluate($type, ['groups' => $groups]);
+            } catch (ExpressionLanguage\SyntaxError $e) {
+                $result['type'] = $type;
+            }
         }
 
         if (isset($rs[JsonEventSubscriber::EXTRA_DATA_KEY]['id'])) {
