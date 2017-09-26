@@ -24,8 +24,11 @@ class SerializerPass implements CompilerPassInterface
      */
     public function process(ContainerBuilder $container)
     {
-        $container->getDefinition('jms_serializer.json_serialization_visitor')
-            ->addArgument($container->getDefinition('json_api.metadata_factory'))
+        $definition = $container->getDefinition('jms_serializer.json_serialization_visitor');
+        if (count($definition->getArguments()) < 2) {
+            $definition->addArgument(null);
+        }
+        $definition->addArgument($container->getDefinition('json_api.metadata_factory'))
             ->addArgument('%json_api.show_version_info%')
             ->setClass('Mango\Bundle\JsonApiBundle\Serializer\JsonApiSerializationVisitor')
         ;
