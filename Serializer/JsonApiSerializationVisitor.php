@@ -117,11 +117,30 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
      */
     protected function validateJsonApiDocument($data)
     {
-        if ((is_array($data) || $data instanceof \Traversable) && ((count($data) > 0 && $this->hasResource($data)) || count($data) === 0)) {
+        if (($this->isArrayLike($data)) && ((count($data) > 0 && $this->hasResource($data)) || count($data) === 0)) {
             return true;
         }
 
         return $this->isResource($data);
+    }
+
+    /**
+     * checks if data is traversable and countable
+     *
+     * @param mixed $data
+     *
+     * @return bool
+     */
+    protected function isArrayLike($data)
+    {
+        if (is_array($data)) {
+            return true;
+        }
+        if (is_object($data)) {
+            return ($data instanceof \Traversable) && ($data instanceof \Countable);
+        }
+
+        return false;
     }
 
     /**
