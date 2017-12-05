@@ -21,6 +21,7 @@ use Mango\Bundle\JsonApiBundle\Configuration\Metadata\ClassMetadata;
 use Mango\Bundle\JsonApiBundle\Configuration\Relationship;
 use Mango\Bundle\JsonApiBundle\Resolver\BaseUri\BaseUriResolverInterface;
 use Mango\Bundle\JsonApiBundle\Serializer\JsonApiSerializationVisitor;
+use Mango\Bundle\JsonApiBundle\Util\StringUtil;
 use Metadata\MetadataFactoryInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\PropertyAccess\PropertyAccess;
@@ -163,7 +164,10 @@ class JsonEventSubscriber implements EventSubscriberInterface
                 // class metadata to find out if we can include this relationship.
                 foreach ($include as $includePath) {
                     $last = end($includePath);
-                    if ($last === $relationship->getName()) {
+                    if (in_array(
+                        $last,
+                        [$relationship->getName(), StringUtil::dasherize($relationship->getName()), true]
+                    )) {
                         // keep track of the path we are currently following (e.x. comments -> author)
                         $this->currentPath = $includePath;
                         $relationship->setIncludedByDefault(true);
