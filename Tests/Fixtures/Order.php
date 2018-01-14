@@ -9,6 +9,7 @@
 
 namespace Mango\Bundle\JsonApiBundle\Tests\Fixtures;
 
+use Doctrine\Common\Collections\ArrayCollection;
 use JMS\Serializer\Annotation as JMS;
 use Mango\Bundle\JsonApiBundle\Configuration\Annotation as JsonApi;
 
@@ -37,6 +38,19 @@ class Order
      * @var OrderAddress
      */
     private $address;
+
+    /**
+     * @JsonApi\Relationship(includeByDefault="true", showLinkSelf=false, showLinkRelated=false)
+     * @JMS\Type("array<Mango\Bundle\JsonApiBundle\Tests\Fixtures\OrderItem>")
+     *
+     * @var OrderItem[]
+     */
+    private $items;
+
+    public function __construct()
+    {
+        $this->items = new ArrayCollection();
+    }
 
     public function getId()
     {
@@ -110,5 +124,21 @@ class Order
     public function setAddress($address)
     {
         $this->address = $address;
+    }
+
+    /**
+     * @return array
+     */
+    public function getItems()
+    {
+        return $this->items;
+    }
+
+    /**
+     * @param array $items
+     */
+    public function setItems($items)
+    {
+        $this->items = $items;
     }
 }

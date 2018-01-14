@@ -22,8 +22,10 @@ use Mango\Bundle\JsonApiBundle\Serializer\Exclusion\RelationshipExclusionStrateg
 use Mango\Bundle\JsonApiBundle\Serializer\JsonApiDeserializationVisitor;
 use Mango\Bundle\JsonApiBundle\Serializer\JsonApiSerializationVisitor;
 use Mango\Bundle\JsonApiBundle\Serializer\Serializer as JsonApiSerializer;
+use Mango\Bundle\JsonApiBundle\Tests\Cache\NoopCache;
 use Mango\Bundle\JsonApiBundle\Tests\Fixtures\Order;
 use Mango\Bundle\JsonApiBundle\Tests\Fixtures\OrderAddress;
+use Mango\Bundle\JsonApiBundle\Tests\Fixtures\OrderItem;
 use Mango\Bundle\JsonApiBundle\Tests\TestCase;
 use Metadata\Cache\FileCache;
 use Metadata\Driver\DriverChain;
@@ -161,6 +163,9 @@ class SerializerTest extends TestCase
                     'address' => [
                         'data' => null,
                     ],
+                    'items' => [
+                        'data' => [],
+                    ]
                 ],
             ],
         ]);
@@ -201,6 +206,9 @@ class SerializerTest extends TestCase
                             'id' => 2,
                         ],
                     ],
+                    'items' => [
+                        'data' => [],
+                    ]
                 ],
             ],
             'included' => [
@@ -209,6 +217,90 @@ class SerializerTest extends TestCase
                     'id' => 2,
                     'attributes' => [
                         'street' => 'Street Address 510',
+                    ]
+                ]
+            ]
+        ]);
+    }
+
+    public function testSerializeWithOneToManyRelationship()
+    {
+        $orderAddress = new OrderAddress();
+        $orderAddress->setId(2);
+        $orderAddress->setStreet('Street Address 510');
+
+        $orderItem1 = new OrderItem();
+        $orderItem1->setId(1);
+        $orderItem1->setTitle('Item 1');
+
+        $orderItem2 = new OrderItem();
+        $orderItem2->setId(2);
+        $orderItem2->setTitle('Item 2');
+
+        $order = new Order();
+        $order->setId(1);
+        $order->setEmail('test@example.com');
+        $order->setPhone('+440000000000');
+        $order->setAdminComments('Test comments that might be longer that ordinary text.');
+        $order->setAddress($orderAddress);
+        $order->setItems([$orderItem1, $orderItem2]);
+
+        $serialized = $this->jsonApiSerializer->serialize(
+            $order,
+            'json',
+            Serializer\SerializationContext::create()->setSerializeNull(true)
+        );
+
+        $this->assertSame(json_decode($serialized, 1), [
+            'data' => [
+                'type' => 'order',
+                'id' => 1,
+                'attributes' => [
+                    'email' => 'test@example.com',
+                    'phone' => '+440000000000',
+                    'admin-comments' => 'Test comments that might be longer that ordinary text.',
+                ],
+                'relationships' => [
+                    'address' => [
+                        'data' => [
+                            'type' => 'order/address',
+                            'id' => 2,
+                        ],
+                    ],
+                    'items' => [
+                        'data' => [
+                            [
+                                'type' => 'order/item',
+                                'id' => 1,
+                            ],
+                            [
+                                'type' => 'order/item',
+                                'id' => 2,
+                            ],
+                        ]
+                    ]
+                ],
+            ],
+            'included' => [
+                [
+                    'type' => 'order/address',
+                    'id' => 2,
+                    'attributes' => [
+                        'street' => 'Street Address 510',
+                    ]
+                ],
+                [
+                    'type' => 'order/item',
+                    'id' => 1,
+                    'attributes' => [
+                        'title' => 'Item 1',
+                    ]
+                ],
+                [
+                    'type' => 'order/item',
+                    'id' => 2,
+                    'attributes' => [
+                        'title' => 'Item 2',
                     ]
                 ]
             ]
@@ -225,8 +317,9 @@ class SerializerTest extends TestCase
         $namingStrategy = new SerializedNameAnnotationStrategy(new CamelCaseNamingStrategy('-'));
         $jmsMetadataFactory = new MetadataFactory(new AnnotationDriver(new AnnotationReader()));
         $jsonApiChainDriver = new DriverChain($drivers);
+
         $jsonApiMetadataFactory = new MetadataFactory($jsonApiChainDriver);
-        $jsonApiMetadataFactory->setCache(new FileCache(sys_get_temp_dir()));
+        $jsonApiMetadataFactory->setCache(new NoopCache());
         $handlerRegistry = new HandlerRegistry();
 
         $jsonApiEventSubscriber = new JsonEventSubscriber(
