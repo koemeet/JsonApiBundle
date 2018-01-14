@@ -41,6 +41,14 @@ class Order
 
     /**
      * @JsonApi\Relationship(includeByDefault="true", showLinkSelf=false, showLinkRelated=false)
+     * @JMS\Type("Mango\Bundle\JsonApiBundle\Tests\Fixtures\OrderPaymentAbstract")
+     *
+     * @var OrderPaymentAbstract
+     */
+    private $payment;
+
+    /**
+     * @JsonApi\Relationship(includeByDefault="true", showLinkSelf=false, showLinkRelated=false)
      * @JMS\Type("array<Mango\Bundle\JsonApiBundle\Tests\Fixtures\OrderItem>")
      *
      * @var OrderItem[]
@@ -124,6 +132,22 @@ class Order
     public function setAddress($address)
     {
         $this->address = $address;
+    }
+
+    /**
+     * @return OrderPaymentAbstract
+     */
+    public function getPayment()
+    {
+        return $this->payment;
+    }
+
+    /**
+     * @param OrderPaymentAbstract $payment
+     */
+    public function setPayment($payment)
+    {
+        $this->payment = $payment;
     }
 
     /**

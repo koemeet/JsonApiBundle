@@ -26,6 +26,8 @@ use Mango\Bundle\JsonApiBundle\Tests\Cache\NoopCache;
 use Mango\Bundle\JsonApiBundle\Tests\Fixtures\Order;
 use Mango\Bundle\JsonApiBundle\Tests\Fixtures\OrderAddress;
 use Mango\Bundle\JsonApiBundle\Tests\Fixtures\OrderItem;
+use Mango\Bundle\JsonApiBundle\Tests\Fixtures\OrderPaymentCard;
+use Mango\Bundle\JsonApiBundle\Tests\Fixtures\OrderPaymentCash;
 use Mango\Bundle\JsonApiBundle\Tests\TestCase;
 use Metadata\Cache\FileCache;
 use Metadata\Driver\DriverChain;
@@ -163,6 +165,9 @@ class SerializerTest extends TestCase
                     'address' => [
                         'data' => null,
                     ],
+                    'payment' => [
+                        'data' => null,
+                    ],
                     'items' => [
                         'data' => [],
                     ]
@@ -205,6 +210,9 @@ class SerializerTest extends TestCase
                             'type' => 'order/address',
                             'id' => 2,
                         ],
+                    ],
+                    'payment' => [
+                        'data' => null,
                     ],
                     'items' => [
                         'data' => [],
@@ -267,6 +275,9 @@ class SerializerTest extends TestCase
                             'id' => 2,
                         ],
                     ],
+                    'payment' => [
+                        'data' => null,
+                    ],
                     'items' => [
                         'data' => [
                             [
@@ -302,6 +313,113 @@ class SerializerTest extends TestCase
                     'attributes' => [
                         'title' => 'Item 2',
                     ]
+                ]
+            ]
+        ]);
+    }
+
+    public function testSerializeWithDiscriminatorMapRelationship()
+    {
+        $cardPayment = new OrderPaymentCard();
+        $cardPayment->setId(1);
+        $cardPayment->setAmount(10.00);
+
+        $cashPayment = new OrderPaymentCash();
+        $cashPayment->setId(2);
+        $cashPayment->setAmount(20.00);
+
+        $order = new Order();
+        $order->setId(1);
+        $order->setPayment($cardPayment);
+
+        $serialized = $this->jsonApiSerializer->serialize(
+            $order,
+            'json',
+            Serializer\SerializationContext::create()->setSerializeNull(true)
+        );
+
+        $this->assertSame(json_decode($serialized, 1), [
+            'data' => [
+                'type' => 'order',
+                'id' => 1,
+                'attributes' => [
+                    'email' => null,
+                    'phone' => null,
+                    'admin-comments' => null,
+                ],
+                'relationships' => [
+                    'address' => [
+                        'data' => null,
+                    ],
+                    'payment' => [
+                        'data' => [
+                            'type' => 'order/payment-card',
+                            'id' => 1,
+                        ],
+                    ],
+                    'items' => [
+                        'data' => [],
+                    ]
+                ],
+            ],
+            'included' => [
+                [
+                    'type' => 'order/payment-card',
+                    'id' => 1,
+                    'attributes' => [
+                        'amount' => 10,
+                        'type' => 'card',
+                    ],
+                ]
+            ]
+        ]);
+
+        $order = new Order();
+        $order->setId(2);
+        $order->setPayment($cashPayment);
+
+        $serialized = $this->jsonApiSerializer->serialize(
+            $order,
+            'json',
+            Serializer\SerializationContext::create()->setSerializeNull(true)
+        );
+
+        // TODO: here is a bug. When serialized, relationships merge in include property
+        // relationship from the previous serialize, some how leak into the include
+        // of the 2nd ->serialize call.
+
+        $this->assertSame(json_decode($serialized, 1), [
+            'data' => [
+                'type' => 'order',
+                'id' => 2,
+                'attributes' => [
+                    'email' => null,
+                    'phone' => null,
+                    'admin-comments' => null,
+                ],
+                'relationships' => [
+                    'address' => [
+                        'data' => null,
+                    ],
+                    'payment' => [
+                        'data' => [
+                            'type' => 'order/payment-cash',
+                            'id' => 2,
+                        ],
+                    ],
+                    'items' => [
+                        'data' => [],
+                    ]
+                ],
+            ],
+            'included' => [
+                [
+                    'type' => 'order/payment-cash',
+                    'id' => 2,
+                    'attributes' => [
+                        'amount' => 20,
+                        'type' => 'cash',
+                    ],
                 ]
             ]
         ]);
