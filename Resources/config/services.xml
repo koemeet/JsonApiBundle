@@ -4,13 +4,13 @@
            xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd">
 
     <parameters>
-        <parameter key="json_api.listener.json_event_subcriber.class">Mango\Bundle\JsonApiBundle\EventListener\Serializer\JsonEventSubscriber</parameter>
+        <parameter key="json_api.listener.json_event_subscriber.class">Mango\Bundle\JsonApiBundle\EventListener\Serializer\JsonEventSubscriber</parameter>
         <parameter key="json_api.serializer.handler.paginated.class">Mango\Bundle\JsonApiBundle\Serializer\Handler\PaginatedRepresentationHandler</parameter>
     </parameters>
 
 
     <services>
-        <service id="json_api.listener.json_event_subscriber" class="%json_api.listener.json_event_subcriber.class%">
+        <service id="json_api.listener.json_event_subscriber" class="%json_api.listener.json_event_subscriber.class%">
             <argument type="service" id="json_api.metadata_factory"/>
             <argument type="service" id="jms_serializer.metadata_factory"/>
             <argument type="service" id="jms_serializer.naming_strategy"/>
