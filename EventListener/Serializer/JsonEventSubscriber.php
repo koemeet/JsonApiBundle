@@ -85,6 +85,7 @@ class JsonEventSubscriber implements EventSubscriberInterface
      * @param MetadataFactoryInterface        $jmsMetadataFactory
      * @param PropertyNamingStrategyInterface $namingStrategy
      * @param RequestStack                    $requestStack
+     * @param BaseUriResolverInterface        $baseUriResolver
      */
     public function __construct(
         MetadataFactoryInterface $jsonApiMetadataFactory,

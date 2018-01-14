@@ -15,6 +15,9 @@ use JMS\Serializer\Handler\HandlerRegistry;
 use JMS\Serializer\Naming\CamelCaseNamingStrategy;
 use JMS\Serializer\Naming\SerializedNameAnnotationStrategy;
 use Mango\Bundle\JsonApiBundle\Configuration\Metadata\Driver\AnnotationDriver;
+use Mango\Bundle\JsonApiBundle\Configuration\Metadata\Driver\YamlDriver;
+use Mango\Bundle\JsonApiBundle\EventListener\Serializer\JsonEventSubscriber;
+use Mango\Bundle\JsonApiBundle\Resolver\BaseUri\BaseUriResolver;
 use Mango\Bundle\JsonApiBundle\Serializer\Exclusion\RelationshipExclusionStrategy;
 use Mango\Bundle\JsonApiBundle\Serializer\JsonApiDeserializationVisitor;
 use Mango\Bundle\JsonApiBundle\Serializer\JsonApiSerializationVisitor;
@@ -22,22 +25,17 @@ use Mango\Bundle\JsonApiBundle\Serializer\Serializer as JsonApiSerializer;
 use Mango\Bundle\JsonApiBundle\Tests\Fixtures\Order;
 use Mango\Bundle\JsonApiBundle\Tests\Fixtures\OrderAddress;
 use Mango\Bundle\JsonApiBundle\Tests\TestCase;
+use Metadata\Cache\FileCache;
+use Metadata\Driver\DriverChain;
+use Metadata\Driver\FileLocator;
 use Metadata\MetadataFactory;
 use PhpCollection\Map;
+use Symfony\Component\HttpFoundation\RequestStack;
 
 class SerializerTest extends TestCase
 {
     /** @var JsonApiSerializer */
     protected $jsonApiSerializer;
-
-    /** @var Serializer\Serializer */
-    protected $serializer;
-    protected $dispatcher;
-    protected $objectConstructor;
-    protected $factory;
-    protected $handlerRegistry;
-    protected $serializationVisitors;
-    protected $deserializationVisitors;
 
     public function testDeserializeId()
     {
@@ -135,30 +133,140 @@ class SerializerTest extends TestCase
         $this->assertSame($addressStreet, $order->getAddress()->getStreet());
     }
 
+    public function testSimpleSerialize()
+    {
+        $order = new Order();
+        $order->setId(1);
+        $order->setEmail('test@example.com');
+        $order->setPhone('+440000000000');
+        $order->setAdminComments('Test comments that might be longer that ordinary text.');
+        $order->setAddress(null);
+
+        $serialized = $this->jsonApiSerializer->serialize(
+            $order,
+            'json',
+            Serializer\SerializationContext::create()->setSerializeNull(true)
+        );
+
+        $this->assertSame(json_decode($serialized, 1), [
+            'data' => [
+                'type' => 'order',
+                'id' => 1,
+                'attributes' => [
+                    'email' => 'test@example.com',
+                    'phone' => '+440000000000',
+                    'admin-comments' => 'Test comments that might be longer that ordinary text.',
+                ],
+                'relationships' => [
+                    'address' => [
+                        'data' => null,
+                    ],
+                ],
+            ],
+        ]);
+    }
+
+    public function testSerializeWithRelationship()
+    {
+        $orderAddress = new OrderAddress();
+        $orderAddress->setId(2);
+        $orderAddress->setStreet('Street Address 510');
+
+        $order = new Order();
+        $order->setId(1);
+        $order->setEmail('test@example.com');
+        $order->setPhone('+440000000000');
+        $order->setAdminComments('Test comments that might be longer that ordinary text.');
+        $order->setAddress($orderAddress);
+
+        $serialized = $this->jsonApiSerializer->serialize(
+            $order,
+            'json',
+            Serializer\SerializationContext::create()->setSerializeNull(true)
+        );
+
+        $this->assertSame(json_decode($serialized, 1), [
+            'data' => [
+                'type' => 'order',
+                'id' => 1,
+                'attributes' => [
+                    'email' => 'test@example.com',
+                    'phone' => '+440000000000',
+                    'admin-comments' => 'Test comments that might be longer that ordinary text.',
+                ],
+                'relationships' => [
+                    'address' => [
+                        'data' => [
+                            'type' => 'order/address',
+                            'id' => 2,
+                        ],
+                    ],
+                ],
+            ],
+            'included' => [
+                [
+                    'type' => 'order/address',
+                    'id' => 2,
+                    'attributes' => [
+                        'street' => 'Street Address 510',
+                    ]
+                ]
+            ]
+        ]);
+    }
+
     protected function setUp()
     {
-        $this->factory = new MetadataFactory(new AnnotationDriver(new AnnotationReader()));
-
-        $this->handlerRegistry = new HandlerRegistry();
-
-        $this->dispatcher = new Serializer\EventDispatcher\EventDispatcher();
-        $this->dispatcher->addSubscriber(new Serializer\EventDispatcher\Subscriber\DoctrineProxySubscriber());
+        $drivers = [
+            new YamlDriver(new FileLocator(['Mango\Bundle\JsonApiBundle\Tests\Fixtures' => __DIR__ . '/yml'])),
+            new AnnotationDriver(new AnnotationReader())
+        ];
 
         $namingStrategy = new SerializedNameAnnotationStrategy(new CamelCaseNamingStrategy('-'));
+        $jmsMetadataFactory = new MetadataFactory(new AnnotationDriver(new AnnotationReader()));
+        $jsonApiChainDriver = new DriverChain($drivers);
+        $jsonApiMetadataFactory = new MetadataFactory($jsonApiChainDriver);
+        $jsonApiMetadataFactory->setCache(new FileCache(sys_get_temp_dir()));
+        $handlerRegistry = new HandlerRegistry();
 
-        $this->serializationVisitors = new Map([
-            'json' => new JsonApiSerializationVisitor($namingStrategy),
-        ]);
-        $this->deserializationVisitors = new Map([
-            'json' => new JsonApiDeserializationVisitor($namingStrategy),
-        ]);
+        $jsonApiEventSubscriber = new JsonEventSubscriber(
+            $jsonApiMetadataFactory,
+            $jmsMetadataFactory,
+            $namingStrategy,
+            new RequestStack(),
+            new BaseUriResolver('/')
+        );
 
-        $this->objectConstructor = new Serializer\Construction\UnserializeObjectConstructor();
+        $doctrineProxySubscriber = new Serializer\EventDispatcher\Subscriber\DoctrineProxySubscriber();
 
-        $this->serializer = new Serializer\Serializer($this->factory, $this->handlerRegistry, $this->objectConstructor, $this->serializationVisitors, $this->deserializationVisitors, $this->dispatcher);
+        $dispatcher = new Serializer\EventDispatcher\EventDispatcher();
+        $dispatcher->addSubscriber($doctrineProxySubscriber);
+        $dispatcher->addSubscriber($jsonApiEventSubscriber);
 
-        $exclusionStrategy = new RelationshipExclusionStrategy($this->factory);
+        $accessorStrategy = new Serializer\Accessor\DefaultAccessorStrategy();
 
-        $this->jsonApiSerializer = new JsonApiSerializer($this->serializer, $exclusionStrategy);
+        $jsonApiSerializationVisitor = new JsonApiSerializationVisitor(
+            $namingStrategy,
+            $accessorStrategy,
+            $jmsMetadataFactory
+        );
+        $jsonApiDeserializationVisitor = new JsonApiDeserializationVisitor($namingStrategy);
+
+        $serializationVisitors = new Map(['json' => $jsonApiSerializationVisitor]);
+        $deserializationVisitors = new Map(['json' => $jsonApiDeserializationVisitor]);
+        $objectConstructor = new Serializer\Construction\UnserializeObjectConstructor();
+
+        $jmsSerializer = new Serializer\Serializer(
+            $jmsMetadataFactory, 
+            $handlerRegistry, 
+            $objectConstructor, 
+            $serializationVisitors, 
+            $deserializationVisitors, 
+            $dispatcher
+        );
+
+        $exclusionStrategy = new RelationshipExclusionStrategy($jmsMetadataFactory);
+
+        $this->jsonApiSerializer = new JsonApiSerializer($jmsSerializer, $exclusionStrategy);
     }
 }
