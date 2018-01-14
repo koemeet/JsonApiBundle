@@ -16,27 +16,27 @@ use Mango\Bundle\JsonApiBundle\Configuration\Annotation as JsonApi;
 class Order
 {
     /**
-   * @JsonApi\Id()
-   * @JMS\Type("string")
-   */
-  private $id;
+     * @JsonApi\Id()
+     * @JMS\Type("string")
+     */
+    private $id;
 
-  /** @JMS\Type("string") */
-  private $email;
+    /** @JMS\Type("string") */
+    private $email;
 
-  /** @JMS\Type("string") */
-  private $phone;
+    /** @JMS\Type("string") */
+    private $phone;
 
-  /** @JMS\Type("string") */
-  private $adminComments;
+    /** @JMS\Type("string") */
+    private $adminComments;
 
-  /**
-   * @JsonApi\Relationship(includeByDefault="true", showLinkSelf=false, showLinkRelated=false)
-   * @JMS\Type("Mango\Bundle\JsonApiBundle\Tests\Fixtures\OrderAddress")
-   *
-   * @var OrderAddress
-   */
-  private $address;
+    /**
+     * @JsonApi\Relationship(includeByDefault="true", showLinkSelf=false, showLinkRelated=false)
+     * @JMS\Type("Mango\Bundle\JsonApiBundle\Tests\Fixtures\OrderAddress")
+     *
+     * @var OrderAddress
+     */
+    private $address;
 
     public function getId()
     {
@@ -48,67 +48,67 @@ class Order
         $this->id = $id;
     }
 
-  /**
-   * @return mixed
-   */
-  public function getEmail()
-  {
-      return $this->email;
-  }
+    /**
+     * @return mixed
+     */
+    public function getEmail()
+    {
+        return $this->email;
+    }
 
-  /**
-   * @param mixed $email
-   */
-  public function setEmail($email)
-  {
-      $this->email = $email;
-  }
+    /**
+     * @param mixed $email
+     */
+    public function setEmail($email)
+    {
+        $this->email = $email;
+    }
 
-  /**
-   * @return mixed
-   */
-  public function getPhone()
-  {
-      return $this->phone;
-  }
+    /**
+     * @return mixed
+     */
+    public function getPhone()
+    {
+        return $this->phone;
+    }
 
-  /**
-   * @param mixed $phone
-   */
-  public function setPhone($phone)
-  {
-      $this->phone = $phone;
-  }
+    /**
+     * @param mixed $phone
+     */
+    public function setPhone($phone)
+    {
+        $this->phone = $phone;
+    }
 
-  /**
-   * @return mixed
-   */
-  public function getAdminComments()
-  {
-      return $this->adminComments;
-  }
+    /**
+     * @return mixed
+     */
+    public function getAdminComments()
+    {
+        return $this->adminComments;
+    }
 
-  /**
-   * @param mixed $adminComments
-   */
-  public function setAdminComments($adminComments)
-  {
-      $this->adminComments = $adminComments;
-  }
+    /**
+     * @param mixed $adminComments
+     */
+    public function setAdminComments($adminComments)
+    {
+        $this->adminComments = $adminComments;
+    }
 
-  /**
-   * @return mixed
-   */
-  public function getAddress()
-  {
-      return $this->address;
-  }
+    /**
+     * @return mixed
+     */
+    public function getAddress()
+    {
+        return $this->address;
+    }
 
-  /**
-   * @param mixed $address
-   */
-  public function setAddress($address)
-  {
-      $this->address = $address;
-  }
+    /**
+     * @param mixed $address
+     */
+    public function setAddress($address)
+    {
+        $this->address = $address;
+    }
 }
