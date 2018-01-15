@@ -9,7 +9,7 @@
 namespace Mango\Bundle\JsonApiBundle\Serializer\Exclusion;
 
 use Doctrine\Common\Persistence\Proxy;
-use Doctrine\ORM\Proxy\Proxy as ORMProxy;
+use Doctrine\Common\Proxy\Proxy as ORMProxy;
 use JMS\Serializer\Context;
 use JMS\Serializer\Exclusion\ExclusionStrategyInterface;
 use JMS\Serializer\Metadata\ClassMetadata;

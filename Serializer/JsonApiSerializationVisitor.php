@@ -12,7 +12,7 @@ use JMS\Serializer\Accessor\AccessorStrategyInterface;
 use JMS\Serializer\Context;
 use JMS\Serializer\JsonSerializationVisitor;
 use Doctrine\Common\Persistence\Proxy;
-use Doctrine\ORM\Proxy\Proxy as ORMProxy;
+use Doctrine\Common\Proxy\Proxy as ORMProxy;
 use JMS\Serializer\Metadata\ClassMetadata;
 use JMS\Serializer\Naming\PropertyNamingStrategyInterface;
 use Mango\Bundle\JsonApiBundle\Configuration\Metadata\ClassMetadata as JsonApiClassMetadata;

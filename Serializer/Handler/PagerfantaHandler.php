@@ -21,7 +21,7 @@ class PagerfantaHandler extends AbstractPaginationHandler
      */
     public static function getType()
     {
-        return 'Pagerfanta\Pagerfanta';
+        return Pagerfanta::class;
     }
 
     /**

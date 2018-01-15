@@ -9,6 +9,7 @@
 namespace Mango\Bundle\JsonApiBundle\Serializer\Handler;
 
 use Hateoas\Representation\CollectionRepresentation;
+use Hateoas\Representation\PaginatedRepresentation as HateoasPaginatedRepresentation;
 use Mango\Bundle\JsonApiBundle\Representation\PaginatedRepresentation;
 
 /**
@@ -21,7 +22,7 @@ class HateoasRepresentationHandler extends AbstractPaginationHandler
      */
     public static function getType()
     {
-        return 'Hateoas\Representation\PaginatedRepresentation';
+        return HateoasPaginatedRepresentation::class;
     }
 
     /**
