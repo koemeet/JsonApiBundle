@@ -50,6 +50,7 @@ final class Serializer implements SerializerInterface
 
         if ($format === 'json') {
             $context->addExclusionStrategy($this->exclusionStrategy);
+            $context->setSerializeNull(true);
         }
 
         return $this->jmsSerializer->serialize($data, $format, $context);
