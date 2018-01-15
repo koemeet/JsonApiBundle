@@ -12,26 +12,44 @@ use Doctrine\Common\Collections\ArrayCollection;
 use JMS\Serializer\Annotation as JMS;
 use Mango\Bundle\JsonApiBundle\Configuration\Annotation as JsonApi;
 
-/** @JsonApi\Resource(type="order", showLinkSelf=false) */
+/**
+ * @JsonApi\Resource(type="order", showLinkSelf=false)
+ *
+ * @author Ruslan Zavacky <ruslan.zavacky@gmail.com>
+ */
 class Order
 {
     /**
      * @JsonApi\Id()
      * @JMS\Type("string")
+     *
+     * @var string
      */
     private $id;
 
-    /** @JMS\Type("string") */
+    /**
+     * @JMS\Type("string")
+     *
+     * @var string
+     */
     private $email;
 
-    /** @JMS\Type("string") */
+    /**
+     * @JMS\Type("string")
+     *
+     * @var string
+     */
     private $phone;
 
-    /** @JMS\Type("string") */
+    /**
+     * @JMS\Type("string")
+     *
+     * @var string
+     */
     private $adminComments;
 
     /**
-     * @JsonApi\Relationship(includeByDefault="true", showLinkSelf=false, showLinkRelated=false)
+     * @JsonApi\Relationship(includeByDefault=true, showLinkSelf=false, showLinkRelated=false)
      * @JMS\Type("Mango\Bundle\JsonApiBundle\Tests\Fixtures\OrderAddress")
      *
      * @var OrderAddress
@@ -39,7 +57,7 @@ class Order
     private $address;
 
     /**
-     * @JsonApi\Relationship(includeByDefault="true", showLinkSelf=false, showLinkRelated=false)
+     * @JsonApi\Relationship(includeByDefault=true, showLinkSelf=false, showLinkRelated=false)
      * @JMS\Type("Mango\Bundle\JsonApiBundle\Tests\Fixtures\OrderPaymentAbstract")
      *
      * @var OrderPaymentAbstract
@@ -47,26 +65,39 @@ class Order
     private $payment;
 
     /**
-     * @JsonApi\Relationship(includeByDefault="true", showLinkSelf=false, showLinkRelated=false)
+     * @JsonApi\Relationship(includeByDefault=true, showLinkSelf=false, showLinkRelated=false)
      * @JMS\Type("array<Mango\Bundle\JsonApiBundle\Tests\Fixtures\OrderItem>")
      *
      * @var OrderItem[]
      */
     private $items;
 
+    /**
+     * Order constructor
+     */
     public function __construct()
     {
         $this->items = new ArrayCollection();
     }
 
+    /**
+     * @return string
+     */
     public function getId()
     {
         return $this->id;
     }
 
+    /**
+     * @param string $id
+     *
+     * @return $this
+     */
     public function setId($id)
     {
         $this->id = $id;
+
+        return $this;
     }
 
     /**
@@ -78,15 +109,19 @@ class Order
     }
 
     /**
-     * @param mixed $email
+     * @param string $email
+     *
+     * @return $this
      */
     public function setEmail($email)
     {
         $this->email = $email;
+
+        return $this;
     }
 
     /**
-     * @return mixed
+     * @return string
      */
     public function getPhone()
     {
@@ -94,15 +129,18 @@ class Order
     }
 
     /**
-     * @param mixed $phone
+     * @param string $phone
+     * @return $this
      */
     public function setPhone($phone)
     {
         $this->phone = $phone;
+
+        return $this;
     }
 
     /**
-     * @return mixed
+     * @return string
      */
     public function getAdminComments()
     {
@@ -110,15 +148,19 @@ class Order
     }
 
     /**
-     * @param mixed $adminComments
+     * @param string $adminComments
+     *
+     * @return $this
      */
     public function setAdminComments($adminComments)
     {
         $this->adminComments = $adminComments;
+
+        return $this;
     }
 
     /**
-     * @return mixed
+     * @return OrderAddress
      */
     public function getAddress()
     {
@@ -126,11 +168,15 @@ class Order
     }
 
     /**
-     * @param mixed $address
+     * @param string $address
+     *
+     * @return $this
      */
     public function setAddress($address)
     {
         $this->address = $address;
+
+        return $this;
     }
 
     /**
@@ -143,14 +189,18 @@ class Order
 
     /**
      * @param OrderPaymentAbstract $payment
+     *
+     * @return $this
      */
-    public function setPayment($payment)
+    public function setPayment(OrderPaymentAbstract $payment)
     {
         $this->payment = $payment;
+
+        return $this;
     }
 
     /**
-     * @return array
+     * @return ArrayCollection|OrderItem[]
      */
     public function getItems()
     {
@@ -158,10 +208,14 @@ class Order
     }
 
     /**
-     * @param array $items
+     * @param ArrayCollection|OrderItem[] $items
+     *
+     * @return $this
      */
-    public function setItems($items)
+    public function setItems(ArrayCollection $items)
     {
         $this->items = $items;
+
+        return $this;
     }
 }

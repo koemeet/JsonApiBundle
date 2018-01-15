@@ -31,26 +31,45 @@ abstract class OrderPaymentAbstract
     /**
      * @JsonApi\Id()
      * @JMS\Type("string")
+     *
+     * @var string
      */
     private $id;
 
-    /** @JMS\Type("float") */
+    /**
+     * @JMS\Type("float")
+     *
+     * @var float
+     */
     private $amount;
 
+    /**
+     * @var string
+     */
     protected $type;
 
+    /**
+     * @return string
+     */
     public function getId()
     {
         return $this->id;
     }
 
+    /**
+     * @param string $id
+     *
+     * @return $this
+     */
     public function setId($id)
     {
         $this->id = $id;
+
+        return $this;
     }
 
     /**
-     * @return mixed
+     * @return float
      */
     public function getAmount()
     {
@@ -58,11 +77,17 @@ abstract class OrderPaymentAbstract
     }
 
     /**
-     * @param mixed $amount
+     * Set amount
+     *
+     * @param float $amount
+     *
+     * @return $this
      */
     public function setAmount($amount)
     {
         $this->amount = $amount;
+
+        return $this;
     }
 
     /**
