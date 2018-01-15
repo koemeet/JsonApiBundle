@@ -93,6 +93,17 @@ mango_json_api:
     show_version_info: true
 ```
 
+## Serialization JSON VS JSON:API
+```php
+$serializer = $container->get('jms_serializer');
+
+$serializer->serialize($object, 'json'); // raw json
+$serializer->serialize($object, 'json:api'); // json:api
+
+$serializer->deserialize($string, \Some\Type:class, 'json'); // from raw json
+$serializer->deserialize($string, \Some\Type:class, 'json:api'); // from json:api
+```
+
 ## Example response
 > GET /api/channels
 
