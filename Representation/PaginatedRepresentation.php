@@ -107,8 +107,7 @@ class PaginatedRepresentation
     }
 
     /**
-     * @return int
-     * @throws \Exception
+     * @return int|null
      */
     public function getNextPage()
     {
@@ -116,7 +115,7 @@ class PaginatedRepresentation
             return $this->page + 1;
         }
 
-        throw new \Exception('Next page does not exist');
+        return null;
     }
 
     /**
@@ -128,8 +127,7 @@ class PaginatedRepresentation
     }
 
     /**
-     * @return int
-     * @throws \Exception
+     * @return int|null
      */
     public function getPreviousPage()
     {
@@ -137,6 +135,6 @@ class PaginatedRepresentation
             return $this->page - 1;
         }
 
-        throw new \Exception('Previous page does not exist');
+        return null;
     }
 }
