@@ -57,6 +57,9 @@
             <tag name="jms_serializer.deserialization_visitor" format="json:api" />
         </service>
 
+        <service id="jms_serializer.json_api_constraint_violation_handler" class="Mango\Bundle\JsonApiBundle\Serializer\Handler\ConstraintViolationHandler" public="true">
+            <tag name="jms_serializer.subscribing_handler" />
+        </service>
     </services>
 
 </container>

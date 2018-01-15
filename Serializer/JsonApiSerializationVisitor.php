@@ -20,6 +20,7 @@ use Mango\Bundle\JsonApiBundle\EventListener\Serializer\JsonEventSubscriber;
 use Metadata\MetadataFactoryInterface;
 use PhpOption\None;
 use Symfony\Component\ExpressionLanguage;
+use Symfony\Component\Validator\ConstraintViolationListInterface;
 
 /**
  * @author Steffen Brem <steffenbrem@gmail.com>
@@ -101,11 +102,25 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
         return $root;
     }
 
+    /**
+     * Build json api root
+     *
+     * @param mixed      $data
+     * @param array|null $meta
+     *
+     * @return array
+     */
     protected function buildJsonApiRoot($data, array $meta = null)
     {
-        $root = array(
-            'data' => $data,
-        );
+        if ($data instanceof ConstraintViolationListInterface) {
+            $root = [
+                'errors' => $data,
+            ];
+        } else {
+            $root = [
+                'data' => $data,
+            ];
+        }
 
         if ($meta) {
             $root['meta'] = $meta;
@@ -138,6 +153,10 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
             return true;
         }
 
+        if ($data instanceof ConstraintViolationListInterface) {
+            return true;
+        }
+
         return $this->isResource($data);
     }
 
@@ -152,16 +171,12 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
 
         $root = $this->getRoot();
 
-        // TODO: Error handling
-        if (isset($root['data']) && array_key_exists('errors', $root['data'])) {
-            return parent::getResult();
-        }
-
         if ($root) {
             $data = array();
             $meta = array();
             $included = array();
             $links = array();
+            $errors = array();
 
             if (array_key_exists('data', $root)) {
                 $data = $root['data'];
@@ -177,6 +192,10 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
 
             if (isset($root['links'])) {
                 $links = $root['links'];
+            }
+
+            if (isset($root['errors'])) {
+                $errors = $root['errors'];
             }
 
             if (!is_null($data)) {
@@ -210,10 +229,13 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
                 $root['links'] = $links;
             }
 
-            $root['data'] = $data;
-
-            if ($included) {
-                $root['included'] = array_values($included);
+            if (is_array($errors)) {
+                $root['errors'] = $errors;
+            } else {
+                $root['data'] = $data;
+                if ($included) {
+                    $root['included'] = array_values($included);
+                }
             }
 
             $this->setRoot($root);
