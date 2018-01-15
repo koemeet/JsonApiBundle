@@ -78,6 +78,10 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
             $data = $root;
         }
 
+        if (($data instanceof \Traversable) && count($data) === 0 && !$this->isResource($data)) {
+            $data = [];
+        }
+
         $this->isJsonApiDocument = $this->validateJsonApiDocument($data);
 
         if ($this->isJsonApiDocument) {
@@ -117,6 +121,14 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
      */
     protected function validateJsonApiDocument($data)
     {
+        if (is_null($data)) {
+            return true;
+        }
+
+        if (is_array($data)) {
+            return true;
+        }
+
         if ((is_array($data) || $data instanceof \Traversable) && count($data) > 0 && $this->hasResource($data)) {
             return true;
         }
@@ -146,7 +158,7 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
             $included = array();
             $links = array();
 
-            if (isset($root['data'])) {
+            if (array_key_exists('data', $root)) {
                 $data = $root['data'];
             }
 
@@ -162,14 +174,19 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
                 $links = $root['links'];
             }
 
-            // filter out duplicate primary resource objects that are in `included`
-            $included = array_udiff(
-                (array)$included,
-                (isset($data['type'])) ? [$data] : $data,
-                function($a, $b) {
-                    return strcmp($a['type'].$a['id'], $b['type'].$b['id']);
-                }
-            );
+            if (!is_null($data)) {
+                // filter out duplicate primary resource objects that are in `included`
+                $included = array_udiff(
+                    (array) $included,
+                    (isset($data['type'])) ? array($data) : $data,
+                    function ($a, $b) {
+                        return strcmp(
+                            $a['type'] . $a['id'],
+                            $b['type'] . $b['id']
+                        );
+                    }
+                );
+            }
 
             // start building new root array
             $root = array();
