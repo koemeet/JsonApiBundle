@@ -12,7 +12,6 @@ namespace Mango\Bundle\JsonApiBundle\Serializer;
 
 use JMS\Serializer\DeserializationContext;
 use JMS\Serializer\Exclusion\ExclusionStrategyInterface;
-use JMS\Serializer\scalar;
 use JMS\Serializer\SerializationContext;
 use JMS\Serializer\SerializerInterface;
 
@@ -31,6 +30,10 @@ final class Serializer implements SerializerInterface
      */
     private $exclusionStrategy;
 
+    /**
+     * @param SerializerInterface        $jmsSerializer
+     * @param ExclusionStrategyInterface $exclusionStrategy
+     */
     public function __construct(SerializerInterface $jmsSerializer, ExclusionStrategyInterface $exclusionStrategy)
     {
         $this->jmsSerializer = $jmsSerializer;

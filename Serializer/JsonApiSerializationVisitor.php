@@ -1,5 +1,4 @@
 <?php
-
 /*
  * This file is part of the Mango package.
  *
@@ -11,8 +10,6 @@
 
 namespace Mango\Bundle\JsonApiBundle\Serializer;
 
-use Hateoas\Representation\CollectionRepresentation;
-use Hateoas\Representation\PaginatedRepresentation;
 use JMS\Serializer\Accessor\AccessorStrategyInterface;
 use JMS\Serializer\Context;
 use JMS\Serializer\JsonSerializationVisitor;
@@ -37,19 +34,22 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
      */
     protected $showVersionInfo;
 
+    /**
+     * @var bool
+     */
     protected $isJsonApiDocument = false;
 
     /**
      * @param PropertyNamingStrategyInterface $propertyNamingStrategy
      * @param AccessorStrategyInterface       $accessorStrategy
      * @param MetadataFactoryInterface        $metadataFactory
-     * @param                                 $showVersionInfo
+     * @param bool                            $showVersionInfo
      */
     public function __construct(
         PropertyNamingStrategyInterface $propertyNamingStrategy,
         AccessorStrategyInterface $accessorStrategy = null,
         MetadataFactoryInterface $metadataFactory,
-        $showVersionInfo
+        $showVersionInfo = true
     ) {
         parent::__construct($propertyNamingStrategy, $accessorStrategy);
 
@@ -164,10 +164,13 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
 
             // filter out duplicate primary resource objects that are in `included`
             $included = array_udiff(
-                (array)$included,
+                (array) $included,
                 (isset($data['type'])) ? [$data] : $data,
-                function($a, $b) {
-                    return strcmp($a['type'].$a['id'], $b['type'].$b['id']);
+                function ($a, $b) {
+                    return strcmp(
+                        $a['type'] . $a['id'],
+                        $b['type'] . $b['id']
+                    );
                 }
             );
 
@@ -233,20 +236,24 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
 
         $idField = $jsonApiMetadata->getIdField();
 
-        $result['attributes'] = array_filter($rs, function($key) use ($idField) {
-            switch ($key) {
-                case $idField:
-                case 'relationships':
-                case 'links':
+        $result['attributes'] = array_filter(
+            $rs,
+            function ($key) use ($idField) {
+                switch ($key) {
+                    case $idField:
+                    case 'relationships':
+                    case 'links':
+                        return false;
+                }
+
+                if ($key === JsonEventSubscriber::EXTRA_DATA_KEY) {
                     return false;
-            }
+                }
 
-            if ($key === JsonEventSubscriber::EXTRA_DATA_KEY) {
-                return false;
-            }
-
-            return true;
-        }, ARRAY_FILTER_USE_KEY);
+                return true;
+            },
+            ARRAY_FILTER_USE_KEY
+        );
 
         if (isset($rs['relationships'])) {
             $result['relationships'] = $rs['relationships'];

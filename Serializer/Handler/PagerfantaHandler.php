@@ -1,5 +1,4 @@
 <?php
-
 /*
  * This file is part of the Mango package.
  *
@@ -28,14 +27,20 @@ class PagerfantaHandler extends AbstractPaginationHandler
     }
 
     /**
-     * @param Pagerfanta $object
+     * @param mixed $object
      *
      * @return PaginatedRepresentation
+     * @throws \Exception
      */
     protected function createPaginatedRepresentation($object)
     {
         if (!$object instanceof Pagerfanta) {
-            return;
+            throw new \Exception(
+                sprintf(
+                    'Wrong parameter given. Expected instance of "%s"',
+                    'Pagerfanta\Pagerfanta'
+                )
+            );
         }
 
         $items = $object->getCurrentPageResults();

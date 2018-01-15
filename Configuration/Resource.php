@@ -1,5 +1,4 @@
 <?php
-
 /*
  * This file is part of the Mango package.
  *
@@ -61,6 +60,6 @@ class Resource
      */
     public function getShowLinkSelf()
     {
-        return (bool)$this->showLinkSelf;
+        return (bool) $this->showLinkSelf;
     }
 }

@@ -60,6 +60,8 @@ class YamlDriver extends AbstractFileDriver
 
             return $classMetadata;
         }
+
+        return null;
     }
 
     /**
@@ -80,7 +82,6 @@ class YamlDriver extends AbstractFileDriver
     {
         if (isset($config['resource'])) {
             $resource = $config['resource'];
-
             return new Resource(
                 $resource['type'],
                 isset($resource['showLinkSelf']) ? $resource['showLinkSelf'] : null

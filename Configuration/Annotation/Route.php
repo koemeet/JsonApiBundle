@@ -18,5 +18,8 @@ namespace Mango\Bundle\JsonApiBundle\Configuration\Annotation;
  */
 final class Route
 {
+    /**
+     * @var string
+     */
     public $href;
 }

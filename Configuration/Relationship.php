@@ -10,8 +10,6 @@
 
 namespace Mango\Bundle\JsonApiBundle\Configuration;
 
-use Doctrine\Common\Collections\Collection;
-
 /**
  * @author Steffen Brem <steffenbrem@gmail.com>
  */
@@ -49,8 +47,13 @@ class Relationship
      * @param bool|false $showLinkSelf
      * @param bool|false $showLinkRelated
      */
-    public function __construct($name, $includedByDefault = null, $showData = null, $showLinkSelf = null, $showLinkRelated = null)
-    {
+    public function __construct(
+        $name,
+        $includedByDefault = null,
+        $showData = null,
+        $showLinkSelf = null,
+        $showLinkRelated = null
+    ) {
         $this->name = $name;
 
         if (null !== $includedByDefault) {
