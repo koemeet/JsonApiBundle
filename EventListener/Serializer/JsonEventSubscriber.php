@@ -360,11 +360,11 @@ class JsonEventSubscriber implements EventSubscriberInterface
      * @param ClassMetadata $classMetadata
      * @param               $object
      *
-     * @return mixed
+     * @return string
      */
     protected function getId(ClassMetadata $classMetadata, $object)
     {
-        return $this->propertyAccessor->getValue($object, $classMetadata->getIdField());
+        return (string) $this->propertyAccessor->getValue($object, $classMetadata->getIdField());
     }
 
     /**

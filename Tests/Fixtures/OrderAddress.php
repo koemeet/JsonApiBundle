@@ -12,30 +12,50 @@ namespace Mango\Bundle\JsonApiBundle\Tests\Fixtures;
 use JMS\Serializer\Annotation as JMS;
 use Mango\Bundle\JsonApiBundle\Configuration\Annotation as JsonApi;
 
-/** @JsonApi\Resource(type="order/address", showLinkSelf=false) */
+/**
+ * @JsonApi\Resource(type="order/address", showLinkSelf=false)
+ *
+ * @author Ruslan Zavacky <ruslan.zavacky@gmail.com>
+ */
 class OrderAddress
 {
     /**
      * @JsonApi\Id()
      * @JMS\Type("string")
+     *
+     * @var string
      */
     private $id;
 
-    /** @JMS\Type("string") */
+    /**
+     * @JMS\Type("string")
+     *
+     * @var string
+     */
     private $street;
 
+    /**
+     * @return string
+     */
     public function getId()
     {
         return $this->id;
     }
 
+    /**
+     * @param string $id
+     *
+     * @return $this
+     */
     public function setId($id)
     {
         $this->id = $id;
+
+        return $this;
     }
 
     /**
-     * @return mixed
+     * @return string
      */
     public function getStreet()
     {
@@ -43,10 +63,13 @@ class OrderAddress
     }
 
     /**
-     * @param mixed $street
+     * @param string $street
+     *
+     * @return $this
      */
     public function setStreet($street)
     {
         $this->street = $street;
+        return $this;
     }
 }
