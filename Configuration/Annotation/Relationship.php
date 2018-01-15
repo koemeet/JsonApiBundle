@@ -35,4 +35,9 @@ final class Relationship
      * @var bool
      */
     public $showLinkRelated;
+
+    /**
+     * @var bool
+     */
+    public $absolute;
 }

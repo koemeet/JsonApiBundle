@@ -102,7 +102,6 @@ class JsonEventSubscriber implements EventSubscriberInterface
         $this->requestStack = $requestStack;
         $this->baseUriResolver = $baseUriResolver;
 
-        $this->baseUri = $this->baseUriResolver->getBaseUri();
         $this->propertyAccessor = PropertyAccess::createPropertyAccessor();
     }
 
@@ -214,11 +213,21 @@ class JsonEventSubscriber implements EventSubscriberInterface
             $visitor->addData('relationships', $relationships);
         }
 
+        //
         // TODO: Improve link handling
-        if ($metadata->getResource() && true === $metadata->getResource()->getShowLinkSelf()) {
-            $visitor->addData('links', array(
-                'self' => $this->baseUri.'/'.$objectProps['type'].'/'.$objectProps['id'],
-            ));
+        /** @var Relationship $resource */
+        $resource = $metadata->getResource();
+        if ($resource && true === $resource->getShowLinkSelf()) {
+            $uri = $this->baseUriResolver->getBaseUri($resource->isAbsolute());
+            $visitor->addData(
+                'links',
+                [
+                    'self' =>
+                        $uri . '/' .
+                        $objectProps['type'] . '/' .
+                        $objectProps['id'],
+                ]
+            );
         }
 
         $root = (array) $visitor->getRoot();
@@ -238,13 +247,14 @@ class JsonEventSubscriber implements EventSubscriberInterface
 
         $links = array();
 
-        // TODO: Improve this
+        $uri = $this->baseUriResolver->getBaseUri($relationship->isAbsolute());
+
         if ($relationship->getShowLinkSelf()) {
-            $links['self'] = $this->baseUri.'/'.$type.'/'.$primaryId.'/relationships/'.$relationshipPayloadKey;
+            $links['self'] = $uri . '/' . $type . '/' . $primaryId . '/relationships/' . $relationshipPayloadKey;
         }
 
         if ($relationship->getShowLinkRelated()) {
-            $links['related'] = $this->baseUri.'/'.$type.'/'.$primaryId.'/'.$relationshipPayloadKey;
+            $links['related'] = $uri . '/' . $type . '/' . $primaryId . '/' . $relationshipPayloadKey;
         }
 
         return $links;

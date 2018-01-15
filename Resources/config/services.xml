@@ -40,6 +40,7 @@
 
         <service id="json_api.resolver.base_uri" alias="json_api.resolver.base_uri.default"/>
         <service id="json_api.resolver.base_uri.default" class="Mango\Bundle\JsonApiBundle\Resolver\BaseUri\BaseUriResolver">
+            <argument type="service" id="request_stack"/>
             <argument>%json_api.base_uri%</argument>
         </service>
 

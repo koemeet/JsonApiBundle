@@ -27,7 +27,7 @@ This will define your class as a JSON-API resource, and you can optionally set i
 use Mango\Bundle\JsonApiBundle\Configuration\Annotation as JsonApi;
 
 /**
- * @JsonApi\Resource(type="posts", showLinkSelf=true)
+ * @JsonApi\Resource(type="posts", showLinkSelf=true, absolute=false)
  */
  class Post 
  {
@@ -38,6 +38,7 @@ use Mango\Bundle\JsonApiBundle\Configuration\Annotation as JsonApi;
 | ---           | ---     | ---       | ---       | ---   |
 | type          | ~       | No        | string    | If left default, it will resolve its type dynamically based on the short class name. |
 | showLinkSelf  | true    | No        | boolean   | Add `self` link to the resource |
+| absolute      | false   | No        | boolean   | Enables absolute urls creation |
 
 ### @Id (optional, it defaults to `id`)
 This will define the property that will be used as the `id` of a resource. It needs to be unique for every resource of the same type.
@@ -73,7 +74,7 @@ use Mango\Bundle\JsonApiBundle\Configuration\Annotation as JsonApi;
     // ..
     
     /**
-     * @JsonApi\Relationship(includeByDefault=true, showLinkSelf=false, showLinkRelated=false)
+     * @JsonApi\Relationship(includeByDefault=true, showLinkSelf=false, showLinkRelated=false, absolute=false)
      */
     protected $comments;
  }
@@ -84,6 +85,7 @@ use Mango\Bundle\JsonApiBundle\Configuration\Annotation as JsonApi;
 | showData              | false   | No        | boolean   | Shows `data`, which consists of ids of the relationship data |
 | showLinkSelf          | false   | No        | boolean   | Add `self` link of the relationship |
 | showLinkRelated       | false   | No        | boolean   | Add `related` link of the relationship |
+| absolute              | false   | No        | boolean   | Enables absolute urls creation |
 
 ## Configuration Reference
 ```yaml

@@ -11,7 +11,6 @@ namespace Mango\Bundle\JsonApiBundle\Serializer\Handler;
 use JMS\Serializer\Context;
 use JMS\Serializer\GraphNavigator;
 use JMS\Serializer\Handler\SubscribingHandlerInterface;
-use Mango\Bundle\JsonApiBundle\MangoJsonApiBundle;
 use Mango\Bundle\JsonApiBundle\Representation\PaginatedRepresentation;
 use Mango\Bundle\JsonApiBundle\Serializer\JsonApiSerializationVisitor;
 use Symfony\Component\HttpFoundation\RequestStack;
@@ -42,7 +41,7 @@ abstract class AbstractPaginationHandler implements SubscribingHandlerInterface
         return [
             [
                 'direction' => GraphNavigator::DIRECTION_SERIALIZATION,
-                'format'    => MangoJsonApiBundle::FORMAT,
+                'format'    => 'json:api',
                 'type'      => static::getType(),
                 'method'    => 'serialize',
             ],
@@ -51,7 +50,7 @@ abstract class AbstractPaginationHandler implements SubscribingHandlerInterface
 
     /**
      * @param JsonApiSerializationVisitor $visitor
-     * @param mixed                       $object
+     * @param                             $object
      * @param array                       $type
      * @param Context                     $context
      *
@@ -111,7 +110,10 @@ abstract class AbstractPaginationHandler implements SubscribingHandlerInterface
     }
 
     /**
-     * @param $page
+     * Get uri for page
+     *
+     * @param int $page
+     * @param int $limit
      *
      * @return string
      */

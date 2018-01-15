@@ -14,7 +14,9 @@ namespace Mango\Bundle\JsonApiBundle\Resolver\BaseUri;
 interface BaseUriResolverInterface
 {
     /**
+     * @param bool $isAbsolute
+     *
      * @return string
      */
-    public function getBaseUri();
+    public function getBaseUri($isAbsolute);
 }

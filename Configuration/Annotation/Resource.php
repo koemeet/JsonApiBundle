@@ -25,4 +25,9 @@ final class Resource
      * @var bool
      */
     public $showLinkSelf;
+
+    /**
+     * @var bool
+     */
+    public $absolute;
 }
