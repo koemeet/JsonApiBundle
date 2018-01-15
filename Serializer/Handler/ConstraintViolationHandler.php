@@ -12,6 +12,7 @@ use JMS\Serializer\Context;
 use JMS\Serializer\GraphNavigator;
 use JMS\Serializer\Handler\SubscribingHandlerInterface;
 use JMS\Serializer\JsonSerializationVisitor;
+use Mango\Bundle\JsonApiBundle\MangoJsonApiBundle;
 use Symfony\Component\Validator\ConstraintViolation;
 use Symfony\Component\Validator\ConstraintViolationList;
 
@@ -31,13 +32,13 @@ class ConstraintViolationHandler implements SubscribingHandlerInterface
             [
                 'direction' => GraphNavigator::DIRECTION_SERIALIZATION,
                 'type'      => ConstraintViolationList::class,
-                'format'    => 'json',
+                'format'    => MangoJsonApiBundle::FORMAT,
                 'method'    => 'serializeConstraintViolationList'
             ],
             [
                 'direction' => GraphNavigator::DIRECTION_SERIALIZATION,
                 'type'      => ConstraintViolation::class,
-                'format'    => 'json',
+                'format'    => MangoJsonApiBundle::FORMAT,
                 'method'    => 'serializeConstraintViolation'
             ]
         ];
