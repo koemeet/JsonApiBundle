@@ -16,6 +16,7 @@ use JMS\Serializer\Naming\SerializedNameAnnotationStrategy;
 use Mango\Bundle\JsonApiBundle\Configuration\Metadata\Driver\AnnotationDriver;
 use Mango\Bundle\JsonApiBundle\Configuration\Metadata\Driver\YamlDriver;
 use Mango\Bundle\JsonApiBundle\EventListener\Serializer\JsonEventSubscriber;
+use Mango\Bundle\JsonApiBundle\MangoJsonApiBundle;
 use Mango\Bundle\JsonApiBundle\Resolver\BaseUri\BaseUriResolver;
 use Mango\Bundle\JsonApiBundle\Serializer\Exclusion\RelationshipExclusionStrategy;
 use Mango\Bundle\JsonApiBundle\Serializer\JsonApiDeserializationVisitor;
@@ -78,8 +79,8 @@ class JsonApiSerializerBuilder
         );
         $jsonApiDeserializationVisitor = new JsonApiDeserializationVisitor($namingStrategy);
 
-        $serializationVisitors = new Map(['json' => $jsonApiSerializationVisitor]);
-        $deserializationVisitors = new Map(['json' => $jsonApiDeserializationVisitor]);
+        $serializationVisitors = new Map([MangoJsonApiBundle::FORMAT => $jsonApiSerializationVisitor]);
+        $deserializationVisitors = new Map([MangoJsonApiBundle::FORMAT => $jsonApiDeserializationVisitor]);
         $objectConstructor = new Serializer\Construction\UnserializeObjectConstructor();
 
         $jmsSerializer = new Serializer\Serializer(

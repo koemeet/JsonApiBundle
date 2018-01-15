@@ -10,6 +10,7 @@ namespace Mango\Bundle\JsonApiBundle\Tests\Serializer;
 
 use Doctrine\Common\Collections\ArrayCollection;
 use JMS\Serializer;
+use Mango\Bundle\JsonApiBundle\MangoJsonApiBundle;
 use Mango\Bundle\JsonApiBundle\Serializer\Serializer as JsonApiSerializer;
 use Mango\Bundle\JsonApiBundle\Tests\Fixtures\Order;
 use Mango\Bundle\JsonApiBundle\Tests\Fixtures\OrderAddress;
@@ -28,8 +29,6 @@ use Mango\Bundle\JsonApiBundle\Tests\TestCase;
  */
 class SerializerTest extends TestCase
 {
-    const FORMAT_JSON = 'json';
-
     /**
      * {@inheritdoc}
      */
@@ -54,7 +53,7 @@ class SerializerTest extends TestCase
 
         $serialized = $this->jsonApiSerializer->serialize(
             $order,
-            self::FORMAT_JSON,
+            MangoJsonApiBundle::FORMAT,
             Serializer\SerializationContext::create()->setSerializeNull(true)
         );
 
@@ -102,7 +101,7 @@ class SerializerTest extends TestCase
 
         $serialized = $this->jsonApiSerializer->serialize(
             $order,
-            self::FORMAT_JSON,
+            MangoJsonApiBundle::FORMAT,
             Serializer\SerializationContext::create()->setSerializeNull(true)
         );
 
@@ -171,7 +170,7 @@ class SerializerTest extends TestCase
 
         $serialized = $this->jsonApiSerializer->serialize(
             $order,
-            self::FORMAT_JSON,
+            MangoJsonApiBundle::FORMAT,
             Serializer\SerializationContext::create()->setSerializeNull(true)
         );
 
@@ -257,7 +256,7 @@ class SerializerTest extends TestCase
 
         $serialized = $this->jsonApiSerializer->serialize(
             $order,
-            self::FORMAT_JSON,
+            MangoJsonApiBundle::FORMAT,
             Serializer\SerializationContext::create()->setSerializeNull(true)
         );
 
@@ -303,7 +302,7 @@ class SerializerTest extends TestCase
 
         $serialized = $this->jsonApiSerializer->serialize(
             $order,
-            self::FORMAT_JSON,
+            MangoJsonApiBundle::FORMAT,
             Serializer\SerializationContext::create()->setSerializeNull(true)
         );
 
