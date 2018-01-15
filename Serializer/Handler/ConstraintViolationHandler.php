@@ -13,6 +13,7 @@ use JMS\Serializer\GraphNavigator;
 use JMS\Serializer\Handler\SubscribingHandlerInterface;
 use JMS\Serializer\JsonSerializationVisitor;
 use Mango\Bundle\JsonApiBundle\MangoJsonApiBundle;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Validator\ConstraintViolation;
 use Symfony\Component\Validator\ConstraintViolationList;
 
@@ -70,9 +71,14 @@ class ConstraintViolationHandler implements SubscribingHandlerInterface
     public function serializeConstraintViolation(JsonSerializationVisitor $visitor, ConstraintViolation $violation)
     {
         $data = [
+            'status' => Response::HTTP_UNPROCESSABLE_ENTITY,
             'code'   => $violation->getCode(),
             'title'  => 'Validation Failed',
-            'detail' => $violation->getMessage()
+            'detail' => $violation->getMessage(),
+            'meta' => [
+                'property_path' => $violation->getPropertyPath(),
+                'invalid_value' => $violation->getInvalidValue()
+            ]
         ];
 
         if (null === $visitor->getRoot()) {
