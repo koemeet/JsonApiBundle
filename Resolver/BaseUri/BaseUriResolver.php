@@ -29,7 +29,7 @@ class BaseUriResolver implements BaseUriResolverInterface
     }
 
     /**
-     * @inheritDoc
+     * {@inheritdoc}
      */
     public function getBaseUri()
     {

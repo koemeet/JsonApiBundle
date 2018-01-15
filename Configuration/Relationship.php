@@ -1,7 +1,6 @@
 <?php
+
 /*
- * This file is part of the Mango package.
- *
  * (c) Steffen Brem <steffenbrem@gmail.com>
  *
  * For the full copyright and license information, please view the LICENSE
@@ -82,7 +81,7 @@ class Relationship
     }
 
     /**
-     * @return boolean
+     * @return bool
      */
     public function isIncludedByDefault()
     {
@@ -98,7 +97,7 @@ class Relationship
     }
 
     /**
-     * @return boolean
+     * @return bool
      */
     public function getShowData()
     {
@@ -106,7 +105,7 @@ class Relationship
     }
 
     /**
-     * @param boolean $showData
+     * @param bool $showData
      */
     public function setShowData($showData)
     {
@@ -114,7 +113,7 @@ class Relationship
     }
 
     /**
-     * @return boolean
+     * @return bool
      */
     public function getShowLinkSelf()
     {
@@ -122,7 +121,7 @@ class Relationship
     }
 
     /**
-     * @return boolean
+     * @return bool
      */
     public function getShowLinkRelated()
     {

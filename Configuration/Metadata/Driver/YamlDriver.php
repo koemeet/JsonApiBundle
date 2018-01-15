@@ -1,7 +1,6 @@
 <?php
+
 /*
- * This file is part of the Mango package.
- *
  * (c) Steffen Brem <steffenbrem@gmail.com>
  *
  * For the full copyright and license information, please view the LICENSE
@@ -76,7 +75,7 @@ class YamlDriver extends AbstractFileDriver
      * @param array            $config
      * @param \ReflectionClass $class
      *
-     * @return Resource
+     * @return resource
      */
     protected function parseResource(array $config, \ReflectionClass $class)
     {

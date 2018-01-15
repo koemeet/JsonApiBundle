@@ -1,7 +1,6 @@
 <?php
+
 /*
- * This file is part of the Mango package.
- *
  * (c) Steffen Brem <steffenbrem@gmail.com>
  *
  * For the full copyright and license information, please view the LICENSE
@@ -26,7 +25,7 @@ class Route
     protected $parameters;
 
     /**
-     * @var boolean
+     * @var bool
      */
     protected $absolute;
 
@@ -38,7 +37,7 @@ class Route
     /**
      * @param string       $name
      * @param string|array $parameters
-     * @param boolean      $absolute
+     * @param bool         $absolute
      * @param string|null  $generator
      */
     public function __construct($name, $parameters = [], $absolute = false, $generator = null)
@@ -66,7 +65,7 @@ class Route
     }
 
     /**
-     * @return boolean
+     * @return bool
      */
     public function isAbsolute()
     {
