@@ -1,5 +1,4 @@
 <?php
-
 /*
  * This file is part of the Mango package.
  *
@@ -19,6 +18,13 @@ namespace Mango\Bundle\JsonApiBundle\Configuration\Annotation;
  */
 final class Resource
 {
+    /**
+     * @var string
+     */
     public $type;
+
+    /**
+     * @var bool
+     */
     public $showLinkSelf;
 }

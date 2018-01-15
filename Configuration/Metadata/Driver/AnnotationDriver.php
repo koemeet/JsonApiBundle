@@ -1,5 +1,4 @@
 <?php
-
 /*
  * This file is part of the Mango package.
  *
@@ -12,12 +11,10 @@
 namespace Mango\Bundle\JsonApiBundle\Configuration\Metadata\Driver;
 
 use Doctrine\Common\Annotations\Reader;
-use Doctrine\Common\Util\Inflector;
 use Mango\Bundle\JsonApiBundle\Configuration\Annotation;
 use Mango\Bundle\JsonApiBundle\Configuration\Metadata\ClassMetadata;
 use Mango\Bundle\JsonApiBundle\Configuration\Relationship;
 use Mango\Bundle\JsonApiBundle\Configuration\Resource;
-use Mango\Bundle\JsonApiBundle\Util\StringUtil;
 use Metadata\Driver\DriverInterface;
 
 /**
@@ -54,7 +51,12 @@ class AnnotationDriver implements DriverInterface
 
         foreach ($annotations as $annotation) {
             if ($annotation instanceof Annotation\Resource) {
-                $classMetadata->setResource(new Resource($annotation->type, $annotation->showLinkSelf));
+                $classMetadata->setResource(
+                    new Resource(
+                        $annotation->type,
+                        $annotation->showLinkSelf
+                    )
+                );
             }
         }
 

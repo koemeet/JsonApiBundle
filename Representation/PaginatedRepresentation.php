@@ -1,5 +1,4 @@
 <?php
-
 /*
  * This file is part of the Mango package.
  *
@@ -10,6 +9,8 @@
  */
 
 namespace Mango\Bundle\JsonApiBundle\Representation;
+
+use Traversable;
 
 /**
  * PaginatedRepresentation
@@ -109,12 +110,15 @@ class PaginatedRepresentation
 
     /**
      * @return int
+     * @throws \Exception
      */
     public function getNextPage()
     {
         if ($this->hasNextPage()) {
             return $this->page + 1;
         }
+
+        throw new \Exception('Next page does not exist');
     }
 
     /**
@@ -127,11 +131,14 @@ class PaginatedRepresentation
 
     /**
      * @return int
+     * @throws \Exception
      */
     public function getPreviousPage()
     {
         if ($this->hasPreviousPage()) {
             return $this->page - 1;
         }
+
+        throw new \Exception('Previous page does not exist');
     }
 }
