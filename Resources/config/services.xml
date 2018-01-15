@@ -42,6 +42,10 @@
         <service id="json_api.resolver.base_uri.default" class="Mango\Bundle\JsonApiBundle\Resolver\BaseUri\BaseUriResolver">
             <argument>%json_api.base_uri%</argument>
         </service>
+
+        <service id="jms_serializer.json_api_constraint_violation_handler" class="Mango\Bundle\JsonApiBundle\Serializer\Handler\ConstraintViolationHandler" public="true">
+            <tag name="jms_serializer.subscribing_handler" />
+        </service>
     </services>
 
 </container>
