@@ -18,6 +18,7 @@ use JMS\Serializer\EventDispatcher\ObjectEvent;
 use JMS\Serializer\Naming\PropertyNamingStrategyInterface;
 use Mango\Bundle\JsonApiBundle\Configuration\Metadata\ClassMetadata;
 use Mango\Bundle\JsonApiBundle\Configuration\Relationship;
+use Mango\Bundle\JsonApiBundle\MangoJsonApiBundle;
 use Mango\Bundle\JsonApiBundle\Resolver\BaseUri\BaseUriResolverInterface;
 use Mango\Bundle\JsonApiBundle\Serializer\JsonApiSerializationVisitor;
 use Metadata\MetadataFactoryInterface;
@@ -113,7 +114,7 @@ class JsonEventSubscriber implements EventSubscriberInterface
         return array(
             array(
                 'event' => Events::POST_SERIALIZE,
-                'format' => 'json',
+                'format' => MangoJsonApiBundle::FORMAT,
                 'method' => 'onPostSerialize',
             ),
         );

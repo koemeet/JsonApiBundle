@@ -9,6 +9,7 @@
 namespace Mango\Bundle\JsonApiBundle\Tests\Serializer;
 
 use JMS\Serializer;
+use Mango\Bundle\JsonApiBundle\MangoJsonApiBundle;
 use Mango\Bundle\JsonApiBundle\Serializer\Serializer as JsonApiSerializer;
 use Mango\Bundle\JsonApiBundle\Tests\Fixtures\Order;
 use Mango\Bundle\JsonApiBundle\Tests\Fixtures\OrderAddress;
@@ -46,7 +47,7 @@ class DeserializationTest extends TestCase
         $order = $this->jsonApiSerializer->deserialize(
             $data,
             Order::class,
-            'json',
+            MangoJsonApiBundle::FORMAT,
             Serializer\DeserializationContext::create()->setSerializeNull(true)
         );
 
@@ -69,7 +70,7 @@ class DeserializationTest extends TestCase
         $order = $this->jsonApiSerializer->deserialize(
             $data,
             Order::class,
-            'json',
+            MangoJsonApiBundle::FORMAT,
             Serializer\DeserializationContext::create()->setSerializeNull(true)
         );
 
@@ -93,7 +94,7 @@ class DeserializationTest extends TestCase
         $order = $this->jsonApiSerializer->deserialize(
             $data,
             Order::class,
-            'json',
+            MangoJsonApiBundle::FORMAT,
             Serializer\DeserializationContext::create()->setSerializeNull(true)
         );
 
@@ -141,7 +142,7 @@ class DeserializationTest extends TestCase
         $order = $this->jsonApiSerializer->deserialize(
             $data,
             Order::class,
-            'json',
+            MangoJsonApiBundle::FORMAT,
             Serializer\DeserializationContext::create()->setSerializeNull(true)
         );
 
