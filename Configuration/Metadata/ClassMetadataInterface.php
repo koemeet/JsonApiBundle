@@ -1,5 +1,4 @@
 <?php
-
 /*
  * (c) Steffen Brem <steffenbrem@gmail.com>
  *
