@@ -229,7 +229,7 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
                 $root['links'] = $links;
             }
 
-            if (is_array($errors)) {
+            if (is_array($errors) && count($errors) > 0) {
                 $root['errors'] = $errors;
             } else {
                 $root['data'] = $data;
