@@ -8,6 +8,7 @@
 
 namespace Mango\Bundle\JsonApiBundle\Tests\Serializer;
 
+use Doctrine\Common\Collections\ArrayCollection;
 use JMS\Serializer;
 use Mango\Bundle\JsonApiBundle\Serializer\Serializer as JsonApiSerializer;
 use Mango\Bundle\JsonApiBundle\Tests\Fixtures\Order;
@@ -27,6 +28,8 @@ use Mango\Bundle\JsonApiBundle\Tests\TestCase;
  */
 class SerializerTest extends TestCase
 {
+    const FORMAT_JSON = 'json';
+
     /**
      * {@inheritdoc}
      */
@@ -42,23 +45,23 @@ class SerializerTest extends TestCase
      */
     public function testSimpleSerialize()
     {
-        $order = new Order();
-        $order->setId(1);
-        $order->setEmail('test@example.com');
-        $order->setPhone('+440000000000');
-        $order->setAdminComments('Test comments that might be longer that ordinary text.');
-        $order->setAddress(null);
+        $order = (new Order())
+            ->setId(1)
+            ->setEmail('test@example.com')
+            ->setPhone('+440000000000')
+            ->setAdminComments('Test comments that might be longer that ordinary text.')
+            ->setAddress(null);
 
         $serialized = $this->jsonApiSerializer->serialize(
             $order,
-            'json',
+            self::FORMAT_JSON,
             Serializer\SerializationContext::create()->setSerializeNull(true)
         );
 
         $this->assertSame(json_decode($serialized, 1), [
             'data' => [
                 'type' => 'order',
-                'id' => 1,
+                'id' => '1',
                 'attributes' => [
                     'email' => 'test@example.com',
                     'phone' => '+440000000000',
@@ -86,27 +89,27 @@ class SerializerTest extends TestCase
      */
     public function testSerializeWithRelationship()
     {
-        $orderAddress = new OrderAddress();
-        $orderAddress->setId(2);
-        $orderAddress->setStreet('Street Address 510');
+        $orderAddress = (new OrderAddress())
+            ->setId(2)
+            ->setStreet('Street Address 510');
 
-        $order = new Order();
-        $order->setId(1);
-        $order->setEmail('test@example.com');
-        $order->setPhone('+440000000000');
-        $order->setAdminComments('Test comments that might be longer that ordinary text.');
-        $order->setAddress($orderAddress);
+        $order = (new Order())
+            ->setId(1)
+            ->setEmail('test@example.com')
+            ->setPhone('+440000000000')
+            ->setAdminComments('Test comments that might be longer that ordinary text.')
+            ->setAddress($orderAddress);
 
         $serialized = $this->jsonApiSerializer->serialize(
             $order,
-            'json',
+            self::FORMAT_JSON,
             Serializer\SerializationContext::create()->setSerializeNull(true)
         );
 
         $this->assertSame(json_decode($serialized, 1), [
             'data' => [
                 'type' => 'order',
-                'id' => 1,
+                'id' => '1',
                 'attributes' => [
                     'email' => 'test@example.com',
                     'phone' => '+440000000000',
@@ -116,7 +119,7 @@ class SerializerTest extends TestCase
                     'address' => [
                         'data' => [
                             'type' => 'order/address',
-                            'id' => 2,
+                            'id' => '2',
                         ],
                     ],
                     'payment' => [
@@ -130,7 +133,7 @@ class SerializerTest extends TestCase
             'included' => [
                 [
                     'type' => 'order/address',
-                    'id' => 2,
+                    'id' => '2',
                     'attributes' => [
                         'street' => 'Street Address 510',
                     ]
@@ -146,36 +149,36 @@ class SerializerTest extends TestCase
      */
     public function testSerializeWithOneToManyRelationship()
     {
-        $orderAddress = new OrderAddress();
-        $orderAddress->setId(2);
-        $orderAddress->setStreet('Street Address 510');
+        $orderAddress = (new OrderAddress())
+            ->setId(2)
+            ->setStreet('Street Address 510');
 
-        $orderItem1 = new OrderItem();
-        $orderItem1->setId(1);
-        $orderItem1->setTitle('Item 1');
+        $orderItem1 = (new OrderItem())
+            ->setId(1)
+            ->setTitle('Item 1');
 
-        $orderItem2 = new OrderItem();
-        $orderItem2->setId(2);
-        $orderItem2->setTitle('Item 2');
+        $orderItem2 = (new OrderItem())
+            ->setId(2)
+            ->setTitle('Item 2');
 
-        $order = new Order();
-        $order->setId(1);
-        $order->setEmail('test@example.com');
-        $order->setPhone('+440000000000');
-        $order->setAdminComments('Test comments that might be longer that ordinary text.');
-        $order->setAddress($orderAddress);
-        $order->setItems([$orderItem1, $orderItem2]);
+        $order = (new Order())
+            ->setId(1)
+            ->setEmail('test@example.com')
+            ->setPhone('+440000000000')
+            ->setAdminComments('Test comments that might be longer that ordinary text.')
+            ->setAddress($orderAddress)
+            ->setItems(new ArrayCollection([$orderItem1, $orderItem2]));
 
         $serialized = $this->jsonApiSerializer->serialize(
             $order,
-            'json',
+            self::FORMAT_JSON,
             Serializer\SerializationContext::create()->setSerializeNull(true)
         );
 
         $this->assertSame(json_decode($serialized, 1), [
             'data' => [
                 'type' => 'order',
-                'id' => 1,
+                'id' => '1',
                 'attributes' => [
                     'email' => 'test@example.com',
                     'phone' => '+440000000000',
@@ -185,7 +188,7 @@ class SerializerTest extends TestCase
                     'address' => [
                         'data' => [
                             'type' => 'order/address',
-                            'id' => 2,
+                            'id' => '2',
                         ],
                     ],
                     'payment' => [
@@ -195,11 +198,11 @@ class SerializerTest extends TestCase
                         'data' => [
                             [
                                 'type' => 'order/item',
-                                'id' => 1,
+                                'id' => '1',
                             ],
                             [
                                 'type' => 'order/item',
-                                'id' => 2,
+                                'id' => '2',
                             ],
                         ]
                     ]
@@ -208,21 +211,21 @@ class SerializerTest extends TestCase
             'included' => [
                 [
                     'type' => 'order/address',
-                    'id' => 2,
+                    'id' => '2',
                     'attributes' => [
                         'street' => 'Street Address 510',
                     ]
                 ],
                 [
                     'type' => 'order/item',
-                    'id' => 1,
+                    'id' => '1',
                     'attributes' => [
                         'title' => 'Item 1',
                     ]
                 ],
                 [
                     'type' => 'order/item',
-                    'id' => 2,
+                    'id' => '2',
                     'attributes' => [
                         'title' => 'Item 2',
                     ]
@@ -240,28 +243,28 @@ class SerializerTest extends TestCase
     {
         $this->markTestSkipped('WIP');
 
-        $cardPayment = new OrderPaymentCard();
-        $cardPayment->setId(1);
-        $cardPayment->setAmount(10.00);
+        $cardPayment = (new OrderPaymentCard())
+            ->setId(1)
+            ->setAmount(10.00);
 
-        $cashPayment = new OrderPaymentCash();
-        $cashPayment->setId(2);
-        $cashPayment->setAmount(20.00);
+        $cashPayment = (new OrderPaymentCash())
+            ->setId(2)
+            ->setAmount(20.00);
 
-        $order = new Order();
-        $order->setId(1);
-        $order->setPayment($cardPayment);
+        $order = (new Order())
+            ->setId(1)
+            ->setPayment($cardPayment);
 
         $serialized = $this->jsonApiSerializer->serialize(
             $order,
-            'json',
+            self::FORMAT_JSON,
             Serializer\SerializationContext::create()->setSerializeNull(true)
         );
 
         $this->assertSame(json_decode($serialized, 1), [
             'data' => [
                 'type' => 'order',
-                'id' => 1,
+                'id' => '1',
                 'attributes' => [
                     'email' => null,
                     'phone' => null,
@@ -274,7 +277,7 @@ class SerializerTest extends TestCase
                     'payment' => [
                         'data' => [
                             'type' => 'order/payment-card',
-                            'id' => 1,
+                            'id' => '1',
                         ],
                     ],
                     'items' => [
@@ -285,7 +288,7 @@ class SerializerTest extends TestCase
             'included' => [
                 [
                     'type' => 'order/payment-card',
-                    'id' => 1,
+                    'id' => '1',
                     'attributes' => [
                         'amount' => 10,
                         'type' => 'card',
@@ -294,13 +297,13 @@ class SerializerTest extends TestCase
             ]
         ]);
 
-        $order = new Order();
-        $order->setId(2);
-        $order->setPayment($cashPayment);
+        $order = (new Order())
+            ->setId(2)
+            ->setPayment($cashPayment);
 
         $serialized = $this->jsonApiSerializer->serialize(
             $order,
-            'json',
+            self::FORMAT_JSON,
             Serializer\SerializationContext::create()->setSerializeNull(true)
         );
 
@@ -311,7 +314,7 @@ class SerializerTest extends TestCase
         $this->assertSame(json_decode($serialized, 1), [
             'data' => [
                 'type' => 'order',
-                'id' => 2,
+                'id' => '2',
                 'attributes' => [
                     'email' => null,
                     'phone' => null,
@@ -324,7 +327,7 @@ class SerializerTest extends TestCase
                     'payment' => [
                         'data' => [
                             'type' => 'order/payment-cash',
-                            'id' => 2,
+                            'id' => '2',
                         ],
                     ],
                     'items' => [
@@ -335,7 +338,7 @@ class SerializerTest extends TestCase
             'included' => [
                 [
                     'type' => 'order/payment-cash',
-                    'id' => 2,
+                    'id' => '2',
                     'attributes' => [
                         'amount' => 20,
                         'type' => 'cash',
