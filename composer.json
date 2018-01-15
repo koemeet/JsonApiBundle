@@ -22,7 +22,7 @@
         "jms/serializer-bundle": "~0.13|~1.0|~2.0",
         "pagerfanta/pagerfanta": "~1.0",
         "willdurand/hateoas": "~2.0",
-        "symfony/expression-language": "~2.4",
+        "symfony/expression-language": "~2.3|~3.0",
         "doctrine/common": "^2.4.8"
     },
     "require-dev": {
