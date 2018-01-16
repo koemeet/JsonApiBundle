@@ -1,8 +1,6 @@
 <?php
 
 /*
- * This file is part of the Mango package.
- *
  * (c) Steffen Brem <steffenbrem@gmail.com>
  *
  * For the full copyright and license information, please view the LICENSE
@@ -15,16 +13,15 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Mango\Bundle\JsonApiBundle\Configuration\Relationship;
 use Mango\Bundle\JsonApiBundle\Configuration\Resource;
-use Metadata\MergeableClassMetadata;
 use Metadata\MergeableInterface;
 
 /**
  * @author Steffen Brem <steffenbrem@gmail.com>
  */
-class ClassMetadata extends MergeableClassMetadata implements ClassMetadataInterface
+class ClassMetadata extends \JMS\Serializer\Metadata\ClassMetadata implements ClassMetadataInterface
 {
     /**
-     * @var Resource
+     * @var resource
      */
     protected $resource;
 
@@ -38,15 +35,21 @@ class ClassMetadata extends MergeableClassMetadata implements ClassMetadataInter
      */
     protected $relationships;
 
+    /**
+     * @var array
+     */
+    protected $relationshipsHash;
+
     public function __construct($name)
     {
         parent::__construct($name);
 
         $this->relationships = new ArrayCollection();
+        $this->relationshipsHash = [];
     }
 
     /**
-     * @return Resource
+     * @return resource
      */
     public function getResource()
     {
@@ -54,7 +57,7 @@ class ClassMetadata extends MergeableClassMetadata implements ClassMetadataInter
     }
 
     /**
-     * @param Resource $resource
+     * @param resource $resource
      */
     public function setResource(Resource $resource)
     {
@@ -89,12 +92,21 @@ class ClassMetadata extends MergeableClassMetadata implements ClassMetadataInter
         return $this->relationships;
     }
 
+    public function getRelationshipsHash()
+    {
+        return $this->relationshipsHash;
+    }
+
     /**
      * {@inheritdoc}
      */
     public function setRelationships(Collection $collection)
     {
         $this->relationships = $collection;
+
+        foreach ($collection as $relationship) {
+            $this->relationshipsHash[$relationship->getName()] = $relationship;
+        }
     }
 
     /**
@@ -103,10 +115,11 @@ class ClassMetadata extends MergeableClassMetadata implements ClassMetadataInter
     public function addRelationship($relationship)
     {
         $this->relationships->add($relationship);
+        $this->relationshipsHash[$relationship->getName()] = $relationship;
     }
 
     /**
-     * {@inheritDoc}
+     * {@inheritdoc}
      */
     public function merge(MergeableInterface $object)
     {
@@ -148,6 +161,10 @@ class ClassMetadata extends MergeableClassMetadata implements ClassMetadataInter
             $this->relationships,
             $parentStr
             ) = unserialize($str);
+
+        foreach ($this->relationships as $relationship) {
+            $this->relationshipsHash[$relationship->getName()] = $relationship;
+        }
 
         parent::unserialize($parentStr);
     }
