@@ -11,7 +11,7 @@ namespace Mango\Bundle\JsonApiBundle\Util;
 use JMS\Serializer\SerializationContext;
 use JMS\Serializer\SerializerInterface;
 use Mango\Bundle\JsonApiBundle\MangoJsonApiBundle;
-use Pagerfanta\Adapter\CallbackAdapter;
+use Pagerfanta\Adapter\AdapterInterface;
 use Pagerfanta\Pagerfanta;
 use Symfony\Component\HttpFoundation\RequestStack;
 
@@ -50,12 +50,11 @@ trait JsonApiSerializerTrait
     /**
      * Build pagerfanta
      *
-     * @param \Closure $getTotalCallback
-     * @param \Closure $getResultsCallback
+     * @param AdapterInterface $adapter
      *
      * @return Pagerfanta
      */
-    public function buildPagerfanta(\Closure $getTotalCallback, \Closure $getResultsCallback)
+    public function buildPagerfanta(AdapterInterface $adapter)
     {
         /** @var RequestStack $requestStack */
         $requestStack = $this->get('request_stack');
@@ -63,12 +62,7 @@ trait JsonApiSerializerTrait
 
         $pageFoundation = $request->get('page', []);
 
-        $pager = new Pagerfanta(
-            new CallbackAdapter(
-                $getTotalCallback,
-                $getResultsCallback
-            )
-        );
+        $pager = new Pagerfanta($adapter);
 
         $pager->setCurrentPage(isset($pageFoundation['number']) ? $pageFoundation['number'] : 1);
         $pager->setMaxPerPage(isset($pageFoundation['size']) ? $pageFoundation['size'] : 10);
