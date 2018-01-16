@@ -30,6 +30,7 @@ class Configuration implements ConfigurationInterface
             ->children()
             ->booleanNode('show_version_info')->defaultValue(true)->end()
             ->scalarNode('base_uri')->defaultValue('/api')->end()
+            ->scalarNode('catch_exceptions')->defaultValue(false)->end()
             ->end()
         ;
 

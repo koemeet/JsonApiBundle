@@ -61,6 +61,21 @@
         <service id="jms_serializer.json_api_constraint_violation_handler" class="Mango\Bundle\JsonApiBundle\Serializer\Handler\ConstraintViolationHandler" public="true">
             <tag name="jms_serializer.subscribing_handler" />
         </service>
+
+        <service id="jms_serializer.json_api_exception_handler" class="Mango\Bundle\JsonApiBundle\Serializer\Handler\ExceptionHandler" public="true">
+            <tag name="jms_serializer.subscribing_handler" />
+        </service>
+
+        <service id="json_api.exception.subscriber" class="Mango\Bundle\JsonApiBundle\EventListener\ExceptionSubscriber" public="true">
+            <argument type="service" id="jms_serializer" />
+            <argument type="service" id="logger" />
+            <argument>%json_api.catch_exceptions%</argument>
+            <tag name="kernel.event_subscriber" />
+        </service>
+
+        <service id="jms_serializer.handler_registry" class="Mango\Bundle\JsonApiBundle\Serializer\Handler\LazyRegexHandlerRegistry">
+            <argument type="service" id="service_container" />
+        </service>
     </services>
 
 </container>

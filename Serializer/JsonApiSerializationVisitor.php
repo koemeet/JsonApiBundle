@@ -116,6 +116,10 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
             $root = [
                 'errors' => $data,
             ];
+        } elseif ($data instanceof \Exception) {
+            $root = [
+                'errors' => $data,
+            ];
         } else {
             $root = [
                 'data' => $data,
@@ -154,6 +158,10 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
         }
 
         if ($data instanceof ConstraintViolationListInterface) {
+            return true;
+        }
+
+        if ($data instanceof \Exception) {
             return true;
         }
 
