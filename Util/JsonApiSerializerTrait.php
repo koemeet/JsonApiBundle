@@ -64,8 +64,13 @@ trait JsonApiSerializerTrait
 
         $pager = new Pagerfanta($adapter);
 
-        $pager->setCurrentPage(isset($pageFoundation['number']) ? $pageFoundation['number'] : 1);
-        $pager->setMaxPerPage(isset($pageFoundation['size']) ? $pageFoundation['size'] : 10);
+        if (!empty($pageFoundation['size'])) {
+            $pager->setMaxPerPage($pageFoundation['size']);
+        }
+
+        if (!empty($pageFoundation['number'])) {
+            $pager->setCurrentPage($pageFoundation['number']);
+        }
 
         return $pager;
     }
