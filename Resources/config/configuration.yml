@@ -1,0 +1,47 @@
+parameters:
+    json_api.metadata.annotation_driver.class: Mango\Bundle\JsonApiBundle\Configuration\Metadata\Driver\AnnotationDriver
+    json_api.metadata.yaml_driver.class: Mango\Bundle\JsonApiBundle\Configuration\Metadata\Driver\YamlDriver
+
+services:
+
+    json_api.metadata.annotation_driver:
+        class: '%json_api.metadata.annotation_driver.class%'
+        public: false
+        arguments:
+            - '@annotations.reader'
+
+    json_api.metadata.yaml_driver:
+        class: '%json_api.metadata.yaml_driver.class%'
+        arguments:
+            - '@jms_serializer.metadata.file_locator'
+
+    json_api.metadata.chain_driver:
+        class: '%jms_serializer.metadata.chain_driver.class%'
+        public: false
+        arguments:
+            - ['@json_api.metadata.yaml_driver', '@json_api.metadata.annotation_driver']
+
+    json_api.metadata.cache.file_cache:
+        class: '%jms_serializer.metadata.cache.file_cache.class%'
+        public: false
+        arguments:
+            - ~
+
+    json_api.metadata.cache:
+        alias: 'json_api.metadata.cache.file_cache'
+        public: false
+
+    json_api.metadata_factory:
+        class: '%jms_serializer.metadata.metadata_factory.class%'
+        public: false
+        arguments:
+            - '@json_api.metadata.chain_driver'
+            - 'Metadata\ClassHierarchyMetadata'
+            - '%kernel.debug%'
+        calls:
+            - [setCache, ['@?json_api.metadata.cache']]
+
+    json_api.serializer.relationship_exclusion_strategy:
+        class: 'Mango\Bundle\JsonApiBundle\Serializer\Exclusion\RelationshipExclusionStrategy'
+        arguments:
+            - '@json_api.metadata_factory'

@@ -41,9 +41,9 @@ class MangoJsonApiExtension extends Extension implements PrependExtensionInterfa
         $configuration = new Configuration();
         $config = $this->processConfiguration($configuration, $configs);
 
-        $loader = new Loader\XmlFileLoader($container, new FileLocator(__DIR__.'/../Resources/config'));
-        $loader->load('configuration.xml');
-        $loader->load('services.xml');
+        $loader = new Loader\YamlFileLoader($container, new FileLocator(__DIR__.'/../Resources/config'));
+        $loader->load('configuration.yml');
+        $loader->load('services.yml');
 
         // TODO: Make this configurable
         $configDir = '%kernel.cache_dir%/json_api';

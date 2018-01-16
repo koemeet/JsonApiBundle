@@ -13,8 +13,6 @@ use JMS\Serializer\SerializerInterface;
 use Mango\Bundle\JsonApiBundle\MangoJsonApiBundle;
 use Pagerfanta\Adapter\CallbackAdapter;
 use Pagerfanta\Pagerfanta;
-use Psr\Container\ContainerInterface;
-use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
@@ -86,25 +84,13 @@ trait JsonApiSerializerTrait
      */
     private function getSerializer()
     {
-        switch (true) {
-            case $this instanceof Controller:
-            case $this instanceof ContainerInterface:
-                return $this->get('json_api.serializer');
-                break;
-            default:
-                throw new \Exception(
-                    sprintf(
-                        'Given trait assumes that class implements at least one of: "%s"',
-                        implode(
-                            '","',
-                            [
-                                ContainerInterface::class,
-                                Controller::class
-                            ]
-                        )
-                    )
-                );
-                break;
+        try {
+            return $this->get('json_api.serializer');
+        } catch (\Exception $exception) {
+            throw new \Exception(
+                'Given trait assumes that class implements Psr\Container\ContainerInterface or at ' .
+                'least has get method to get service from container by name'
+            );
         }
     }
 }
