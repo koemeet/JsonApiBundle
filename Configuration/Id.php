@@ -1,7 +1,6 @@
 <?php
+
 /*
- * This file is part of the Mango package.
- *
  * (c) Steffen Brem <steffenbrem@gmail.com>
  *
  * For the full copyright and license information, please view the LICENSE
@@ -25,7 +24,7 @@ class Id
      */
     public function __construct($fieldName)
     {
-        $this->fieldName = $fieldName;
+        $this->fieldName = (string) $fieldName;
     }
 
     /**
@@ -33,6 +32,6 @@ class Id
      */
     public function getFieldName()
     {
-        return $this->fieldName;
+        return (string) $this->fieldName;
     }
 }

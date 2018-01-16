@@ -1,8 +1,6 @@
 <?php
 
 /*
- * This file is part of the Mango package.
- *
  * (c) Steffen Brem <steffenbrem@gmail.com>
  *
  * For the full copyright and license information, please view the LICENSE
@@ -14,12 +12,16 @@ namespace Mango\Bundle\JsonApiBundle\Serializer;
 use JMS\Serializer\Accessor\AccessorStrategyInterface;
 use JMS\Serializer\Context;
 use JMS\Serializer\JsonSerializationVisitor;
-use Mango\Bundle\JsonApiBundle\Configuration\Metadata\ClassMetadata as JsonApiClassMetadata;
+use Doctrine\Common\Persistence\Proxy;
+use Doctrine\ORM\Proxy\Proxy as ORMProxy;
 use JMS\Serializer\Metadata\ClassMetadata;
 use JMS\Serializer\Naming\PropertyNamingStrategyInterface;
+use Mango\Bundle\JsonApiBundle\Configuration\Metadata\ClassMetadata as JsonApiClassMetadata;
 use Mango\Bundle\JsonApiBundle\EventListener\Serializer\JsonEventSubscriber;
 use Metadata\MetadataFactoryInterface;
 use Symfony\Component\Validator\ConstraintViolationListInterface;
+use PhpOption\None;
+use Symfony\Component\ExpressionLanguage;
 
 /**
  * @author Steffen Brem <steffenbrem@gmail.com>
@@ -41,23 +43,23 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
      */
     protected $isJsonApiDocument = false;
 
-    /**
-     * @param PropertyNamingStrategyInterface $propertyNamingStrategy
-     * @param AccessorStrategyInterface       $accessorStrategy
-     * @param MetadataFactoryInterface        $metadataFactory
-     * @param                                 $showVersionInfo
-     */
-    public function __construct(
-        PropertyNamingStrategyInterface $propertyNamingStrategy,
-        AccessorStrategyInterface $accessorStrategy = null,
-        MetadataFactoryInterface $metadataFactory,
-        $showVersionInfo
-    ) {
-        parent::__construct($propertyNamingStrategy, $accessorStrategy);
+  /**
+   * @param PropertyNamingStrategyInterface $propertyNamingStrategy
+   * @param AccessorStrategyInterface|null  $accessorStrategy
+   * @param MetadataFactoryInterface|null   $metadataFactory
+   * @param bool                            $showVersionInfo
+   */
+  public function __construct(
+    PropertyNamingStrategyInterface $propertyNamingStrategy,
+    AccessorStrategyInterface $accessorStrategy = null,
+    MetadataFactoryInterface $metadataFactory = null,
+    $showVersionInfo = false
+  ) {
+    parent::__construct($propertyNamingStrategy, $accessorStrategy);
 
-        $this->metadataFactory = $metadataFactory;
-        $this->showVersionInfo = $showVersionInfo;
-    }
+      $this->metadataFactory = $metadataFactory;
+      $this->showVersionInfo = $showVersionInfo;
+  }
 
     /**
      * @return bool
@@ -200,10 +202,7 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
                     (array) $included,
                     (isset($data['type'])) ? array($data) : $data,
                     function ($a, $b) {
-                        return strcmp(
-                            $a['type'] . $a['id'],
-                            $b['type'] . $b['id']
-                        );
+                        return strcmp($a['type'].$a['id'], $b['type'].$b['id']);
                     }
                 );
             }
@@ -248,14 +247,20 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
         $rs = parent::endVisitingObject($metadata, $data, $type, $context);
 
         if ($rs instanceof \ArrayObject) {
-            $rs = [];
+            $rs = array();
             $this->setRoot($rs);
 
             return $rs;
         }
 
+        if ($data instanceof Proxy || $data instanceof ORMProxy) {
+            $class = get_parent_class($data);
+        } else {
+            $class = get_class($data);
+        }
+
         /** @var JsonApiClassMetadata $jsonApiMetadata */
-        $jsonApiMetadata = $this->metadataFactory->getMetadataForClass(get_class($data));
+        $jsonApiMetadata = $this->metadataFactory->getMetadataForClass($class);
 
         if (null === $jsonApiMetadata) {
             return $rs;
@@ -264,7 +269,17 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
         $result = array();
 
         if (isset($rs[JsonEventSubscriber::EXTRA_DATA_KEY]['type'])) {
-            $result['type'] = $rs[JsonEventSubscriber::EXTRA_DATA_KEY]['type'];
+            $language = new ExpressionLanguage\ExpressionLanguage();
+            $type =  $rs[JsonEventSubscriber::EXTRA_DATA_KEY]['type'];
+
+            $groups = $context->attributes->get('groups');
+            $groups = $groups instanceof None ? [] : $groups->get();
+
+            try {
+                $result['type'] = $language->evaluate($type, ['groups' => $groups]);
+            } catch (ExpressionLanguage\SyntaxError $e) {
+                $result['type'] = $type;
+            }
         }
 
         if (isset($rs[JsonEventSubscriber::EXTRA_DATA_KEY]['id'])) {
@@ -273,7 +288,7 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
 
         $idField = $jsonApiMetadata->getIdField();
 
-        $result['attributes'] = array_filter($rs, function($key) use ($idField) {
+        $result['attributes'] = array_filter($rs, function ($key) use ($idField) {
             switch ($key) {
                 case $idField:
                 case 'relationships':
@@ -323,8 +338,14 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
     protected function isResource($data)
     {
         if (is_object($data)) {
+            if ($data instanceof Proxy || $data instanceof ORMProxy) {
+                $class = get_parent_class($data);
+            } else {
+                $class = get_class($data);
+            }
+
             /** @var JsonApiClassMetadata $metadata */
-            if ($metadata = $this->metadataFactory->getMetadataForClass(get_class($data))) {
+            if ($metadata = $this->metadataFactory->getMetadataForClass($class)) {
                 if ($metadata->getResource()) {
                     return true;
                 }
