@@ -218,15 +218,7 @@ class JsonEventSubscriber implements EventSubscriberInterface
         $resource = $metadata->getResource();
         if ($resource && true === $resource->getShowLinkSelf()) {
             $uri = $this->baseUriResolver->getBaseUri($resource->isAbsolute());
-            $visitor->addData(
-                'links',
-                [
-                    'self' =>
-                        $uri . '/' .
-                        $objectProps['type'] . '/' .
-                        $objectProps['id'],
-                ]
-            );
+            $visitor->addData('links', ['self' => $uri . '/' . $objectProps['type'] . '/' . $objectProps['id']]);
         }
 
         $root = (array) $visitor->getRoot();

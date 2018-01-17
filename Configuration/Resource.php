@@ -35,7 +35,7 @@ class Resource
      *
      * @param string    $type
      * @param bool|null $showLinkSelf
-     * @param bool|     $absolute
+     * @param bool|null $absolute
      */
     public function __construct($type, $showLinkSelf = null, $absolute = null)
     {
