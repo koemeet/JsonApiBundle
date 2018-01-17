@@ -17,7 +17,7 @@ use JMS\Serializer\Metadata\PropertyMetadata;
  */
 class JsonApiDeserializationVisitor extends JsonDeserializationVisitor
 {
-    protected $includedResources = array();
+    protected $includedResources = [];
 
     protected $root;
 
@@ -34,12 +34,20 @@ class JsonApiDeserializationVisitor extends JsonDeserializationVisitor
     {
         if ($metadata->name === 'id') {
             if (isset($data['id'])) {
-                parent::visitProperty($metadata, $data, $context);
+                parent::visitProperty(
+                    $metadata,
+                    $data,
+                    $context
+                );
             } elseif (isset($data['data'])) {
-                parent::visitProperty($metadata, $data['data'], $context);
+                parent::visitProperty(
+                    $metadata,
+                    $data['data'],
+                    $context
+                );
             }
-        } elseif (isset($data['data']['relationships'][$metadata->name]) || isset($data['relationships'][$metadata->name])) { // TODO: add this property
-
+        } elseif (isset($data['data']['relationships'][$metadata->name]) ||
+            isset($data['relationships'][$metadata->name])) { // TODO: add this property
             $included = isset($data['included']) ? $data['included'] : [];
 
             $relationship = [];
@@ -49,7 +57,7 @@ class JsonApiDeserializationVisitor extends JsonDeserializationVisitor
                 $relationship = $data['relationships'][$metadata->name]['data'];
             }
 
-            $relationshipData = array();
+            $relationshipData = [];
             foreach ($included as $include) {
                 if ($include['type'] === $relationship['type'] && $include['id'] === $relationship['id']) {
                     $relationshipData = $include;
@@ -58,18 +66,34 @@ class JsonApiDeserializationVisitor extends JsonDeserializationVisitor
             }
 
             if (!$relationshipData) {
-              $relationshipData = $relationship;
+                $relationshipData = $relationship;
             }
 
             if ($relationshipData) {
-                parent::visitProperty($metadata, array($metadata->name => $relationshipData), $context);
+                parent::visitProperty(
+                    $metadata,
+                    [$metadata->name => $relationshipData],
+                    $context
+                );
             }
         } elseif (isset($data['data']['attributes'])) {
-            parent::visitProperty($metadata, $data['data']['attributes'], $context);
+            parent::visitProperty(
+                $metadata,
+                $data['data']['attributes'],
+                $context
+            );
         } elseif (isset($data['attributes'])) {
-            parent::visitProperty($metadata, $data['attributes'], $context);
+            parent::visitProperty(
+                $metadata,
+                $data['attributes'],
+                $context
+            );
         } else {
-            parent::visitProperty($metadata, [], $context);
+            parent::visitProperty(
+                $metadata,
+                [],
+                $context
+            );
         }
     }
 }

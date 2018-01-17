@@ -48,14 +48,21 @@ class ExceptionSubscriber implements EventSubscriberInterface
      * Exception subscriber constructor
      *
      * @param SerializerInterface $serializer
-     * @param LoggerInterface     $logger
      * @param bool                $enabled
      */
-    public function __construct(SerializerInterface $serializer, LoggerInterface $logger, $enabled = false)
+    public function __construct(SerializerInterface $serializer, $enabled = false)
     {
         $this->serializer = $serializer;
-        $this->logger = $logger;
         $this->enabled = $enabled;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function setLogger(LoggerInterface $logger = null)
+    {
+        $this->logger = $logger;
+        return $this;
     }
 
     /**

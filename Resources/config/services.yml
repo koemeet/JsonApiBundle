@@ -71,8 +71,9 @@ services:
         public: true
         arguments:
             - '@jms_serializer'
-            - '@logger'
             - '%json_api.catch_exceptions%'
+        calls:
+            - [ setLogger, ['@?logger'] ]
         tags:
             - { name: 'kernel.event_subscriber' }
 

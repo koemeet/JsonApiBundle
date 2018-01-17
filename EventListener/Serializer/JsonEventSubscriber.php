@@ -142,14 +142,19 @@ class JsonEventSubscriber implements EventSubscriberInterface
         $groups = $context->attributes->get('groups');
         $groups = $groups instanceof None ? [] : $groups->get();
 
-        $objectProps = $this->getObjectMainProps($metadata, $object, $groups);
-            $visitor->addData(
-                self::EXTRA_DATA_KEY,
-                [
-                    'id' => $objectProps['id'],
+        $objectProps = $this->getObjectMainProps(
+            $metadata,
+            $object,
+            $groups
+        );
+
+        $visitor->setData(
+            self::EXTRA_DATA_KEY,
+            [
+                'id' => $objectProps['id'],
                 'type' => $objectProps['type'],
-                ]
-            );
+            ]
+        );
 
         $relationships = array();
 
@@ -210,7 +215,7 @@ class JsonEventSubscriber implements EventSubscriberInterface
         }
 
         if ($relationships) {
-            $visitor->addData('relationships', $relationships);
+            $visitor->setData('relationships', $relationships);
         }
 
         //
@@ -219,7 +224,7 @@ class JsonEventSubscriber implements EventSubscriberInterface
         $resource = $metadata->getResource();
         if ($resource && true === $resource->getShowLinkSelf()) {
             $uri = $this->baseUriResolver->getBaseUri($resource->isAbsolute());
-            $visitor->addData(
+            $visitor->setData(
                 'links',
                 [
                     'self' =>
@@ -236,11 +241,15 @@ class JsonEventSubscriber implements EventSubscriberInterface
     }
 
     /**
+     * Process relationship links
+     *
+     * @param array        $objectProps
      * @param Relationship $relationship
+     * @param string       $relationshipPayloadKey
      *
      * @return array
      */
-    protected function processRelationshipLinks($objectProps, Relationship $relationship, $relationshipPayloadKey)
+    protected function processRelationshipLinks(array $objectProps, Relationship $relationship, $relationshipPayloadKey)
     {
         $primaryId = $objectProps['id'];
         $type = $objectProps['type'];

@@ -74,7 +74,7 @@ class YamlDriver extends AbstractFileDriver
      * @param array            $config
      * @param \ReflectionClass $class
      *
-     * @return resource
+     * @return Resource
      */
     protected function parseResource(array $config, \ReflectionClass $class)
     {
