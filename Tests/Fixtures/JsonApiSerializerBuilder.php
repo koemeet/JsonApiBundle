@@ -60,7 +60,7 @@ class JsonApiSerializerBuilder
             $jmsMetadataFactory,
             $namingStrategy,
             new RequestStack(),
-            new BaseUriResolver('/')
+            new BaseUriResolver(new RequestStack(), '/')
         );
 
         $doctrineProxySubscriber = new Serializer\EventDispatcher\Subscriber\DoctrineProxySubscriber();

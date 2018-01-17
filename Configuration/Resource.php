@@ -26,15 +26,27 @@ class Resource
     private $showLinkSelf = true;
 
     /**
-     * @param $type
-     * @param $showLinkSelf
+     * @var bool
      */
-    public function __construct($type, $showLinkSelf = null)
+    protected $absolute = false;
+
+    /**
+     * Resource constructor
+     *
+     * @param string    $type
+     * @param bool|null $showLinkSelf
+     * @param bool|     $absolute
+     */
+    public function __construct($type, $showLinkSelf = null, $absolute = null)
     {
         $this->type = $type;
 
         if (null !== $showLinkSelf) {
             $this->showLinkSelf = $showLinkSelf;
+        }
+
+        if (null !== $absolute) {
+            $this->absolute = $absolute;
         }
     }
 
@@ -60,5 +72,13 @@ class Resource
     public function getShowLinkSelf()
     {
         return (bool) $this->showLinkSelf;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isAbsolute()
+    {
+        return $this->absolute;
     }
 }

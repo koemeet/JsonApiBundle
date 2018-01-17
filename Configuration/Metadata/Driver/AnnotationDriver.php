@@ -112,7 +112,13 @@ class AnnotationDriver implements DriverInterface
                 $propertiesMetadata[] = $virtualPropertyMetadata;
                 $propertiesAnnotations[] = $annot->options;
             } elseif ($annot instanceof Annotation\Resource) {
-                $classMetadata->setResource(new Resource($annot->type, $annot->showLinkSelf));
+                $classMetadata->setResource(
+                    new Resource(
+                        $annot->type,
+                        $annot->showLinkSelf,
+                        $annot->absolute
+                    )
+                );
             }
         }
 
@@ -174,7 +180,8 @@ class AnnotationDriver implements DriverInterface
               $annot->includeByDefault,
               $annot->showData,
               $annot->showLinkSelf,
-              $annot->showLinkRelated
+              $annot->showLinkRelated,
+              $annot->absolute
             ));
                     } elseif ($annot instanceof Since) {
                         $propertyMetadata->sinceVersion = $annot->version;
