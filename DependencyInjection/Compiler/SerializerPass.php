@@ -1,8 +1,5 @@
 <?php
-
 /*
- * This file is part of the Mango package.
- *
  * (c) Steffen Brem <steffenbrem@gmail.com>
  *
  * For the full copyright and license information, please view the LICENSE
@@ -30,7 +27,6 @@ class SerializerPass implements CompilerPassInterface
         }
         $definition->addArgument($container->getDefinition('json_api.metadata_factory'))
             ->addArgument('%json_api.show_version_info%')
-            ->setClass('Mango\Bundle\JsonApiBundle\Serializer\JsonApiSerializationVisitor')
-        ;
+            ->setClass('Mango\Bundle\JsonApiBundle\Serializer\JsonApiSerializationVisitor');
     }
 }

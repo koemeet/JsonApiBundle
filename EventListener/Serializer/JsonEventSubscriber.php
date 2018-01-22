@@ -1,8 +1,5 @@
 <?php
-
 /*
- * This file is part of the Mango package.
- *
  * (c) Steffen Brem <steffenbrem@gmail.com>
  *
  * For the full copyright and license information, please view the LICENSE
@@ -70,10 +67,13 @@ class JsonEventSubscriber implements EventSubscriberInterface
     protected $baseUriResolver;
 
     /**
+     * Json event subscriber constructor
+     *
      * @param MetadataFactoryInterface        $jsonApiMetadataFactory
      * @param MetadataFactoryInterface        $jmsMetadataFactory
      * @param PropertyNamingStrategyInterface $namingStrategy
      * @param RequestStack                    $requestStack
+     * @param BaseUriResolverInterface        $baseUriResolver
      */
     public function __construct(
         MetadataFactoryInterface $jsonApiMetadataFactory,
@@ -126,7 +126,8 @@ class JsonEventSubscriber implements EventSubscriberInterface
             $visitor->addData(
                 self::EXTRA_DATA_KEY,
                 $this->getRelationshipDataArray(
-                    $metadata, $object
+                    $metadata,
+                    $object
                 )
             );
 
@@ -329,7 +330,7 @@ class JsonEventSubscriber implements EventSubscriberInterface
 
     /**
      * @param ClassMetadata $classMetadata
-     * @param               $id
+     * @param mixed         $object
      *
      * @return array
      */
@@ -365,7 +366,7 @@ class JsonEventSubscriber implements EventSubscriberInterface
 
     /**
      * @param ClassMetadata $classMetadata
-     * @param               $id
+     * @param mixed         $object
      *
      * @return bool
      */

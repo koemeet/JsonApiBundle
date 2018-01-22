@@ -1,7 +1,5 @@
 <?php
 /*
- * This file is part of the Mango package.
- *
  * (c) Steffen Brem <steffenbrem@gmail.com>
  *
  * For the full copyright and license information, please view the LICENSE
@@ -60,6 +58,8 @@ class YamlDriver extends AbstractFileDriver
 
             return $classMetadata;
         }
+
+        return null;
     }
 
     /**
@@ -80,7 +80,6 @@ class YamlDriver extends AbstractFileDriver
     {
         if (isset($config['resource'])) {
             $resource = $config['resource'];
-
             return new Resource(
                 $resource['type'],
                 isset($resource['showLinkSelf']) ? $resource['showLinkSelf'] : null

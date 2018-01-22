@@ -1,7 +1,5 @@
 <?php
 /*
- * This file is part of the Mango package.
- *
  * (c) Steffen Brem <steffenbrem@gmail.com>
  *
  * For the full copyright and license information, please view the LICENSE
@@ -18,5 +16,8 @@ namespace Mango\Bundle\JsonApiBundle\Configuration\Annotation;
  */
 final class Id
 {
+    /**
+     * @var string
+     */
     protected $idField;
 }

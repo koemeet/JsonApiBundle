@@ -1,8 +1,5 @@
 <?php
-
 /*
- * This file is part of the Mango package.
- *
  * (c) Steffen Brem <steffenbrem@gmail.com>
  *
  * For the full copyright and license information, please view the LICENSE
@@ -10,6 +7,8 @@
  */
 
 namespace Mango\Bundle\JsonApiBundle\Representation;
+
+use Traversable;
 
 /**
  * PaginatedRepresentation
@@ -108,13 +107,15 @@ class PaginatedRepresentation
     }
 
     /**
-     * @return int
+     * @return int|null
      */
     public function getNextPage()
     {
         if ($this->hasNextPage()) {
             return $this->page + 1;
         }
+
+        return null;
     }
 
     /**
@@ -126,12 +127,14 @@ class PaginatedRepresentation
     }
 
     /**
-     * @return int
+     * @return int|null
      */
     public function getPreviousPage()
     {
         if ($this->hasPreviousPage()) {
             return $this->page - 1;
         }
+
+        return null;
     }
 }

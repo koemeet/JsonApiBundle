@@ -1,7 +1,5 @@
 <?php
 /*
- * This file is part of the Mango package.
- *
  * (c) Steffen Brem <steffenbrem@gmail.com>
  *
  * For the full copyright and license information, please view the LICENSE
@@ -41,7 +39,7 @@ class Route
      * @param boolean      $absolute
      * @param string|null  $generator
      */
-    public function __construct($name, $parameters = array(), $absolute = false, $generator = null)
+    public function __construct($name, $parameters = [], $absolute = false, $generator = null)
     {
         $this->name = $name;
         $this->parameters = $parameters;

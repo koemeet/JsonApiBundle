@@ -1,5 +1,5 @@
 <?php
-/**
+/*
  * (c) Steffen Brem <steffenbrem@gmail.com>
  *
  * For the full copyright and license information, please view the LICENSE
@@ -16,8 +16,6 @@ use Mango\Bundle\JsonApiBundle\Serializer\JsonApiSerializationVisitor;
 use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
- * AbstractPaginationHandler
- *
  * @author Steffen Brem <steffenbrem@gmail.com>
  */
 abstract class AbstractPaginationHandler implements SubscribingHandlerInterface
@@ -63,8 +61,7 @@ abstract class AbstractPaginationHandler implements SubscribingHandlerInterface
         $object,
         array $type,
         Context $context
-    )
-    {
+    ) {
         $representation = $this->createPaginatedRepresentation($object);
 
         if (false === $visitor->isJsonApiDocument()) {
@@ -87,8 +84,7 @@ abstract class AbstractPaginationHandler implements SubscribingHandlerInterface
         PaginatedRepresentation $representation,
         JsonApiSerializationVisitor $visitor,
         Context $context
-    )
-    {
+    ) {
         // serialize items
         $data = $context->accept($representation->getItems());
 
