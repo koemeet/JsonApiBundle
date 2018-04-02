@@ -59,6 +59,9 @@ class SerializerTest extends TestCase
         );
 
         $this->assertSame(json_decode($serialized, 1), [
+            'jsonapi' => [
+                'version' => '1.0'
+            ],
             'data' => [
                 'type' => 'order',
                 'id' => '1',
@@ -66,17 +69,6 @@ class SerializerTest extends TestCase
                     'email' => 'test@example.com',
                     'phone' => '+440000000000',
                     'admin-comments' => 'Test comments that might be longer that ordinary text.',
-                ],
-                'relationships' => [
-                    'address' => [
-                        'data' => null,
-                    ],
-                    'payment' => [
-                        'data' => null,
-                    ],
-                    'items' => [
-                        'data' => [],
-                    ]
                 ],
             ],
         ]);
@@ -107,6 +99,9 @@ class SerializerTest extends TestCase
         );
 
         $this->assertSame(json_decode($serialized, 1), [
+            'jsonapi' => [
+                'version' => '1.0'
+            ],
             'data' => [
                 'type' => 'order',
                 'id' => '1',
@@ -122,12 +117,6 @@ class SerializerTest extends TestCase
                             'id' => '2',
                         ],
                     ],
-                    'payment' => [
-                        'data' => null,
-                    ],
-                    'items' => [
-                        'data' => [],
-                    ]
                 ],
             ],
             'included' => [
@@ -176,6 +165,9 @@ class SerializerTest extends TestCase
         );
 
         $this->assertSame(json_decode($serialized, 1), [
+            'jsonapi' => [
+                'version' => '1.0'
+            ],
             'data' => [
                 'type' => 'order',
                 'id' => '1',
@@ -190,9 +182,6 @@ class SerializerTest extends TestCase
                             'type' => 'order/address',
                             'id' => '2',
                         ],
-                    ],
-                    'payment' => [
-                        'data' => null,
                     ],
                     'items' => [
                         'data' => [
@@ -262,6 +251,9 @@ class SerializerTest extends TestCase
         );
 
         $this->assertSame(json_decode($serialized, 1), [
+            'jsonapi' => [
+                'version' => '1.0'
+            ],
             'data' => [
                 'type' => 'order',
                 'id' => '1',
@@ -271,18 +263,12 @@ class SerializerTest extends TestCase
                     'admin-comments' => null,
                 ],
                 'relationships' => [
-                    'address' => [
-                        'data' => null,
-                    ],
                     'payment' => [
                         'data' => [
                             'type' => 'order/payment-card',
                             'id' => '1',
                         ],
                     ],
-                    'items' => [
-                        'data' => [],
-                    ]
                 ],
             ],
             'included' => [
@@ -312,6 +298,9 @@ class SerializerTest extends TestCase
         // of the 2nd ->serialize call.
 
         $this->assertSame(json_decode($serialized, 1), [
+            'jsonapi' => [
+                'version' => '1.0'
+            ],
             'data' => [
                 'type' => 'order',
                 'id' => '2',
@@ -321,9 +310,6 @@ class SerializerTest extends TestCase
                     'admin-comments' => null,
                 ],
                 'relationships' => [
-                    'address' => [
-                        'data' => null,
-                    ],
                     'payment' => [
                         'data' => [
                             'type' => 'order/payment-cash',
