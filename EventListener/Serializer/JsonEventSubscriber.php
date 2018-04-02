@@ -204,7 +204,13 @@ class JsonEventSubscriber implements EventSubscriberInterface
                     }
                 } // belongsTo relationship
                 else {
-                    $relationshipData['data'] = $this->processRelationship($relationshipObject, $relationship, $context);
+                    $processedRelationship = $this->processRelationship($relationshipObject, $relationship, $context);;
+
+                    if ($processedRelationship) {
+                        $relationshipData['data'] = $processedRelationship;
+                    } else {
+                        unset($relationships[$relationshipPayloadKey]);
+                    }
                 }
             }
         }
@@ -223,6 +229,7 @@ class JsonEventSubscriber implements EventSubscriberInterface
 
         $root = (array) $visitor->getRoot();
         $root['included'] = array_values($this->includedRelationships);
+        $root['included'] = array_filter($root['included']);
         $visitor->setRoot($root);
     }
 
