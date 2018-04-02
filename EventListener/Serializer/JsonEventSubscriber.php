@@ -202,6 +202,10 @@ class JsonEventSubscriber implements EventSubscriberInterface
                     foreach ($relationshipObject as $item) {
                         $relationshipData['data'][] = $this->processRelationship($item, $relationship, $context);
                     }
+
+                    if (empty($relationshipData['data'])) {
+                        unset($relationships[$relationshipPayloadKey]);
+                    }
                 } // belongsTo relationship
                 else {
                     $processedRelationship = $this->processRelationship($relationshipObject, $relationship, $context);;
