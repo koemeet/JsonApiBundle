@@ -1,4 +1,5 @@
 <?php
+
 /*
  * (c) Steffen Brem <steffenbrem@gmail.com>
  *
@@ -49,16 +50,21 @@ final class Serializer implements SerializerInterface
 
         if ($format === 'json') {
             $context->addExclusionStrategy($this->exclusionStrategy);
+            $context->setSerializeNull(true);
         }
 
         return $this->jmsSerializer->serialize($data, $format, $context);
     }
 
     /**
-     * @inheritDoc
+     * {@inheritdoc}
      */
     public function deserialize($data, $type, $format, DeserializationContext $context = null)
     {
+        if (null === $context) {
+            $context = new DeserializationContext();
+        }
+
         return $this->jmsSerializer->deserialize($data, $type, $format, $context);
     }
 }

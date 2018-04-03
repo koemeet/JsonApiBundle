@@ -1,4 +1,5 @@
 <?php
+
 /*
  * (c) Steffen Brem <steffenbrem@gmail.com>
  *
@@ -35,4 +36,9 @@ final class Relationship
      * @var bool
      */
     public $showLinkRelated;
+
+    /**
+     * @var bool
+     */
+    public $absolute;
 }

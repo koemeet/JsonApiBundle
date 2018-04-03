@@ -8,6 +8,8 @@
 
 namespace Mango\Bundle\JsonApiBundle\Resolver\BaseUri;
 
+use Symfony\Component\HttpFoundation\RequestStack;
+
 /**
  * @author Steffen Brem <steffenbrem@gmail.com>
  */
@@ -19,18 +21,33 @@ class BaseUriResolver implements BaseUriResolverInterface
     private $baseUri;
 
     /**
-     * @param string $baseUri
+     * Request stack
+     *
+     * @var RequestStack
      */
-    public function __construct($baseUri)
+    private $requestStack;
+
+    /**
+     * Base uri resolver constructor
+     *
+     * @param RequestStack $requestStack
+     * @param string       $baseUri
+     */
+    public function __construct(RequestStack $requestStack, $baseUri)
     {
+        $this->requestStack = $requestStack;
         $this->baseUri = $baseUri;
     }
 
     /**
-     * @inheritDoc
+     * {@inheritdoc}
      */
-    public function getBaseUri()
+    public function getBaseUri($isAbsolute)
     {
-        return $this->baseUri;
+        if (!$isAbsolute) {
+            return $this->baseUri;
+        }
+
+        return $this->requestStack->getCurrentRequest()->getUriForPath($this->baseUri);
     }
 }

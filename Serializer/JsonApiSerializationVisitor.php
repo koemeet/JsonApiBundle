@@ -11,11 +11,16 @@ namespace Mango\Bundle\JsonApiBundle\Serializer;
 use JMS\Serializer\Accessor\AccessorStrategyInterface;
 use JMS\Serializer\Context;
 use JMS\Serializer\JsonSerializationVisitor;
-use Mango\Bundle\JsonApiBundle\Configuration\Metadata\ClassMetadata as JsonApiClassMetadata;
+use Doctrine\Common\Persistence\Proxy;
+use Doctrine\ORM\Proxy\Proxy as ORMProxy;
 use JMS\Serializer\Metadata\ClassMetadata;
 use JMS\Serializer\Naming\PropertyNamingStrategyInterface;
+use Mango\Bundle\JsonApiBundle\Configuration\Metadata\ClassMetadata as JsonApiClassMetadata;
 use Mango\Bundle\JsonApiBundle\EventListener\Serializer\JsonEventSubscriber;
 use Metadata\MetadataFactoryInterface;
+use PhpOption\None;
+use Symfony\Component\ExpressionLanguage;
+use Symfony\Component\Validator\ConstraintViolationListInterface;
 
 /**
  * @author Steffen Brem <steffenbrem@gmail.com>
@@ -39,21 +44,21 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
 
     /**
      * @param PropertyNamingStrategyInterface $propertyNamingStrategy
-     * @param AccessorStrategyInterface       $accessorStrategy
-     * @param MetadataFactoryInterface        $metadataFactory
+     * @param AccessorStrategyInterface|null  $accessorStrategy
+     * @param MetadataFactoryInterface|null   $metadataFactory
      * @param bool                            $showVersionInfo
      */
     public function __construct(
         PropertyNamingStrategyInterface $propertyNamingStrategy,
         AccessorStrategyInterface $accessorStrategy = null,
-        MetadataFactoryInterface $metadataFactory,
+        MetadataFactoryInterface $metadataFactory = null,
         $showVersionInfo = true
     ) {
         parent::__construct($propertyNamingStrategy, $accessorStrategy);
 
-        $this->metadataFactory = $metadataFactory;
-        $this->showVersionInfo = $showVersionInfo;
-    }
+      $this->metadataFactory = $metadataFactory;
+      $this->showVersionInfo = $showVersionInfo;
+  }
 
     /**
      * @return bool
@@ -76,6 +81,10 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
             $data = $root;
         }
 
+        if (($data instanceof \Traversable) && count($data) === 0 && !$this->isResource($data)) {
+            $data = [];
+        }
+
         $this->isJsonApiDocument = $this->validateJsonApiDocument($data);
 
         if ($this->isJsonApiDocument) {
@@ -90,11 +99,25 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
         return $root;
     }
 
+    /**
+     * Build json api root
+     *
+     * @param mixed      $data
+     * @param array|null $meta
+     *
+     * @return array
+     */
     protected function buildJsonApiRoot($data, array $meta = null)
     {
-        $root = array(
-            'data' => $data,
-        );
+        if ($data instanceof ConstraintViolationListInterface) {
+            $root = [
+                'errors' => $data,
+            ];
+        } else {
+            $root = [
+                'data' => $data,
+            ];
+        }
 
         if ($meta) {
             $root['meta'] = $meta;
@@ -119,6 +142,10 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
             return true;
         }
 
+        if ($data instanceof ConstraintViolationListInterface) {
+            return true;
+        }
+
         return $this->isResource($data);
     }
 
@@ -133,18 +160,14 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
 
         $root = $this->getRoot();
 
-        // TODO: Error handling
-        if (isset($root['data']) && array_key_exists('errors', $root['data'])) {
-            return parent::getResult();
-        }
-
         if ($root) {
             $data = array();
             $meta = array();
             $included = array();
             $links = array();
+            $errors = array();
 
-            if (isset($root['data'])) {
+            if (array_key_exists('data', $root)) {
                 $data = $root['data'];
             }
 
@@ -160,17 +183,23 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
                 $links = $root['links'];
             }
 
-            // filter out duplicate primary resource objects that are in `included`
-            $included = array_udiff(
-                (array) $included,
-                (isset($data['type'])) ? [$data] : $data,
-                function ($a, $b) {
-                    return strcmp(
-                        $a['type'] . $a['id'],
-                        $b['type'] . $b['id']
-                    );
-                }
-            );
+            if (isset($root['errors'])) {
+                $errors = $root['errors'];
+            }
+
+            if (!is_null($data)) {
+                // filter out duplicate primary resource objects that are in `included`
+                $included = array_udiff(
+                    (array) $included,
+                    (isset($data['type'])) ? [$data] : $data,
+                    function ($a, $b) {
+                        return strcmp(
+                            $a['type'] . $a['id'],
+                            $b['type'] . $b['id']
+                        );
+                    }
+                );
+            }
 
             // start building new root array
             $root = array();
@@ -189,10 +218,13 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
                 $root['links'] = $links;
             }
 
-            $root['data'] = $data;
-
-            if ($included) {
-                $root['included'] = array_values($included);
+            if (is_array($errors) && count($errors) > 0) {
+                $root['errors'] = $errors;
+            } else {
+                $root['data'] = $data;
+                if ($included) {
+                    $root['included'] = array_values($included);
+                }
             }
 
             $this->setRoot($root);
@@ -209,14 +241,20 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
         $rs = parent::endVisitingObject($metadata, $data, $type, $context);
 
         if ($rs instanceof \ArrayObject) {
-            $rs = [];
+            $rs = array();
             $this->setRoot($rs);
 
             return $rs;
         }
 
+        if ($data instanceof Proxy || $data instanceof ORMProxy) {
+            $class = get_parent_class($data);
+        } else {
+            $class = get_class($data);
+        }
+
         /** @var JsonApiClassMetadata $jsonApiMetadata */
-        $jsonApiMetadata = $this->metadataFactory->getMetadataForClass(get_class($data));
+        $jsonApiMetadata = $this->metadataFactory->getMetadataForClass($class);
 
         if (null === $jsonApiMetadata) {
             return $rs;
@@ -225,7 +263,17 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
         $result = array();
 
         if (isset($rs[JsonEventSubscriber::EXTRA_DATA_KEY]['type'])) {
-            $result['type'] = $rs[JsonEventSubscriber::EXTRA_DATA_KEY]['type'];
+            $language = new ExpressionLanguage\ExpressionLanguage();
+            $type =  $rs[JsonEventSubscriber::EXTRA_DATA_KEY]['type'];
+
+            $groups = $context->attributes->get('groups');
+            $groups = $groups instanceof None ? [] : $groups->get();
+
+            try {
+                $result['type'] = $language->evaluate($type, ['groups' => $groups]);
+            } catch (ExpressionLanguage\SyntaxError $e) {
+                $result['type'] = $type;
+            }
         }
 
         if (isset($rs[JsonEventSubscriber::EXTRA_DATA_KEY]['id'])) {
@@ -244,11 +292,11 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
                         return false;
                 }
 
-                if ($key === JsonEventSubscriber::EXTRA_DATA_KEY) {
-                    return false;
-                }
+                    if ($key === JsonEventSubscriber::EXTRA_DATA_KEY) {
+                        return false;
+                    }
 
-                return true;
+                    return true;
             },
             ARRAY_FILTER_USE_KEY
         );
@@ -288,8 +336,14 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
     protected function isResource($data)
     {
         if (is_object($data)) {
+            if ($data instanceof Proxy || $data instanceof ORMProxy) {
+                $class = get_parent_class($data);
+            } else {
+                $class = get_class($data);
+            }
+
             /** @var JsonApiClassMetadata $metadata */
-            if ($metadata = $this->metadataFactory->getMetadataForClass(get_class($data))) {
+            if ($metadata = $this->metadataFactory->getMetadataForClass($class)) {
                 if ($metadata->getResource()) {
                     return true;
                 }

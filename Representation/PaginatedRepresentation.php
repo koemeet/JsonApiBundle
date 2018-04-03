@@ -11,7 +11,7 @@ namespace Mango\Bundle\JsonApiBundle\Representation;
 use Traversable;
 
 /**
- * PaginatedRepresentation
+ * PaginatedRepresentation.
  *
  * @author Steffen Brem <steffenbrem@gmail.com>
  */

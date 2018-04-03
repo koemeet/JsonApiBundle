@@ -1,4 +1,5 @@
 <?php
+
 /*
  * (c) Steffen Brem <steffenbrem@gmail.com>
  *
@@ -23,7 +24,7 @@ class Id
      */
     public function __construct($fieldName)
     {
-        $this->fieldName = $fieldName;
+        $this->fieldName = (string) $fieldName;
     }
 
     /**
@@ -31,6 +32,6 @@ class Id
      */
     public function getFieldName()
     {
-        return $this->fieldName;
+        return (string) $this->fieldName;
     }
 }

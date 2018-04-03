@@ -1,4 +1,5 @@
 <?php
+
 /*
  * (c) Steffen Brem <steffenbrem@gmail.com>
  *
@@ -74,7 +75,7 @@ class YamlDriver extends AbstractFileDriver
      * @param array            $config
      * @param \ReflectionClass $class
      *
-     * @return Resource
+     * @return resource
      */
     protected function parseResource(array $config, \ReflectionClass $class)
     {
