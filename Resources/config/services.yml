@@ -1,5 +1,6 @@
 parameters:
     json_api.listener.json_event_subscriber.class: Mango\Bundle\JsonApiBundle\EventListener\Serializer\JsonEventSubscriber
+    jms_serializer.datetime_handler.class: Mango\Bundle\JsonApiBundle\Serializer\Handler\DateHandler
 
 services:
 
