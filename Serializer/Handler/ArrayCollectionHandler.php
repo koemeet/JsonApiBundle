@@ -5,19 +5,18 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
+
 namespace Mango\Bundle\JsonApiBundle\Serializer\Handler;
 
-use JMS\Serializer\GraphNavigator;
-use JMS\Serializer\Handler\DateHandler as BaseDateHandler;
+use JMS\Serializer\Handler\ArrayCollectionHandler as BaseArrayCollectionHandler;
 use Mango\Bundle\JsonApiBundle\MangoJsonApiBundle;
 
 /**
- * DateHandler handler to add the same handlers for dates in json:api format as for json format
+ * ArrayCollectionHandler handler to add the same handlers for ArrayCollection in json:api format as for json format
  *
- * @copyright 2018 OpticsPlanet, Inc
- * @author    Vlad Yarus <vladislav.yarus@intexsys.lv>
+ * @author Alexander Kurbatsky <alexander.kurbatsky@intexsys.lv>
  */
-class DateHandler extends BaseDateHandler
+class ArrayCollectionHandler extends BaseArrayCollectionHandler
 {
     /**
      * {@inheritdoc}
@@ -29,13 +28,9 @@ class DateHandler extends BaseDateHandler
         foreach ($methods as $method) {
             if ($method['format'] === 'json') {
                 $method['format'] = MangoJsonApiBundle::FORMAT;
-                if (!isset($method['method']) && $method['direction'] === GraphNavigator::DIRECTION_DESERIALIZATION) {
-                    $method['method'] = 'deserialize' . $method['type'] . 'FromJson';
-                }
                 $additionalMethods[] = $method;
             }
         }
-
         return array_merge($methods, $additionalMethods);
     }
 }

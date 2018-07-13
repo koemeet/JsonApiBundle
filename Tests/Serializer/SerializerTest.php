@@ -65,6 +65,7 @@ class SerializerTest extends TestCase
                     'email' => 'test@example.com',
                     'phone' => '+440000000000',
                     'admin-comments' => 'Test comments that might be longer that ordinary text.',
+                    'date' => null
                 ],
                 'relationships' => [
                     'address' => [
@@ -74,6 +75,9 @@ class SerializerTest extends TestCase
                         'data' => null,
                     ],
                     'items' => [
+                        'data' => [],
+                    ],
+                    'gift-coupons' => [
                         'data' => [],
                     ]
                 ],
@@ -97,7 +101,8 @@ class SerializerTest extends TestCase
             ->setEmail('test@example.com')
             ->setPhone('+440000000000')
             ->setAdminComments('Test comments that might be longer that ordinary text.')
-            ->setAddress($orderAddress);
+            ->setAddress($orderAddress)
+            ->setOrderDate(new \DateTime('2018-01-01T00:00:00+0300'));
 
         $serialized = $this->jsonApiSerializer->serialize(
             $order,
@@ -113,6 +118,7 @@ class SerializerTest extends TestCase
                     'email' => 'test@example.com',
                     'phone' => '+440000000000',
                     'admin-comments' => 'Test comments that might be longer that ordinary text.',
+                    'date' => '2018-01-01T00:00:00+0300'
                 ],
                 'relationships' => [
                     'address' => [
@@ -125,6 +131,9 @@ class SerializerTest extends TestCase
                         'data' => null,
                     ],
                     'items' => [
+                        'data' => [],
+                    ],
+                    'gift-coupons' => [
                         'data' => [],
                     ]
                 ],
@@ -166,6 +175,7 @@ class SerializerTest extends TestCase
             ->setPhone('+440000000000')
             ->setAdminComments('Test comments that might be longer that ordinary text.')
             ->setAddress($orderAddress)
+            ->setOrderDate(new \DateTime('2018-01-01T00:00:00+0300'))
             ->setItems(new ArrayCollection([$orderItem1, $orderItem2]));
 
         $serialized = $this->jsonApiSerializer->serialize(
@@ -182,6 +192,7 @@ class SerializerTest extends TestCase
                     'email' => 'test@example.com',
                     'phone' => '+440000000000',
                     'admin-comments' => 'Test comments that might be longer that ordinary text.',
+                    'date' => '2018-01-01T00:00:00+0300'
                 ],
                 'relationships' => [
                     'address' => [
@@ -204,6 +215,9 @@ class SerializerTest extends TestCase
                                 'id' => '2',
                             ],
                         ]
+                    ],
+                    'gift-coupons' => [
+                        'data' => [],
                     ]
                 ],
             ],

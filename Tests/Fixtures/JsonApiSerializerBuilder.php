@@ -28,6 +28,11 @@ use Metadata\Driver\FileLocator;
 use Metadata\MetadataFactory;
 use PhpCollection\Map;
 use Symfony\Component\HttpFoundation\RequestStack;
+use Mango\Bundle\JsonApiBundle\Serializer\Handler\DateHandler;
+use JMS\Serializer\Handler\StdClassHandler;
+use JMS\Serializer\Handler\PhpCollectionHandler;
+use Mango\Bundle\JsonApiBundle\Serializer\Handler\ArrayCollectionHandler;
+use JMS\Serializer\Handler\PropelCollectionHandler;
 
 /**
  * Json api serializer builder
@@ -54,7 +59,7 @@ class JsonApiSerializerBuilder
 
         $jsonApiMetadataFactory = new MetadataFactory($jsonApiChainDriver);
         $jsonApiMetadataFactory->setCache(new NoopCache());
-        $handlerRegistry = new HandlerRegistry();
+        $handlerRegistry = self::createHandlerRegistryAndAddDefaultHandlers();
 
         $jsonApiEventSubscriber = new JsonEventSubscriber(
             $jsonApiMetadataFactory,
@@ -95,5 +100,22 @@ class JsonApiSerializerBuilder
         $exclusionStrategy = new RelationshipExclusionStrategy($jmsMetadataFactory);
 
         return new JsonApiSerializer($jmsSerializer, $exclusionStrategy);
+    }
+
+    /**
+     * Create HandlerRegistry and add default handlers
+     *
+     * @return HandlerRegistry
+     */
+    private static function createHandlerRegistryAndAddDefaultHandlers()
+    {
+        $handlerRegistry = new HandlerRegistry();
+        $handlerRegistry->registerSubscribingHandler(new DateHandler());
+        $handlerRegistry->registerSubscribingHandler(new StdClassHandler());
+        $handlerRegistry->registerSubscribingHandler(new PhpCollectionHandler());
+        $handlerRegistry->registerSubscribingHandler(new ArrayCollectionHandler());
+        $handlerRegistry->registerSubscribingHandler(new PropelCollectionHandler());
+
+        return $handlerRegistry;
     }
 }

@@ -103,6 +103,39 @@ class DeserializationTest extends TestCase
     }
 
     /**
+     * Test deserialize attributes with serialized property name overide
+     *
+     * @return void
+     */
+    public function testDeserializeAttributesWithSerializedNameOverride()
+    {
+        $id = 'ORDER-1';
+        $orderDate = '2018-01-01T00:00:00+0300';
+
+        $data = json_encode(
+            [
+                'data' => [
+                    'id'         => $id,
+                    'attributes' => [
+                        'date' => $orderDate
+                    ]
+                ]
+            ]
+        );
+
+        /** @var Order $order */
+        $order = $this->jsonApiSerializer->deserialize(
+            $data,
+            Order::class,
+            MangoJsonApiBundle::FORMAT,
+            Serializer\DeserializationContext::create()->setSerializeNull(true)
+        );
+
+        $this->assertSame($order->getId(), $id);
+        $this->assertEquals($order->getOrderDate(), new \DateTime($orderDate));
+    }
+
+    /**
      * Test deserialize single relationship
      *
      * @return void
@@ -149,5 +182,52 @@ class DeserializationTest extends TestCase
         $this->assertSame($id, $order->getId());
         $this->assertSame(true, $order->getAddress() instanceof OrderAddress);
         $this->assertSame($addressStreet, $order->getAddress()->getStreet());
+    }
+
+    /**
+     * Test deserialize ArrayCollection relationship
+     *
+     * @return void
+     */
+    public function testDeserializeArrayCollectionRelationship()
+    {
+        $id = 'ORDER-1';
+        $firstCouponId = '11';
+        $secondCouponId = '22';
+
+        $data = json_encode(
+            [
+                'data'     => [
+                    'id'            => $id,
+                    'relationships' => [
+                        'gift-coupons' => [
+                            'data' => [
+                                (object)[
+                                    'type'       => 'order/coupon',
+                                    'id'         => $firstCouponId
+                                ],
+                                (object)[
+                                    'type'       => 'order/coupon',
+                                    'id'         => $secondCouponId
+                                ]
+                            ],
+                        ],
+                    ],
+                ]
+            ]
+        );
+
+        /** @var Order $order */
+        $order = $this->jsonApiSerializer->deserialize(
+            $data,
+            Order::class,
+            MangoJsonApiBundle::FORMAT,
+            Serializer\DeserializationContext::create()->setSerializeNull(true)
+        );
+        $this->assertSame($id, $order->getId());
+
+        $giftCoupons = $order->getGiftCoupons();
+        $this->assertSame($firstCouponId, $giftCoupons[0]->getId());
+        $this->assertSame($secondCouponId, $giftCoupons[1]->getId());
     }
 }

@@ -57,6 +57,14 @@ class Order
     private $address;
 
     /**
+     * @JMS\Type("DateTime")
+     * @JMS\SerializedName("date")
+     *
+     * @var \DateTime
+     */
+    private $orderDate;
+
+    /**
      * @JsonApi\Relationship(includeByDefault=true, showLinkSelf=false, showLinkRelated=false)
      * @JMS\Type("Mango\Bundle\JsonApiBundle\Tests\Fixtures\OrderPaymentAbstract")
      *
@@ -73,11 +81,20 @@ class Order
     private $items;
 
     /**
+     * @JsonApi\Relationship(includeByDefault=true, showLinkSelf=false, showLinkRelated=false)
+     * @JMS\Type("ArrayCollection<Mango\Bundle\JsonApiBundle\Tests\Fixtures\GiftCoupon>")
+     *
+     * @var GiftCoupon[]
+     */
+    private $giftCoupons;
+
+    /**
      * Order constructor
      */
     public function __construct()
     {
         $this->items = new ArrayCollection();
+        $this->giftCoupons = new ArrayCollection();
     }
 
     /**
@@ -180,6 +197,26 @@ class Order
     }
 
     /**
+     * @return \DateTime
+     */
+    public function getOrderDate()
+    {
+        return $this->orderDate;
+    }
+
+    /**
+     * @param \DateTime $orderDate
+     *
+     * @return $this
+     */
+    public function setOrderDate($orderDate)
+    {
+        $this->orderDate = $orderDate;
+
+        return $this;
+    }
+
+    /**
      * @return OrderPaymentAbstract
      */
     public function getPayment()
@@ -215,6 +252,26 @@ class Order
     public function setItems(ArrayCollection $items)
     {
         $this->items = $items;
+
+        return $this;
+    }
+
+    /**
+     * @return GiftCoupon[]
+     */
+    public function getGiftCoupons()
+    {
+        return $this->giftCoupons;
+    }
+
+    /**
+     * @param OrderItem[] $giftCoupons
+     *
+     * @return $this
+     */
+    public function setGiftCoupons($giftCoupons)
+    {
+        $this->giftCoupons = $giftCoupons;
 
         return $this;
     }

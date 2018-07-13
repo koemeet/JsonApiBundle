@@ -11,6 +11,8 @@ namespace Mango\Bundle\JsonApiBundle\Serializer;
 use JMS\Serializer\Context;
 use JMS\Serializer\JsonDeserializationVisitor;
 use JMS\Serializer\Metadata\PropertyMetadata;
+use JMS\Serializer\Naming\AdvancedNamingStrategyInterface;
+use JMS\Serializer\Naming\PropertyNamingStrategyInterface;
 
 /**
  * JsonApi Deserialization Visitor.
@@ -32,6 +34,14 @@ class JsonApiDeserializationVisitor extends JsonDeserializationVisitor
 
     public function visitProperty(PropertyMetadata $metadata, $data, Context $context)
     {
+        if ($this->namingStrategy instanceof AdvancedNamingStrategyInterface) {
+            $propertyName = $this->namingStrategy->getPropertyName($metadata, $context);
+        } elseif ($this->namingStrategy instanceof PropertyNamingStrategyInterface) {
+            $propertyName = $this->namingStrategy->translateName($metadata);
+        } else {
+            $propertyName = $metadata->name;
+        }
+
         if ($metadata->name === 'id') {
             if (isset($data['id'])) {
                 parent::visitProperty(
@@ -46,15 +56,15 @@ class JsonApiDeserializationVisitor extends JsonDeserializationVisitor
                     $context
                 );
             }
-        } elseif (isset($data['data']['relationships'][$metadata->name]) ||
-            isset($data['relationships'][$metadata->name])) { // TODO: add this property
+        } elseif (isset($data['data']['relationships'][$propertyName]) ||
+            isset($data['relationships'][$propertyName])) { // TODO: add this property
             $included = isset($data['included']) ? $data['included'] : [];
 
             $relationship = [];
-            if (isset($data['data']['relationships'][$metadata->name]['data'])) {
-                $relationship = $data['data']['relationships'][$metadata->name]['data'];
-            } elseif (isset($data['relationships'][$metadata->name]['data'])) {
-                $relationship = $data['relationships'][$metadata->name]['data'];
+            if (isset($data['data']['relationships'][$propertyName]['data'])) {
+                $relationship = $data['data']['relationships'][$propertyName]['data'];
+            } elseif (isset($data['relationships'][$propertyName]['data'])) {
+                $relationship = $data['relationships'][$propertyName]['data'];
             }
 
             $relationshipData = [];
@@ -72,7 +82,7 @@ class JsonApiDeserializationVisitor extends JsonDeserializationVisitor
             if ($relationshipData) {
                 parent::visitProperty(
                     $metadata,
-                    [$metadata->name => $relationshipData],
+                    [$propertyName => $relationshipData],
                     $context
                 );
             }

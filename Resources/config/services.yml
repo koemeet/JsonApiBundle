@@ -2,6 +2,7 @@ parameters:
     json_api.listener.json_event_subscriber.class: Mango\Bundle\JsonApiBundle\EventListener\Serializer\JsonEventSubscriber
     jms_serializer.datetime_handler.class: Mango\Bundle\JsonApiBundle\Serializer\Handler\DateHandler
     jms_serializer.doctrine_object_constructor.class: Mango\Bundle\JsonApiBundle\Serializer\Construction\DoctrineObjectConstructor
+    jms_serializer.array_collection_handler.class: Mango\Bundle\JsonApiBundle\Serializer\Handler\ArrayCollectionHandler
 
 services:
 
