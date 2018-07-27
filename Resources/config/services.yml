@@ -3,6 +3,7 @@ parameters:
     jms_serializer.datetime_handler.class: Mango\Bundle\JsonApiBundle\Serializer\Handler\DateHandler
     jms_serializer.doctrine_object_constructor.class: Mango\Bundle\JsonApiBundle\Serializer\Construction\DoctrineObjectConstructor
     jms_serializer.array_collection_handler.class: Mango\Bundle\JsonApiBundle\Serializer\Handler\ArrayCollectionHandler
+    jms_serializer.accessor_strategy.default.class: Mango\Bundle\JsonApiBundle\Serializer\Accessor\DefaultAccessorStrategy
 
 services:
 
@@ -54,6 +55,7 @@ services:
         class: 'Mango\Bundle\JsonApiBundle\Serializer\JsonApiDeserializationVisitor'
         arguments:
             - '@jms_serializer.naming_strategy'
+            - '@jms_serializer.accessor_strategy'
         tags:
             - { name: 'jms_serializer.deserialization_visitor', format: 'json:api' }
 
