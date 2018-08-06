@@ -60,11 +60,14 @@ class JsonApiDeserializationVisitor extends JsonDeserializationVisitor
             isset($data['relationships'][$propertyName])) { // TODO: add this property
             $included = isset($data['included']) ? $data['included'] : [];
 
+            $visit = false;
             $relationship = [];
-            if (isset($data['data']['relationships'][$propertyName]['data'])) {
+            if (array_key_exists('data', $data['data']['relationships'][$propertyName])) {
                 $relationship = $data['data']['relationships'][$propertyName]['data'];
-            } elseif (isset($data['relationships'][$propertyName]['data'])) {
+                $visit = true;
+            } elseif (array_key_exists('data', $data['relationships'][$propertyName])) {
                 $relationship = $data['relationships'][$propertyName]['data'];
+                $visit = true;
             }
 
             $relationshipData = [];
@@ -79,7 +82,7 @@ class JsonApiDeserializationVisitor extends JsonDeserializationVisitor
                 $relationshipData = $relationship;
             }
 
-            if ($relationshipData) {
+            if ($relationshipData || $visit) {
                 parent::visitProperty(
                     $metadata,
                     [$propertyName => $relationshipData],

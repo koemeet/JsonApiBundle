@@ -12,7 +12,7 @@ use JMS\Serializer\SerializerInterface;
 use Mango\Bundle\JsonApiBundle\MangoJsonApiBundle;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
-use Symfony\Component\HttpFoundation\Response;
+use Mango\Bundle\JsonApiBundle\Serializer\JsonApiResponse;
 use Symfony\Component\HttpKernel\Event\GetResponseForExceptionEvent;
 use Symfony\Component\HttpKernel\KernelEvents;
 
@@ -108,7 +108,7 @@ class ExceptionSubscriber implements EventSubscriberInterface
             MangoJsonApiBundle::FORMAT
         );
 
-        $event->setResponse(new Response($content, Response::HTTP_BAD_REQUEST));
+        $event->setResponse(new JsonApiResponse($content, JsonApiResponse::HTTP_BAD_REQUEST));
         $event->stopPropagation();
     }
 }
