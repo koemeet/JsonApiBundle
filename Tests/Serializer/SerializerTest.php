@@ -360,4 +360,28 @@ class SerializerTest extends TestCase
             ]
         ]);
     }
+
+    /**
+     * Test serialize exception
+     *
+     * @return void
+     */
+    public function testSerializeException()
+    {
+        $serialized = $this->jsonApiSerializer->serialize(
+            new \Exception('Some exception'),
+            MangoJsonApiBundle::FORMAT
+        );
+
+        $this->assertSame(json_decode($serialized, 1), [
+            'errors' => [
+                [
+                    'status' => '400',
+                    'code' => '0',
+                    'title' => 'Exception has been thrown',
+                    'detail' => 'Some exception'
+                ],
+            ]
+        ]);
+    }
 }

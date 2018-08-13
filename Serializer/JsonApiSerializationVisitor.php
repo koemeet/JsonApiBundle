@@ -118,7 +118,7 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
             ];
         } elseif ($data instanceof \Exception) {
             $root = [
-                'errors' => $data,
+                'errors' => [$data],
             ];
         } else {
             $root = [

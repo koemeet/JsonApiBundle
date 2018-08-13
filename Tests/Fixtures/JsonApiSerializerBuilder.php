@@ -19,6 +19,7 @@ use Mango\Bundle\JsonApiBundle\EventListener\Serializer\JsonEventSubscriber;
 use Mango\Bundle\JsonApiBundle\MangoJsonApiBundle;
 use Mango\Bundle\JsonApiBundle\Resolver\BaseUri\BaseUriResolver;
 use Mango\Bundle\JsonApiBundle\Serializer\Exclusion\RelationshipExclusionStrategy;
+use Mango\Bundle\JsonApiBundle\Serializer\Handler\ExceptionHandler;
 use Mango\Bundle\JsonApiBundle\Serializer\JsonApiDeserializationVisitor;
 use Mango\Bundle\JsonApiBundle\Serializer\JsonApiSerializationVisitor;
 use Mango\Bundle\JsonApiBundle\Serializer\Serializer as JsonApiSerializer;
@@ -115,6 +116,7 @@ class JsonApiSerializerBuilder
         $handlerRegistry->registerSubscribingHandler(new PhpCollectionHandler());
         $handlerRegistry->registerSubscribingHandler(new ArrayCollectionHandler());
         $handlerRegistry->registerSubscribingHandler(new PropelCollectionHandler());
+        $handlerRegistry->registerSubscribingHandler(new ExceptionHandler());
 
         return $handlerRegistry;
     }

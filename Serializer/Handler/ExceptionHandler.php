@@ -38,6 +38,7 @@ class ExceptionHandler implements SubscribingHandlerInterface
 
     /**
      * Serialize exception
+     * @see http://jsonapi.org/format/#error-objects
      *
      * @param JsonSerializationVisitor $visitor
      * @param \Exception               $exception
@@ -47,10 +48,11 @@ class ExceptionHandler implements SubscribingHandlerInterface
     public function serializeException(JsonSerializationVisitor $visitor, \Exception $exception)
     {
         $data = [
-            'status' => Response::HTTP_BAD_REQUEST,
-            'code'   => $exception->getCode(),
+            // all these values should be a string according to spec
+            'status' => (string) Response::HTTP_BAD_REQUEST,
+            'code'   => (string) $exception->getCode(),
             'title'  => 'Exception has been thrown',
-            'detail' => $exception->getMessage()
+            'detail' => (string) $exception->getMessage()
         ];
 
         if (null === $visitor->getRoot()) {
